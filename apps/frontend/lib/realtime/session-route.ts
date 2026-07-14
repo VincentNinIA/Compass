@@ -1,0 +1,166 @@
+const OPENAI_REALTIME_CALLS_URL = "https://api.openai.com/v1/realtime/calls";
+const MAX_SDP_BYTES = 64 * 1024;
+const DEFAULT_TIMEOUT_MS = 12_000;
+
+const SESSION_CONFIG = {
+  type: "realtime",
+  model: "gpt-realtime-2.1",
+  audio: {
+    output: {
+      voice: "marin",
+    },
+  },
+} as const;
+
+type SessionRouteDependencies = {
+  apiKey?: string;
+  fetchImpl?: typeof fetch;
+  timeoutMs?: number;
+};
+
+type RouteErrorCode =
+  | "unsupported_media_type"
+  | "sdp_too_large"
+  | "invalid_sdp"
+  | "realtime_unconfigured"
+  | "upstream_authentication_failed"
+  | "upstream_rate_limited"
+  | "upstream_unavailable"
+  | "upstream_invalid_response"
+  | "upstream_timeout";
+
+const ERROR_MESSAGES: Record<RouteErrorCode, string> = {
+  unsupported_media_type: "Expected an application/sdp request.",
+  sdp_too_large: "The SDP offer exceeds the allowed size.",
+  invalid_sdp: "The SDP offer is empty or malformed.",
+  realtime_unconfigured: "Realtime is not configured on this server.",
+  upstream_authentication_failed: "Realtime authentication failed upstream.",
+  upstream_rate_limited: "Realtime is temporarily rate limited.",
+  upstream_unavailable: "Realtime is temporarily unavailable.",
+  upstream_invalid_response: "Realtime returned an invalid SDP answer.",
+  upstream_timeout: "Realtime session creation timed out.",
+};
+
+function errorResponse(
+  status: number,
+  code: RouteErrorCode,
+  retryable: boolean,
+): Response {
+  return Response.json(
+    {
+      error: {
+        code,
+        message: ERROR_MESSAGES[code],
+        retryable,
+      },
+    },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}
+
+function isApplicationSdp(contentType: string | null): boolean {
+  return contentType?.split(";", 1)[0]?.trim().toLowerCase() === "application/sdp";
+}
+
+function isValidSdp(value: string): boolean {
+  const normalized = value.replaceAll("\r\n", "\n");
+  return (
+    normalized.startsWith("v=0\n") &&
+    normalized.includes("\no=") &&
+    normalized.includes("\nm=audio ")
+  );
+}
+
+function mapUpstreamFailure(status: number): Response {
+  if (status === 401 || status === 403) {
+    return errorResponse(502, "upstream_authentication_failed", false);
+  }
+  if (status === 429) {
+    return errorResponse(503, "upstream_rate_limited", true);
+  }
+  return errorResponse(502, "upstream_unavailable", status >= 500);
+}
+
+export function createRealtimeSessionHandler(
+  dependencies: SessionRouteDependencies = {},
+) {
+  const fetchImpl = dependencies.fetchImpl ?? fetch;
+  const timeoutMs = dependencies.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  return async function handleRealtimeSession(request: Request): Promise<Response> {
+    if (!isApplicationSdp(request.headers.get("content-type"))) {
+      return errorResponse(415, "unsupported_media_type", false);
+    }
+
+    const declaredLength = Number(request.headers.get("content-length") ?? 0);
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_SDP_BYTES) {
+      return errorResponse(413, "sdp_too_large", false);
+    }
+
+    const offer = await request.text();
+    if (new TextEncoder().encode(offer).byteLength > MAX_SDP_BYTES) {
+      return errorResponse(413, "sdp_too_large", false);
+    }
+    if (!isValidSdp(offer)) {
+      return errorResponse(400, "invalid_sdp", false);
+    }
+
+    const apiKey = dependencies.apiKey ?? process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return errorResponse(503, "realtime_unconfigured", false);
+    }
+
+    const body = new FormData();
+    body.set("sdp", offer);
+    body.set("session", JSON.stringify(SESSION_CONFIG));
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const upstream = await fetchImpl(OPENAI_REALTIME_CALLS_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      if (!upstream.ok) {
+        return mapUpstreamFailure(upstream.status);
+      }
+
+      const answer = await upstream.text();
+      if (!isValidSdp(answer)) {
+        return errorResponse(502, "upstream_invalid_response", true);
+      }
+
+      return new Response(answer, {
+        status: 201,
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type": "application/sdp",
+        },
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return errorResponse(504, "upstream_timeout", true);
+      }
+      return errorResponse(502, "upstream_unavailable", true);
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+}
+
+export const REALTIME_ROUTE_LIMITS = {
+  maxSdpBytes: MAX_SDP_BYTES,
+  timeoutMs: DEFAULT_TIMEOUT_MS,
+} as const;

@@ -12,6 +12,9 @@
     "lint": "pnpm --dir apps/frontend lint",
     "typecheck": "pnpm --dir apps/frontend typecheck",
     "test": "pnpm --dir apps/frontend test --run",
-    "build": "pnpm --dir apps/frontend build"
+    "build": "pnpm --dir apps/frontend build",
+    "test:docs:t0": "node scripts/validate-t0-docs.mjs",
+    "test:e2e:t0": "pnpm --dir apps/frontend test:e2e:t0",
+    "test:e2e:t0:live": "pnpm --dir apps/frontend test:e2e:t0:live"
   }
 }

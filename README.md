@@ -30,6 +30,16 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm test:docs:t0
+pnpm test:e2e:t0
+```
+
+Le smoke OpenAI opt-in est versionné séparément. Il charge la clé standard depuis
+le `.env` racine (ou l'environnement du processus), sans jamais la transmettre au
+navigateur :
+
+```sh
+pnpm test:e2e:t0:live
 ```
 
 Pilot documents and executable card contracts live under `agents/` and

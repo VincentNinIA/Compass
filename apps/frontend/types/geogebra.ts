@@ -1,5 +1,6 @@
 import type { ValidationResult } from "@/lib/geogebra/validator";
 import type { ResetResult } from "@/lib/geogebra/checkpoint";
+import type { InitializationResultV1 } from "@/lib/geogebra/exercise-initialization";
 
 export type GeoGebraApi = {
   deleteObject?(label: string): void;
@@ -8,8 +9,13 @@ export type GeoGebraApi = {
   getAllObjectNames?(): string[];
   getBase64?(callback: (base64: string) => void): void;
   getCommandString(label: string, useLocalizedInput?: boolean): string;
+  getColor?(label: string): string;
   getObjectType?(label: string): string;
+  getObjectName?(index: number): string;
+  getObjectNumber?(): number;
   getValue?(label: string): number;
+  getXcoord?(label: string): number;
+  getYcoord?(label: string): number;
   isDefined(label: string): boolean;
   newConstruction?(): void;
   registerAddListener?(listener: GeoGebraObjectListener): void;
@@ -19,6 +25,7 @@ export type GeoGebraApi = {
   remove?(): void;
   setBase64?(base64: string, callback?: () => void): void;
   setCoordSystem(xMin: number, xMax: number, yMin: number, yMax: number): void;
+  setColor?(label: string, red: number, green: number, blue: number): void;
   setFixed?(label: string, fixed: boolean, selectionAllowed: boolean): void;
   setLabelVisible(label: string, visible: boolean): void;
   unregisterClientListener?(listener: GeoGebraClientListener): void;
@@ -56,7 +63,12 @@ export type GeoGebraResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: GeoGebraAdapterError };
 
-export type SceneObjectOwner = "system" | "student" | "temporary";
+export type SceneObjectOwner =
+  | "system"
+  | "exercise"
+  | "student"
+  | "temporary"
+  | "hint";
 export type SceneObjectKind = "point" | "segment" | "line" | "boolean" | "number" | "other";
 
 export type SceneObject = {
@@ -117,6 +129,7 @@ export type Checkpoint = {
   base64: string;
   initialHash: string;
   initialObjectNames: string[];
+  initialObjects: SceneObject[];
 };
 
 export type GeoGebraAppletParameters = {
@@ -165,5 +178,6 @@ declare global {
     __GEOTUTOR_VALIDATION__?: ValidationResult;
     __GEOTUTOR_PROGRESS__?: ProgressState;
     __GEOTUTOR_RESET__?: ResetResult;
+    __GEOTUTOR_INITIALIZATION__?: InitializationResultV1;
   }
 }

@@ -62,8 +62,9 @@ describe("CompletedActionBridge", () => {
       onAction,
     );
     bridge.start();
-    harness.emit({ type: "update", target: "P" });
-    harness.emit({ type: "update", target: "P" });
+    for (let index = 0; index < 30; index += 1) {
+      harness.emit({ type: "update", target: "P" });
+    }
     harness.emit({ type: "dragEnd" });
     await vi.advanceTimersByTimeAsync(50);
 
@@ -71,6 +72,36 @@ describe("CompletedActionBridge", () => {
     expect(onAction).toHaveBeenCalledWith({
       id: "construction-action-1", kind: "drag", affectedNames: ["P"], studentAffectedNames: ["P"], revision: 1, snapshotHash: "h1",
     });
+  });
+
+  it("emits one student drag start and end around movingGeos before completion", async () => {
+    const harness = await readyAdapter();
+    const registry = new SceneRegistry();
+    registry.register("P", "student", "point");
+    const onAction = vi.fn();
+    const onActivity = vi.fn();
+    const bridge = new CompletedActionBridge(
+      harness.adapter,
+      registry,
+      {
+        capture: () => ({ ok: true, value: completeSnapshot(2, "drag-hash") }),
+      } as never,
+      onAction,
+      onActivity,
+    );
+    bridge.start();
+
+    harness.emit({ type: "movingGeos", argument: "P" });
+    harness.emit({ type: "movingGeos", argument: "P" });
+    harness.emit({ type: "dragEnd", argument: "P" });
+
+    expect(onActivity.mock.calls.map(([activity]) => activity)).toEqual([
+      { type: "student_drag_started", affectedNames: ["P"] },
+      { type: "student_drag_ended", affectedNames: ["P"] },
+    ]);
+    expect(onAction).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(50);
+    expect(onAction).toHaveBeenCalledTimes(1);
   });
 
   it("bounds an unstable action at 500 ms without emitting", async () => {
@@ -145,6 +176,34 @@ describe("CompletedActionBridge", () => {
     bridge.stop();
     expect(harness.api.unregisterClientListener).toHaveBeenCalledTimes(1);
     expect(harness.api.unregisterAddListener).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves a pre-registered hint owner and never reports it as student work", async () => {
+    const harness = await readyAdapter();
+    const registry = new SceneRegistry();
+    registry.register("gtHint_demo_M", "hint", "point");
+    const onAction = vi.fn();
+    const bridge = new CompletedActionBridge(
+      harness.adapter,
+      registry,
+      { capture: () => ({ ok: true, value: completeSnapshot(1, "hint-hash") }) } as never,
+      onAction,
+    );
+    bridge.start();
+    harness.emitObject("add", "gtHint_demo_M");
+    await vi.advanceTimersByTimeAsync(50);
+
+    expect(registry.get("gtHint_demo_M")).toEqual({
+      name: "gtHint_demo_M",
+      owner: "hint",
+      kind: "point",
+    });
+    expect(onAction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        affectedNames: ["gtHint_demo_M"],
+        studentAffectedNames: [],
+      }),
+    );
   });
 
   it("preserves student ownership in a stabilized remove action", async () => {

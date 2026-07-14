@@ -16,5 +16,12 @@ describe("Home", () => {
     expect(screen.getByText("Runtime ready")).toBeInTheDocument();
     expect(screen.getByText("Geometry workspace")).toBeInTheDocument();
     expect(screen.getByText("Voice session")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Start from the exercise sheet",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Analyze" })).toBeDisabled();
   });
 });

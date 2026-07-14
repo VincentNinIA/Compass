@@ -1,5 +1,4 @@
-import { GeoGebraSpike } from "@/components/geogebra-spike";
-import { RealtimeSpike } from "@/components/realtime-spike";
+import { TutorWorkspace } from "@/components/tutor-workspace";
 
 const foundations = [
   {
@@ -46,8 +45,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <GeoGebraSpike />
-      <RealtimeSpike />
+      <TutorWorkspace />
     </main>
   );
 }

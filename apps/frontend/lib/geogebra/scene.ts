@@ -11,9 +11,15 @@ export type SceneResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: SceneError };
 
-const INITIAL_OBJECTS = [
+export const BOOTSTRAP_OBJECTS = [
   { name: "A", command: "A = (-2, 0)", kind: "point" },
   { name: "B", command: "B = (2, 0)", kind: "point" },
+  { name: "AB", command: "AB = Segment(A, B)", kind: "segment" },
+] as const;
+
+export const EXERCISE_OBJECTS = [
+  { name: "A", command: "A = (-3, 0)", kind: "point" },
+  { name: "B", command: "B = (3, 0)", kind: "point" },
   { name: "AB", command: "AB = Segment(A, B)", kind: "segment" },
 ] as const;
 
@@ -50,8 +56,24 @@ export function initializeMinimalScene(
   adapter: GeoGebraAdapter,
   registry: SceneRegistry,
 ): SceneResult<SceneObject[]> {
+  return initializeCanonicalScene(adapter, registry, BOOTSTRAP_OBJECTS, "system");
+}
+
+export function initializeExerciseScene(
+  adapter: GeoGebraAdapter,
+  registry: SceneRegistry,
+): SceneResult<SceneObject[]> {
+  return initializeCanonicalScene(adapter, registry, EXERCISE_OBJECTS, "exercise");
+}
+
+function initializeCanonicalScene(
+  adapter: GeoGebraAdapter,
+  registry: SceneRegistry,
+  objects: typeof BOOTSTRAP_OBJECTS | typeof EXERCISE_OBJECTS,
+  owner: Extract<SceneObjectOwner, "system" | "exercise">,
+): SceneResult<SceneObject[]> {
   const result = adapter.withApi((api): SceneResult<SceneObject[]> => {
-    const collisions = INITIAL_OBJECTS.filter(({ name }) => api.exists(name)).map(
+    const collisions = objects.filter(({ name }) => api.exists(name)).map(
       ({ name }) => name,
     );
     if (collisions.length > 0) {
@@ -66,7 +88,7 @@ export function initializeMinimalScene(
     }
 
     const created: string[] = [];
-    for (const object of INITIAL_OBJECTS) {
+    for (const object of objects) {
       if (!api.evalCommand(object.command)) {
         rollback(api.deleteObject, created);
         return {
@@ -99,9 +121,9 @@ export function initializeMinimalScene(
       api.setLabelVisible(name, true);
     }
 
-    const published = INITIAL_OBJECTS.map(({ name, kind }) => ({
+    const published = objects.map(({ name, kind }) => ({
       name,
-      owner: "system" as const,
+      owner,
       kind,
     }));
     registry.replace(published);

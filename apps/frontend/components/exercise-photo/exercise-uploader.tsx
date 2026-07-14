@@ -1,0 +1,301 @@
+"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
+
+const ALLOWED_IMAGE_MIMES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
+export const EXERCISE_IMAGE_ACCEPT = ALLOWED_IMAGE_MIMES.join(",");
+export const MAX_EXERCISE_IMAGE_BYTES = 10 * 1024 * 1024;
+
+export type ExerciseImageMime = (typeof ALLOWED_IMAGE_MIMES)[number];
+
+export type SelectedExerciseImage = {
+  file: File;
+  previewUrl: string;
+  declaredMime: ExerciseImageMime;
+  byteLength: number;
+};
+
+export type ExerciseUploaderState =
+  | "empty"
+  | "selected"
+  | "client_rejected"
+  | "submitting";
+
+type ValidationResult =
+  | { ok: true; file: File; declaredMime: ExerciseImageMime }
+  | { ok: false; message: string };
+
+type ExerciseUploaderProps = {
+  onAnalyze: (selection: SelectedExerciseImage) => void | Promise<void>;
+  onSelectionChange?: (selection?: SelectedExerciseImage) => void;
+  cleanupToken?: number;
+  analyzeEnabled?: boolean;
+  locked?: boolean;
+};
+
+function isAllowedImageMime(value: string): value is ExerciseImageMime {
+  return ALLOWED_IMAGE_MIMES.some((mime) => mime === value);
+}
+
+export function validateExerciseImageFiles(files: File[]): ValidationResult {
+  if (files.length !== 1) {
+    return {
+      ok: false,
+      message: "Choose exactly one JPEG, PNG, or WebP image.",
+    };
+  }
+
+  const [file] = files;
+  if (!isAllowedImageMime(file.type)) {
+    return {
+      ok: false,
+      message: "This format is not supported. Choose a JPEG, PNG, or WebP image.",
+    };
+  }
+  if (file.size < 1) {
+    return {
+      ok: false,
+      message: "This image is empty. Choose a non-empty JPEG, PNG, or WebP image.",
+    };
+  }
+  if (file.size > MAX_EXERCISE_IMAGE_BYTES) {
+    return {
+      ok: false,
+      message: "This image is larger than 10 MiB. Choose a smaller image.",
+    };
+  }
+
+  return { ok: true, file, declaredMime: file.type };
+}
+
+function formatByteLength(byteLength: number) {
+  if (byteLength < 1024) return `${byteLength} B`;
+  if (byteLength < 1024 * 1024) return `${(byteLength / 1024).toFixed(1)} KiB`;
+  return `${(byteLength / (1024 * 1024)).toFixed(1)} MiB`;
+}
+
+export function ExerciseUploader({
+  onAnalyze,
+  onSelectionChange,
+  cleanupToken = 0,
+  analyzeEnabled = true,
+  locked = false,
+}: ExerciseUploaderProps) {
+  const [state, setState] = useState<ExerciseUploaderState>("empty");
+  const [selection, setSelection] = useState<SelectedExerciseImage>();
+  const [error, setError] = useState<string>();
+  const currentPreviewUrl = useRef<string | undefined>(undefined);
+  const currentSelection = useRef<SelectedExerciseImage | undefined>(undefined);
+  const selectionVersion = useRef(0);
+  const previousCleanupToken = useRef(cleanupToken);
+  const mounted = useRef(true);
+
+  const revokeCurrentPreview = useCallback(() => {
+    if (!currentPreviewUrl.current) return;
+    URL.revokeObjectURL(currentPreviewUrl.current);
+    currentPreviewUrl.current = undefined;
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      revokeCurrentPreview();
+    };
+  }, [revokeCurrentPreview]);
+
+  const clearSelection = useCallback(() => {
+    selectionVersion.current += 1;
+    currentSelection.current = undefined;
+    revokeCurrentPreview();
+    setSelection(undefined);
+    onSelectionChange?.(undefined);
+  }, [onSelectionChange, revokeCurrentPreview]);
+
+  useEffect(() => {
+    if (previousCleanupToken.current === cleanupToken) return;
+    previousCleanupToken.current = cleanupToken;
+    selectionVersion.current += 1;
+    currentSelection.current = undefined;
+    revokeCurrentPreview();
+    setSelection(undefined);
+    setError(undefined);
+    setState("empty");
+  }, [cleanupToken, revokeCurrentPreview]);
+
+  const rejectSelection = useCallback(
+    (message: string) => {
+      clearSelection();
+      setError(message);
+      setState("client_rejected");
+    },
+    [clearSelection],
+  );
+
+  const handleFiles = useCallback(
+    (files: File[]) => {
+      const result = validateExerciseImageFiles(files);
+      if (!result.ok) {
+        rejectSelection(result.message);
+        return;
+      }
+
+      revokeCurrentPreview();
+      const previewUrl = URL.createObjectURL(result.file);
+      currentPreviewUrl.current = previewUrl;
+      const nextSelection = {
+        file: result.file,
+        previewUrl,
+        declaredMime: result.declaredMime,
+        byteLength: result.file.size,
+      };
+      selectionVersion.current += 1;
+      currentSelection.current = nextSelection;
+      setSelection(nextSelection);
+      onSelectionChange?.(nextSelection);
+      setError(undefined);
+      setState("selected");
+    },
+    [onSelectionChange, rejectSelection, revokeCurrentPreview],
+  );
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+    handleFiles(Array.from(event.currentTarget.files ?? []));
+    event.currentTarget.value = "";
+  };
+
+  const handleCancel = () => {
+    clearSelection();
+    setError(undefined);
+    setState("empty");
+  };
+
+  const handleAnalyze = async () => {
+    if (!analyzeEnabled || !selection || state !== "selected") return;
+
+    const analyzedVersion = selectionVersion.current;
+    setError(undefined);
+    setState("submitting");
+    try {
+      await onAnalyze(selection);
+    } catch {
+      if (!mounted.current || analyzedVersion !== selectionVersion.current) return;
+      setError("Analysis could not be started. Your validated image is still selected.");
+    } finally {
+      if (
+        mounted.current &&
+        analyzedVersion === selectionVersion.current &&
+        currentSelection.current
+      ) {
+        setState("selected");
+      }
+    }
+  };
+
+  return (
+    <section className="spike photo-uploader" aria-labelledby="exercise-photo-title">
+      <div className="spike-heading">
+        <div>
+          <p className="section-index">T3 / Exercise photo</p>
+          <h2 id="exercise-photo-title">Start from the exercise sheet</h2>
+        </div>
+        <p>
+          Take a photo or choose one image. It is not analyzed until you choose
+          Analyze.
+        </p>
+      </div>
+
+      <div className="photo-uploader-grid">
+        <div className="photo-picker">
+          <label htmlFor="exercise-photo-input">
+            {selection ? "Replace image" : "Take or choose a photo"}
+          </label>
+          <input
+            id="exercise-photo-input"
+            type="file"
+            accept={EXERCISE_IMAGE_ACCEPT}
+            capture="environment"
+            aria-describedby="exercise-photo-help exercise-photo-state"
+            aria-invalid={state === "client_rejected"}
+            disabled={locked}
+            onChange={handleChange}
+          />
+          <p id="exercise-photo-help" className="photo-help">
+            One JPEG, PNG, or WebP image, from 1 byte to 10 MiB. Photograph only the
+            exercise statement you want help with.
+          </p>
+          <p className="photo-privacy-notice">
+            GeoTutor does not save this photo. It is sent to OpenAI for analysis.
+            Reload or Reset construction clears the local exercise context in this
+            tab.
+          </p>
+
+          <p
+            id="exercise-photo-state"
+            className={`photo-state photo-state-${state}`}
+            role="status"
+            aria-live="polite"
+            data-state={state}
+          >
+            {state === "empty" && "No image selected."}
+            {state === "selected" && "Image selected and validated locally."}
+            {state === "client_rejected" && "Image rejected locally."}
+            {state === "submitting" && "Preparing the validated image for analysis."}
+          </p>
+          {error ? (
+            <p role="alert" className="photo-error">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="photo-actions">
+            <button
+              type="button"
+              disabled={
+                locked || !analyzeEnabled || !selection || state !== "selected"
+              }
+              onClick={() => void handleAnalyze()}
+            >
+              Analyze
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={locked || !selection}
+              onClick={handleCancel}
+            >
+              Cancel selection
+            </button>
+          </div>
+        </div>
+
+        <div className="photo-preview" aria-label="Selected exercise image preview">
+          {selection ? (
+            <figure>
+              {/* A local Object URL is the intended preview source for this client boundary. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={selection.previewUrl} alt={`Preview of ${selection.file.name}`} />
+              <figcaption>
+                <strong>{selection.file.name}</strong>
+                <span>{formatByteLength(selection.byteLength)}</span>
+              </figcaption>
+            </figure>
+          ) : (
+            <p>Your selected photo will appear here before analysis.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}

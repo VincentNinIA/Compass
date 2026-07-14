@@ -13,6 +13,10 @@ const STABILITY_WINDOW_MS = 500;
 
 type ActionKind = CompletedConstructionAction["kind"];
 
+export type ConstructionActivity =
+  | { type: "student_drag_started"; affectedNames: readonly string[] }
+  | { type: "student_drag_ended"; affectedNames: readonly string[] };
+
 export class CompletedActionBridge {
   private readonly affectedNames = new Set<string>();
   private readonly studentAffectedNames = new Set<string>();
@@ -20,6 +24,7 @@ export class CompletedActionBridge {
   private actionCounter = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private pendingKind: ActionKind = "update";
+  private dragActive = false;
   private readonly listener: GeoGebraClientListener;
   private readonly addListener = (name: string) => this.handle({ type: "add", target: name });
   private readonly removeListener = (name: string) => this.handle({ type: "remove", target: name });
@@ -30,6 +35,7 @@ export class CompletedActionBridge {
     private readonly registry: SceneRegistry,
     private readonly snapshots: SnapshotService,
     private readonly onAction: (action: CompletedConstructionAction) => void,
+    private readonly onActivity?: (activity: ConstructionActivity) => void,
   ) {
     this.listener = (event) => this.handle(event);
   }
@@ -57,6 +63,7 @@ export class CompletedActionBridge {
     this.timer = undefined;
     this.affectedNames.clear();
     this.studentAffectedNames.clear();
+    this.dragActive = false;
     this.adapter.unregisterObjectListener("add", this.addListener);
     this.adapter.unregisterObjectListener("remove", this.removeListener);
     this.adapter.unregisterObjectListener("update", this.updateListener);
@@ -76,8 +83,31 @@ export class CompletedActionBridge {
     this.reconcileOwnership(names, kind);
     if (kind !== "remove") this.rememberStudentOwnership(names);
 
-    if (event.type === "movingGeos") return;
+    if (event.type === "movingGeos") {
+      if (!this.dragActive && this.hasStudentNames(names)) {
+        this.dragActive = true;
+        this.onActivity?.({
+          type: "student_drag_started",
+          affectedNames: [...names],
+        });
+      }
+      return;
+    }
+    if (
+      (event.type === "dragEnd" || event.type === "movedGeos") &&
+      this.dragActive
+    ) {
+      this.dragActive = false;
+      this.onActivity?.({
+        type: "student_drag_ended",
+        affectedNames: [...names],
+      });
+    }
     this.scheduleStabilization();
+  }
+
+  private hasStudentNames(names: readonly string[]): boolean {
+    return names.some((name) => this.registry.get(name)?.owner === "student");
   }
 
   private reconcileOwnership(names: string[], kind: ActionKind) {
@@ -88,6 +118,10 @@ export class CompletedActionBridge {
     if (kind !== "add") return;
     this.adapter.withApi((api) => {
       for (const name of names) {
+        // Application-owned helpers are registered before evalCommand so their
+        // add event can never be reclassified as student work.
+        if (this.registry.get(name)) continue;
+        if (!api.exists(name) || !api.isDefined(name)) continue;
         const rawKind = api.getObjectType?.(name) ?? "other";
         this.registry.register(name, "student", normalizeKind(rawKind));
       }

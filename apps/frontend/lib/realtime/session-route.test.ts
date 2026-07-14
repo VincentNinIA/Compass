@@ -4,6 +4,7 @@ import {
   REALTIME_ROUTE_LIMITS,
   createRealtimeSessionHandler,
 } from "./session-route";
+import { REALTIME_TOOL_DEFINITIONS } from "@/lib/tools/contracts";
 
 const OFFER = [
   "v=0",
@@ -43,7 +44,28 @@ describe("POST /api/realtime/session", () => {
       expect(init?.headers).toEqual({ Authorization: "Bearer server-secret" });
       expect(form.get("sdp")).toBe(OFFER);
       expect(JSON.parse(form.get("session") as string)).toEqual(
-        expect.objectContaining({ type: "realtime", model: "gpt-realtime-2.1" }),
+        {
+          type: "realtime",
+          model: "gpt-realtime-2.1",
+          instructions:
+            "You are GeoTutor. Use only the provided tools. Never invent construction state or geometric facts. When a user explicitly asks you to read the current construction and provides its revision, call read_construction before answering.",
+          reasoning: { effort: "low" },
+          audio: {
+            input: {
+              turn_detection: {
+                type: "server_vad",
+                threshold: 0.2,
+                prefix_padding_ms: 300,
+                silence_duration_ms: 400,
+                create_response: false,
+                interrupt_response: true,
+              },
+            },
+            output: { voice: "marin" },
+          },
+          tools: REALTIME_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
       );
       return new Response(ANSWER, {
         status: 201,
@@ -119,6 +141,34 @@ describe("POST /api/realtime/session", () => {
     const response = await handler(request(OFFER));
     expect(response.status).toBe(503);
     expect(await errorCode(response)).toBe("upstream_rate_limited");
+  });
+
+  it("normalizes rejected server configuration without exposing provider details", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const handler = createRealtimeSessionHandler({
+      apiKey: "server-secret",
+      fetchImpl: vi.fn(async () =>
+        Response.json(
+          {
+            error: {
+              code: "invalid_value",
+              param: "session.tools[0]",
+              type: "invalid_request_error",
+              message: "provider detail",
+            },
+          },
+          { status: 400 },
+        ),
+      ) as typeof fetch,
+    });
+    const response = await handler(request(OFFER));
+    expect(response.status).toBe(502);
+    expect(await errorCode(response)).toBe("upstream_configuration_rejected");
+    expect(consoleError).toHaveBeenCalledWith(
+      "Realtime configuration rejected upstream.",
+      { code: "invalid_value", param: "session.tools[0]", type: "invalid_request_error" },
+    );
+    consoleError.mockRestore();
   });
 
   it("normalizes upstream 5xx responses", async () => {

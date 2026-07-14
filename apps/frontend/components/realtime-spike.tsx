@@ -6,7 +6,11 @@ import {
   RealtimeSessionError,
   RealtimeWebRtcSession,
   type RealtimeConnectionState,
+  type RealtimePedagogyRuntime,
+  type RealtimeProactiveRuntime,
 } from "@/lib/realtime/webrtc-session";
+import type { ToolRuntime } from "@/lib/tools/runtime";
+import type { EvidenceLog } from "@/lib/pedagogy/evidence-log";
 
 function friendlyError(error: unknown): string {
   if (error instanceof DOMException && error.name === "NotAllowedError") {
@@ -18,12 +22,25 @@ function friendlyError(error: unknown): string {
   return "The Realtime connection could not be established. You can try again.";
 }
 
-export function RealtimeSpike() {
+export function RealtimeSpike({
+  toolRuntime,
+  pedagogyRuntime,
+  onProactiveRuntime,
+  evidenceLog,
+}: {
+  toolRuntime?: ToolRuntime;
+  pedagogyRuntime?: RealtimePedagogyRuntime;
+  onProactiveRuntime?(runtime?: RealtimeProactiveRuntime): void;
+  evidenceLog?: EvidenceLog;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionRef = useRef<RealtimeWebRtcSession | undefined>(undefined);
   const [state, setState] = useState<RealtimeConnectionState>("idle");
   const [timeline, setTimeline] = useState<string[]>([]);
   const [lastEvent, setLastEvent] = useState<string>();
+  const [sessionProfile, setSessionProfile] = useState<string>();
+  const [voiceTurn, setVoiceTurn] = useState<string>();
+  const [toolLoop, setToolLoop] = useState<string>();
   const [remoteAudio, setRemoteAudio] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -34,6 +51,7 @@ export function RealtimeSpike() {
   const stop = () => {
     sessionRef.current?.stop();
     sessionRef.current = undefined;
+    onProactiveRuntime?.(undefined);
   };
 
   const start = async () => {
@@ -44,17 +62,38 @@ export function RealtimeSpike() {
     stop();
     setTimeline([]);
     setLastEvent(undefined);
+    setSessionProfile(undefined);
+    setVoiceTurn(undefined);
+    setToolLoop(undefined);
     setRemoteAudio(false);
     setError(undefined);
 
-    const session = new RealtimeWebRtcSession(audioRef.current, {
-      onState: setState,
-      onTimeline: appendTimeline,
-      onEvent: (event) => setLastEvent(event.type),
-      onRemoteAudio: setRemoteAudio,
-      onFailure: (failure) => setError(failure.message),
-    });
+    const session = new RealtimeWebRtcSession(
+      audioRef.current,
+      {
+        onState: setState,
+        onTimeline: appendTimeline,
+        onEvent: (event) => setLastEvent(event.type),
+        onSessionSummary: (summary) =>
+          setSessionProfile(
+            `${summary.model} · ${summary.voice} · ${summary.reasoningEffort}`,
+          ),
+        onVoiceTurn: (turn) => setVoiceTurn(`${turn.turnId} · ${turn.state}`),
+        onToolLoop: (result) =>
+          setToolLoop(
+            `${result.responseId} · ${result.outputCount} output(s) · ${result.continued ? "continued" : "stopped"}`,
+          ),
+        onRemoteAudio: setRemoteAudio,
+        onFailure: (failure) => setError(failure.message),
+      },
+      { toolRuntime, pedagogyRuntime, evidenceLog },
+    );
     sessionRef.current = session;
+    onProactiveRuntime?.({
+      requestProactive: (decision, directive) =>
+        session.requestProactive(decision, directive),
+      cancelForActivity: (reason) => session.cancelForActivity(reason),
+    });
 
     try {
       await session.start();
@@ -63,7 +102,13 @@ export function RealtimeSpike() {
     }
   };
 
-  useEffect(() => () => sessionRef.current?.stop(), []);
+  useEffect(
+    () => () => {
+      sessionRef.current?.stop();
+      onProactiveRuntime?.(undefined);
+    },
+    [onProactiveRuntime],
+  );
 
   return (
     <section className="spike realtime-spike" aria-labelledby="realtime-spike-title">
@@ -114,6 +159,18 @@ export function RealtimeSpike() {
           <div>
             <span>Data channel</span>
             <strong>{state === "live" ? "oai-events open" : "not open"}</strong>
+          </div>
+          <div>
+            <span>Verified session</span>
+            <strong>{sessionProfile ?? "not verified"}</strong>
+          </div>
+          <div>
+            <span>Voice turn</span>
+            <strong>{voiceTurn ?? "none"}</strong>
+          </div>
+          <div>
+            <span>Tool loop</span>
+            <strong>{toolLoop ?? "none"}</strong>
           </div>
           <div>
             <span>Last server event</span>

@@ -68,3 +68,30 @@
   invalide les preuves A/B/AB.
 - Impact : toute montée de version devra rejouer le smoke navigateur et les
   lectures `exists`, `isDefined` et `getCommandString`.
+
+## D-012 - Snapshot canonique T1
+
+- Décision : utiliser `getCommandString(name,false)`, trier les objets, normaliser
+  les nombres à `1e-9` et hacher la représentation versionnée avec FNV-1a 32.
+- Raison : supprimer la locale, l'ordre de lecture et le bruit flottant des
+  décisions de progression.
+- Impact : la révision ne change que lorsque le hash canonique change; toute
+  évolution de la normalisation exige une nouvelle version et les fixtures T1.
+
+## D-013 - Deux preuves indépendantes de médiatrice
+
+- Décision : lire `ArePerpendicular(candidate,AB)` séparément de la distance
+  entre `Midpoint(A,B)` et la candidate, avec tolérance `1e-6` pour la distance.
+- Raison : ne jamais confondre une perpendiculaire décalée avec une médiatrice.
+- Impact : le progrès 0/2–2/2 possède toujours deux evidence IDs de la même
+  révision; les helpers `gtR…` sont temporaires et supprimés après mesure.
+
+## D-014 - Reset transactionnel en mémoire
+
+- Décision : capturer `getBase64` et l'inventaire exhaustif après A/B/AB,
+  suspendre le bridge pendant `setBase64`, borner son callback à 3 s, comparer
+  inventaire et hash initial puis reconstruire la fixture en fallback.
+- Raison : restaurer exactement la scène sans persistance et sans callbacks
+  anciens ou listeners dupliqués.
+- Impact : chaque reset incrémente l'epoch, remet le progrès à zéro et doit
+  terminer avec A/B/AB et quatre listeners uniques.

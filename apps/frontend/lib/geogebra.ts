@@ -78,6 +78,11 @@ export function initializeSpikeConstruction(api: GeoGebraApi): GeoGebraEvidence 
   api.setCoordSystem(-5, 5, -3, 3);
   GIVEN_LABELS.forEach((label) => api.setLabelVisible(label, true));
 
+  return collectGeoGebraEvidence(api);
+}
+
+export function collectGeoGebraEvidence(api: GeoGebraApi): GeoGebraEvidence {
+
   const objects: GeoGebraObjectEvidence[] = GIVEN_LABELS.map((label) => ({
     label,
     exists: api.exists(label),

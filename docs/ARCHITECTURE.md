@@ -12,6 +12,14 @@ permission micro ou négociation SDP. La preuve live OpenAI confirme peer/ICE,
 data channel, audio distant, événements de réponse et fermeture complète. Les
 deux spikes restent opérationnels ou dégradés indépendamment.
 
+T1 ajoute une façade GeoGebra à cycle de vie et listeners centralisés, une scène
+transactionnelle A/B/AB avec ownership, des snapshots canoniques non localisés,
+un bridge d'actions stabilisées, deux preuves déterministes de médiatrice, le
+progrès local accessible et un checkpoint Base64 en mémoire. Reset invalide les
+travaux en vol, restaure le hash initial, réinscrit exactement quatre listeners
+et reconstruit la fixture canonique si le hash ou l'inventaire exhaustif diverge,
+ou si le callback `setBase64` dépasse trois secondes.
+
 ## Frontières cibles
 
 ```mermaid
@@ -71,4 +79,6 @@ flowchart LR
 
 ## Éléments non implémentés
 
-Tous les composants ci-dessus sont des cibles contractuelles. Leur implémentation commence à T0-C02 et progresse selon `docs/ROADMAP.md`.
+Les frontières Realtime et GeoGebra existent, mais le gateway vocal T2, le flux
+photo T3, la policy pédagogique T4, l'expérience d'invariance T5 et le hardening
+T6 restent des cibles contractuelles selon `docs/ROADMAP.md`.

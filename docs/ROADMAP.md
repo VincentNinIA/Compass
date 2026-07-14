@@ -2,10 +2,12 @@
 
 ## État de référence
 
-Cette roadmap décrit le travail à réaliser. Au 14 juillet 2026, T0 est close : le
-runtime Next.js, le spike GeoGebra et le spike OpenAI Realtime disposent de
-preuves nominales, de repli, d'isolation et de cleanup. T1-C01 est la prochaine
-carte à contractualiser; aucune implémentation T1 n'est commencée.
+Cette roadmap décrit le travail à réaliser. Au 14 juillet 2026, T0 et les sept
+cartes de T1 sont closes et T1 a été requalifiée après trois correctifs bloquants :
+le runtime, les deux spikes, l'observation stable de
+GeoGebra, la validation locale 0/2–2/2 et le reset exact disposent de preuves
+unitaires et de smokes navigateur. T2-C01 est la prochaine carte séquentielle à
+contractualiser; T3-C01 peut aussi être ouverte selon la priorité produit.
 
 Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6`.
 
@@ -31,13 +33,13 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T0-C04 | done | T0-C02 | Route SDP serveur sans exposition de clé |
 | T0-C05 | done | T0-C04 | Spike WebRTC audio et data channel nettoyable |
 | T0-C06 | done | T0-C03, T0-C05 | Fermeture factuelle des deux spikes |
-| T1-C01 | backlog | T0-C06 | Adaptateur GeoGebra typé et idempotent |
-| T1-C02 | backlog | T1-C01 | Registre A/B/AB avec ownership explicite |
-| T1-C03 | backlog | T1-C02 | Snapshot et hash non localisés stables |
-| T1-C04 | backlog | T1-C03 | Événement d'action terminée stabilisé |
-| T1-C05 | backlog | T1-C03 | Preuves séparées de médiatrice |
-| T1-C06 | backlog | T1-C04, T1-C05 | Progrès local 0/2–2/2 |
-| T1-C07 | backlog | T1-C06 | Checkpoint/reset exact et listeners réconciliés |
+| T1-C01 | done | T0-C06 | Adaptateur GeoGebra typé et idempotent |
+| T1-C02 | done | T1-C01 | Registre A/B/AB avec ownership explicite |
+| T1-C03 | done | T1-C02 | Snapshot et hash non localisés stables |
+| T1-C04 | done | T1-C03 | Événement d'action terminée stabilisé |
+| T1-C05 | done | T1-C03 | Preuves séparées de médiatrice |
+| T1-C06 | done | T1-C04, T1-C05 | Progrès local 0/2–2/2 |
+| T1-C07 | done | T1-C06 | Checkpoint/reset exact et listeners réconciliés |
 | T2-C01 | backlog | T0-C06 | Session Realtime protégée |
 | T2-C02 | backlog | T2-C01 | Un seul déclenchement de réponse par tour |
 | T2-C03 | backlog | T1-C07, T2-C01 | Gateway fermé, strict et idempotent |

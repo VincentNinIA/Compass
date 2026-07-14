@@ -200,6 +200,60 @@ h1 {
   font-weight: 700;
 }
 
+.construction-progress {
+  margin-bottom: 24px;
+  padding: 18px;
+  border: 1px solid var(--line);
+}
+
+.construction-progress > p:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 12px;
+}
+
+.construction-progress strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.construction-progress ul {
+  display: block;
+  padding: 0;
+  background: transparent;
+}
+
+.construction-progress li {
+  min-height: 0;
+  display: block;
+  padding: 4px 0;
+  background: transparent;
+  font-size: 0.8rem;
+}
+
+.construction-progress button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 16px;
+  border: 1px solid var(--ink);
+  color: var(--paper);
+  background: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.construction-progress button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .realtime-console {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);

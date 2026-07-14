@@ -4,8 +4,8 @@ import { RealtimeSpike } from "@/components/realtime-spike";
 const foundations = [
   {
     label: "Geometry workspace",
-    detail: "A, B and AB are created and read back through the Apps API.",
-    status: "Verified below",
+    detail: "A, B and AB are observed, validated and reset without a model.",
+    status: "T1 verified below",
   },
   {
     label: "Voice session",

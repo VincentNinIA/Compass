@@ -1,2 +1,1 @@
-# Compass
-An AI geometry tutor combining ChatGPT and GeoGebra to observe students’ constructions, detect mistakes, provide adaptive hints, and guide reasoning without giving away the answer.
+GeoTutor is a real-time AI geometry tutor that reads exercises, understands students’ GeoGebra constructions, verifies their reasoning, and delivers timely voice or visual guidance. It can act directly in GeoGebra to create, highlight, measure, and animate objects without giving away the answer.

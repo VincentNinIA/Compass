@@ -1,0 +1,174 @@
+{
+  "version": "geotutor_live_run.v1",
+  "seriesId": "series_f4ec3e800c0c0dfa76455a24",
+  "runIndex": 1,
+  "candidate": {
+    "id": "candidate_e9d7884f850fb105e3cc290c",
+    "head": "9692a31f0a397b3936667ed3685145c6a66a6b83",
+    "sourceSha256": "71820d78ab32b0f45ea5ce936e1e3dab1030b3d46ace637ab49dcbe429890bbc",
+    "sourceFileCount": 153,
+    "dirty": true
+  },
+  "environment": {
+    "id": "environment_0f52328722a31843a91e9d4b",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "node": "v22.17.1",
+    "pnpm": "10.6.3",
+    "playwright": "Version 1.61.1",
+    "chromium": "149.0.7827.55",
+    "httpsOrigin": "https://127.0.0.1:3443",
+    "tls": "TLSv1.2+ self-signed local qualification certificate",
+    "certificateSha256": "2a41316917e9acb83d3d33c72f997a1b95c85e3d372b430cea8a8436f6487a6e",
+    "fixtureSha256": "9fd3155009f1e2f6b8bab2cbf946b7c6b901ca52a35851c5210dff0f3b5aa0ef",
+    "credentialConfigured": true,
+    "credentialScope": "single inherited runner process",
+    "microphone": "synthetic browser MediaStream audio track",
+    "geogebraVersion": "5.4.920.0",
+    "exerciseModel": "gpt-5.6-terra",
+    "realtimeModel": "gpt-realtime-2.1",
+    "serverRuntime": "Next.js production server over HTTPS"
+  },
+  "startedAt": "2026-07-15T03:59:10.380Z",
+  "completedAt": "2026-07-15T03:59:26.737Z",
+  "steps": [
+    {
+      "id": "photo_extraction",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:10.381Z",
+      "durationMs": 4562,
+      "evidence": {
+        "secureContext": true,
+        "exerciseResponseStatus": 200,
+        "routeRequests": 1,
+        "extractionOutcome": "ready"
+      }
+    },
+    {
+      "id": "exercise_confirmation",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:14.943Z",
+      "durationMs": 48,
+      "evidence": {
+        "appletVersion": "5.4.920.0",
+        "inventory": [
+          "A",
+          "AB",
+          "B"
+        ],
+        "givensOnly": true
+      }
+    },
+    {
+      "id": "first_block_silent",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:14.991Z",
+      "durationMs": 91,
+      "evidence": {
+        "progress": "1/2",
+        "decision": "SILENT",
+        "proofCount": 2,
+        "responseCreates": 0
+      }
+    },
+    {
+      "id": "live_voice",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:15.082Z",
+      "durationMs": 2352,
+      "evidence": {
+        "capability": "live_voice",
+        "peer": "connected",
+        "dataChannel": "open",
+        "microphoneTracks": 1,
+        "remoteAudioTracks": 1,
+        "model": "gpt-realtime-2.1"
+      }
+    },
+    {
+      "id": "repeated_block_speaks",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:17.434Z",
+      "durationMs": 3702,
+      "evidence": {
+        "decision": "SPEAK",
+        "helpLevel": "L1",
+        "proofCount": 2,
+        "conversationItems": 1,
+        "responseCreates": 1,
+        "audioResponses": 1
+      }
+    },
+    {
+      "id": "verified_correction",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:21.136Z",
+      "durationMs": 3357,
+      "evidence": {
+        "progress": "2/2",
+        "proofCount": 2,
+        "revision": 5,
+        "responsesSettled": true
+      }
+    },
+    {
+      "id": "invariance_and_summary",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:24.493Z",
+      "durationMs": 2026,
+      "evidence": {
+        "samples": 5,
+        "passingSamples": 5,
+        "sceneRestored": true,
+        "listenerCount": 4,
+        "summarySource": "realtime",
+        "oobConversation": "none",
+        "oobModality": "text",
+        "oobAudioEvents": 0
+      }
+    },
+    {
+      "id": "exact_reset",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:26.519Z",
+      "durationMs": 64,
+      "evidence": {
+        "inventory": [
+          "A",
+          "AB",
+          "B"
+        ],
+        "listenerCount": 4,
+        "restoration": "checkpoint",
+        "checkpointHashMatched": true,
+        "evidenceCleared": true,
+        "helpersRemaining": 0
+      }
+    },
+    {
+      "id": "transport_cleanup",
+      "status": "pass",
+      "startedAt": "2026-07-15T03:59:26.583Z",
+      "durationMs": 17,
+      "evidence": {
+        "channel": "closed",
+        "peer": "closed",
+        "microphoneTrack": "ended",
+        "attachedAudioTracks": 0,
+        "finalMode": "scripted_local_after_terminal_reset"
+      }
+    }
+  ],
+  "evidence": {
+    "geogebra": "real_applet_5.4.920.0",
+    "exerciseService": "live_openai_responses",
+    "realtimeService": "live_openai_realtime",
+    "scriptedLocal": false
+  },
+  "artifacts": [
+    "output/playwright/T6-C07/T6-C07-run-1-completed.png",
+    "output/playwright/T6-C07/playwright-run-1/t6-live-gate--live-T6-C07--41173-s-one-strict-golden-journey/video.webm"
+  ],
+  "result": "pass"
+}

@@ -314,7 +314,7 @@ test("T5-C07 real applet runs C01-C06, acknowledges C04, and renders the C05 fal
     experiment.getByRole("heading", { name: "What you discovered" }),
   ).toBeVisible();
   await expect(experiment).toContainText(
-    "Local deterministic fallback · no live model response",
+    "Checked locally from your five measurements",
   );
   await page.waitForFunction(
     () =>
@@ -589,7 +589,7 @@ test("@live T5-C07 credentialed OOB summary stays text-only and outside the conv
     },
   });
   await expect(experiment).not.toContainText(
-    "Local deterministic fallback · no live model response",
+    "Checked locally from your five measurements",
   );
   expect(evidence.oob).toMatchObject({
     type: "response.create",

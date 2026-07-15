@@ -16,8 +16,8 @@
   --panel: #fff0df;
   --panel-soft: #fffaf4;
   --line: #dfd3c4;
-  --accent: #f45b3a;
-  --accent-deep: #cf3f22;
+  --accent: #c83b21;
+  --accent-deep: #9f2f1c;
   --accent-soft: #ffd8c8;
   --success: #24725a;
   --danger: #a63b2b;
@@ -574,6 +574,10 @@ main {
 .student-workspace {
   display: grid;
   gap: 26px;
+}
+
+.student-workspace > * {
+  min-width: 0;
 }
 
 .spike,

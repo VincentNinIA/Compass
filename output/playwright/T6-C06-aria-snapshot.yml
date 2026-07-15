@@ -1,0 +1,123 @@
+- link "Skip to your exercise":
+  - /url: "#main-content"
+- banner:
+  - link "GeoTutor home":
+    - /url: "#top"
+    - text: GeoTutor
+  - navigation "Main navigation":
+    - link "Start":
+      - /url: "#exercise-photo-title"
+    - link "Workspace":
+      - /url: "#geogebra-spike-title"
+    - link "Your coach":
+      - /url: "#realtime-spike-title"
+  - paragraph: Made for curious minds
+- main:
+  - region "Geometry clicks when you can play with it.":
+    - paragraph: Your geometry study buddy
+    - heading "Geometry clicks when you can play with it." [level=1]
+    - paragraph: Bring one exercise. GeoTutor helps you build, test and understand it — without giving away the answer.
+    - link "Add my exercise":
+      - /url: "#exercise-photo-title"
+    - text: One photo. No account.
+    - list "What to expect":
+      - listitem: Your work stays yours
+      - listitem: Ask for a hint anytime
+      - listitem: Learn at your pace
+  - region "From “I’m stuck” to “I get it”.":
+    - paragraph: A simple path
+    - heading "From “I’m stuck” to “I get it”." [level=2]
+    - list:
+      - listitem:
+        - text: "01"
+        - heading "Add your exercise" [level=3]
+        - paragraph: Snap the question or choose a photo.
+      - listitem:
+        - text: "02"
+        - heading "Build it yourself" [level=3]
+        - paragraph: Draw in GeoGebra while your tutor follows along.
+      - listitem:
+        - text: "03"
+        - heading "Make it click" [level=3]
+        - paragraph: Test your idea, explain it and keep the insight.
+  - region "Show me your exercise":
+    - paragraph: Step 1 · Start here
+    - heading "Show me your exercise" [level=2]
+    - paragraph: A clear photo is enough. I'll read the question, then let you check what I understood.
+    - text: Take or choose a photo
+    - paragraph: Use a bright, straight photo of the question.
+    - button "Take or choose a photo"
+    - paragraph: JPEG, PNG or WebP · 10 MB maximum
+    - paragraph: Your photo is used only to read this exercise and is not saved by GeoTutor.
+    - status: Waiting for your photo
+    - button "Read my exercise" [disabled]
+    - button "Remove photo" [disabled]
+    - paragraph: Your exercise will appear here.
+    - text: "Tip: keep the full question inside the frame."
+  - region "Did I understand it?":
+    - status: Add a photo above to begin.
+  - region "Your canvas, your move":
+    - paragraph: Step 2 · Build
+    - heading "Your canvas, your move" [level=2]
+    - paragraph: Use the tools on the canvas to construct the perpendicular bisector. I'll quietly check each useful move.
+    - region "Interactive GeoGebra geometry workspace":
+      - button "Undo" [disabled]
+      - button "Redo" [disabled]
+      - application:
+        - region "GeoGebra scrollable panel"
+        - application
+      - status
+    - complementary:
+      - status: Workspace ready API verified
+      - paragraph:
+        - text: Your progress
+        - strong: 0/2
+      - list:
+        - listitem: "Perpendicular to AB: checking your latest move"
+        - listitem: "Passes through the midpoint of AB: checking your latest move"
+      - status
+      - button "Reset construction"
+      - button "Ask for help"
+      - region "Five-position experiment":
+        - paragraph: Step 3 · Discover
+        - heading "The 5-point challenge" [level=3]
+        - paragraph: Idle
+        - paragraph: Complete the perpendicular bisector to unlock this final challenge.
+        - button "Run experiment" [disabled]
+        - status
+      - group: How GeoTutor checks the construction
+  - region "Stuck? Let's talk it through.":
+    - paragraph: Your coach · Optional
+    - heading "Stuck? Let's talk it through." [level=2]
+    - paragraph: Choose voice or text when you want a nudge. GeoTutor asks questions that help you find the next move yourself.
+    - status:
+      - text: Your coach
+      - strong: Ready when you are
+      - paragraph: Your canvas and local hints work even before you connect a coach.
+      - text: "scripted local. Scripted local: construction, validation and fallbacks stay local; no OpenAI or model request is sent. Reason: local ready"
+      - time: Since 10:31:54 AM
+    - status: idle
+    - paragraph: Local deterministic guidance is ready. Choose a live mode only when needed.
+    - button "Start voice"
+    - button "Use live text"
+    - button "Stop" [disabled]
+    - text: Ask your question
+    - textbox "Ask your question" [disabled]
+    - button "Send question" [disabled]
+    - status
+    - group: Connection details
+  - group: Behind the scenes Performance and privacy details +
+- contentinfo "Keep wondering. Keep drawing.":
+  - link "GeoTutor":
+    - /url: "#top"
+  - heading "Keep wondering. Keep drawing." [level=2]
+  - paragraph: GeoTutor embeds GeoGebra Geometry for this non-commercial prototype. Commercial use requires a separate GeoGebra agreement.
+  - paragraph:
+    - link "GeoGebra":
+      - /url: https://www.geogebra.org/
+    - text: ·
+    - link "License and attribution":
+      - /url: https://www.geogebra.org/license
+  - paragraph: Live voice requires HTTPS and microphone permission. If voice is not available, you can use live text or keep learning locally.
+- alert
+- iframe

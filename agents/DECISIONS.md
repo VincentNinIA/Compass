@@ -604,3 +604,20 @@
   candidat `candidate_e9d7884f850fb105e3cc290c` et l'environnement
   `environment_0f52328722a31843a91e9d4b`, avec 573/573 Vitest, 30/30 hors live
   et aucun finding restant.
+
+## D-046 - La surface élève masque la complexité sans retirer les preuves
+
+- Décision : organiser l'expérience publique autour de trois verbes — ajouter,
+  construire, comprendre — avec une seule action principale par étape. Employer
+  un langage élève dans les titres et états, puis placer transport, fiabilité et
+  preuves techniques dans des zones secondaires repliables mais inspectables.
+- Raison : les frontières T1 à T6 sont nécessaires à la sûreté et à la
+  démonstration, mais leur exposition permanente faisait lire le prototype
+  comme un banc développeur. La hiérarchie produit doit rendre la prochaine
+  action évidente sans affaiblir le contrôle jury.
+- Impact : le shell, la palette, les composants photo/canvas/coach et les états
+  vides forment une surface responsive unique. Les noms accessibles utiles aux
+  gates restent stables lorsque le libellé visible est simplifié. Aucun contrat
+  d'exercice, modèle, permission, autorité pédagogique, stockage ou protocole
+  Realtime n'est modifié par T7; tout changement visuel doit encore passer Axe,
+  clavier, reduced motion, 200 % et les viewports 390/768/1440.

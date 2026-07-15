@@ -238,6 +238,17 @@ l'annulation de réponse, ferme le transport et empêche tout rendu tardif. Son
 lease est aussi propagé dans `CheckpointService` : chaque mutation, reprise de
 listener et promotion de checkpoint revalide le watchdog après toute attente.
 
+T7 ajoute uniquement une couche de présentation. `page.tsx` fournit le shell
+produit et le parcours en trois étapes; `TutorWorkspace` conserve la composition
+des runtimes existants mais ordonne photo, canvas, expérience et coach selon la
+progression élève. Les diagnostics de fiabilité restent montés dans le même
+workspace, derrière un `details` inspectable. Le système CSS non couché possède
+la priorité sur la feuille legacy encapsulée, sans déplacer de logique métier.
+Les libellés visibles peuvent être simplifiés tandis que les régions et noms
+accessibles stables conservent les gates automatisés. Cette couche n'est donc
+propriétaire d'aucun plan, checkpoint, lease, décision pédagogique, transport
+ou stockage.
+
 ## Frontières cibles
 
 ```mermaid

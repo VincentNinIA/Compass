@@ -1,4 +1,4 @@
-# Contrat Builder — T7 Expérience étudiant — en cours
+# Contrat Builder — T7 Expérience étudiant — close
 
 ## État actif
 
@@ -6,14 +6,13 @@
   extrêmement simple et intuitive, avec une direction visuelle jeune, moderne
   et engageante. La surface actuelle de démonstration technique doit être
   transformée sans modifier les autorités pédagogiques T1 à T6.
-- Ordre : T7-C01 architecture d'information et langage élève → T7-C02 système
-  visuel et composition responsive → T7-C03 finition des états, diagnostics
-  repliables et qualification navigateur.
-- Carte active : T7-C01. Une carte est relue et vérifiée avant d'ouvrir la
-  suivante.
-- La remédiation QA T3 préexistante reste une dette conservée : T3-C01 et
-  T3-C04 sont closes; T3-C06 était la prochaine carte. Elle n'est pas déclarée
-  résolue par T7.
+- Ordre exécuté : T7-C01 architecture d'information et langage élève → T7-C02
+  système visuel et composition responsive → T7-C03 finition des états,
+  diagnostics repliables et qualification navigateur.
+- T7-C01, T7-C02 et T7-C03 sont closes avec verdict `pass` le 15 juillet 2026.
+- La remédiation QA T3 a été close séparément sur le candidat
+  `45333e47d8c846816083d00b06d2fd0c47bfd1bb`. T7 ne revendique ni ne modifie
+  cette clôture.
 
 ## Périmètre contractualisé
 
@@ -34,7 +33,7 @@
 
 - Nouveau template d'exercice, changement de modèle, nouvelle capacité
   T1/T2/T3/T4/T5/T6, persistance, commande GeoGebra arbitraire et résolution de
-  la réserve live T2-C01 ou de la remédiation T3 reportée.
+  la réserve live T2-C01.
 - `QA_REPORT.md` côté Builder et `HANDOFF.md` sans reprise réelle.
 
 ## Gates de clôture
@@ -51,6 +50,22 @@ La clôture exige aussi une inspection réelle à 390 × 844, 768 × 1024 et
 1440 × 900, un parcours clavier, l'absence de débordement horizontal et des
 captures montrant l'arrivée et le workspace. Les détails techniques restent
 présents mais ne doivent plus dominer l'expérience élève.
+
+## Preuves de clôture T7
+
+- Le shell produit, le parcours en trois étapes et tous les états visibles sont
+  formulés pour l'élève. Photo, confirmation, canvas GeoGebra, expérience 5/5 et
+  coach forment une progression continue; fiabilité et diagnostics sont
+  repliables sans être supprimés.
+- Le système visuel chaud et responsive conserve focus visible, reduced motion,
+  contraste WCAG AA et reflow sans débordement à 390 × 844, 768 × 1024,
+  1440 × 900 et au zoom 200 %.
+- `lint`, `typecheck` et le build production passent. Vitest rend 608/608 tests
+  sur 51 fichiers; Playwright hors `@live` rend 30/30 avec le vrai applet,
+  Axe sans violation, upload, clavier, reset, modes dégradés et fiabilité.
+- Les captures et le snapshot ARIA sont sous `output/playwright/`. Les autorités
+  T1 à T6, la réserve live T2-C01 et la clôture T3 indépendante ne sont pas
+  modifiées par cette clôture.
 
 ## Archive — état T6 avant réouverture T3
 

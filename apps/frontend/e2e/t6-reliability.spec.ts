@@ -243,6 +243,7 @@ test("T6-C05 measures real local paths and exposes first-audio degradation witho
   }
 
   await page.setViewportSize({ width: 640, height: 720 });
+  await page.getByText("Behind the scenes", { exact: true }).click();
   const reliabilityTable = page.getByRole("table", {
     name: "In-memory latency distributions for this page session",
   });

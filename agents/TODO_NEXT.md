@@ -2,10 +2,10 @@
 
 ## Prochaine action
 
-Exécuter T7 dans l'ordre C01 → C02 → C03 : remplacer l'architecture de
-démonstration technique par un parcours élève en trois étapes, appliquer le
-nouveau système visuel responsive, puis qualifier les états et diagnostics dans
-un vrai navigateur. Préserver toutes les autorités runtime T1 à T6.
+Préparer la machine jury physique à partir du candidat figé : certificat de
+confiance, microphone réel, services externes et parcours présenté. T3 et T7
+sont closes; le parcours élève, le système visuel responsive et la qualification
+navigateur passent sans modifier les autorités runtime T1 à T6.
 
 ## Dépendances
 
@@ -14,9 +14,14 @@ un vrai navigateur. Préserver toutes les autorités runtime T1 à T6.
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
   rend 2/4; VAD multi-tour et continuation après outil expirent.
-- T3-C01, T3-C04, T3-C06, T3-C07 et T3-C08 sont rouvertes par le contre-audit
-  du 15 juillet 2026. T3-C02, T3-C03 et T3-C05 restent closes. T4-C01 à
-  T4-C08 restent closes et doivent être préservées.
+- T3-C01, T3-C04, T3-C06, T3-C07 et T3-C08 ont été refermées après le
+  contre-audit; T3-C02, T3-C03 et T3-C05 sont restées closes. La tranche T3
+  rend 171/171 tests `exercise`, 608/608 frontend, trois E2E 5/5 et une eval
+  credentialed 7/7 sur le candidat `45333e47d8c846816083d00b06d2fd0c47bfd1bb`.
+  T4-C01 à T4-C08 restent closes et doivent être préservées.
+- T7-C01 à T7-C03 sont closes : 608/608 Vitest, lint, typecheck, build et 30/30
+  Playwright hors live passent; Axe est sans violation et les quatre viewports
+  de qualification ne débordent pas.
 - T5-C01 à T5-C07 sont closes dans l'ordre. Le gate final du 15 juillet 2026
   passe avec lint, typecheck, build, 480/480 tests frontend et 18/18 Playwright
   hors live.
@@ -74,17 +79,17 @@ un vrai navigateur. Préserver toutes les autorités runtime T1 à T6.
 
 ## Blocages actuels
 
-Aucun blocage déterministe connu avant T7-C01. Le candidat final doit être figé
-dans Git avant les gates reproductibles; l'arbre courant contient aussi les
-évolutions T5/T6 non commitées qu'il faut préserver. Le gate automatisé C07 a utilisé
-une clé valide, une piste micro synthétique et un certificat local
-auto-signé. Le micro physique, le certificat de confiance et les services
-externes restent à contrôler sur la machine jury. La réserve live T2-C01 reste
-ouverte et ne doit pas être confondue avec le gate C07 réussi.
+Aucun blocage déterministe connu avant la préparation jury. Le candidat T3 est
+figé dans Git; l'arbre courant contient la couche T7 et ses preuves qu'il faut
+préserver avant un nouveau gel. Le gate automatisé C07 a utilisé une clé valide,
+une piste micro synthétique et un certificat local auto-signé. Le micro physique,
+le certificat de confiance et les services externes restent à contrôler sur la
+machine jury. La réserve live T2-C01 reste ouverte et ne doit pas être confondue
+avec le gate C07 réussi.
 
 ## Hors périmètre immédiat
 
 Ne pas modifier le périmètre fonctionnel T1 à T6. SLA production, analytics
 persistants, IndexedDB, historique distant, commande GeoGebra générique et
-second exercice restent hors périmètre. La remédiation T3 reprend à C06 après
-la tranche T7 et ne doit pas être déclarée close par cette refonte.
+second exercice restent hors périmètre. La clôture T3 reste une preuve
+indépendante et ne doit pas être attribuée à la refonte T7.

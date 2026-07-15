@@ -166,10 +166,85 @@ describe("core tool handlers", () => {
       expect(result).toEqual(expect.objectContaining({
         ok: true,
         evidenceIds: [`evidence-r4-${relation}`],
-        data: expect.objectContaining({ relation, pass: true, revision: 4 }),
+        data: expect.objectContaining({
+          relation,
+          pass: true,
+          revision: 4,
+          objects: relation === "perpendicular" ? ["d", "AB"] : ["d", "A", "B"],
+        }),
       }));
     },
   );
+
+  it.each([
+    ["perpendicular", ["d", "A"]],
+    ["perpendicular", ["AB", "d"]],
+    ["perpendicular", ["d", "AB", "A"]],
+    ["passes_midpoint", ["d", "B", "A"]],
+    ["passes_midpoint", ["d", "A"]],
+  ] as const)("rejects the non-canonical %s tuple %j", async (relation, objects) => {
+    const test = fixture();
+    seedConstruction(test);
+    const gateway = new ToolGateway(test.handlers);
+
+    const result = await gateway.execute(
+      {
+        callId: `invalid-${relation}-${objects.join("-")}`,
+        name: "check_relation",
+        arguments: JSON.stringify({ relation, objects, revision: 4 }),
+      },
+      constructing,
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        ok: false,
+        error: expect.objectContaining({ code: "invalid_arguments" }),
+      }),
+    );
+    expect(test.api.evalCommand).not.toHaveBeenCalled();
+  });
+
+  it("rejects evidence whose objects differ from the authorized tuple", async () => {
+    const test = fixture();
+    seedConstruction(test);
+    const canonical = test.validator.validate(4, "d");
+    if (!canonical.ok) throw new Error("Expected canonical validation fixture.");
+    vi.spyOn(test.validator, "validate").mockImplementation(() => {
+      return {
+        ok: true,
+        value: {
+          ...canonical.value,
+          evidence: canonical.value.evidence.map((entry) =>
+            entry.relation === "perpendicular"
+              ? { ...entry, objects: ["d", "A"] }
+              : entry,
+          ) as typeof canonical.value.evidence,
+        },
+      };
+    });
+    const gateway = new ToolGateway(test.handlers);
+
+    const result = await gateway.execute(
+      {
+        callId: "mismatched-evidence",
+        name: "check_relation",
+        arguments: JSON.stringify({
+          relation: "perpendicular",
+          objects: ["d", "AB"],
+          revision: 4,
+        }),
+      },
+      constructing,
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        ok: false,
+        error: expect.objectContaining({ code: "invalid_arguments" }),
+      }),
+    );
+  });
 
   it("initializes only a confirmed plan and creates no solution object", async () => {
     const denied = fixture();

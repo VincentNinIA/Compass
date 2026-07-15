@@ -41,6 +41,12 @@ const names = {
   items: { type: "string", pattern: "^[A-Za-z][A-Za-z0-9_]{0,31}$" },
 } as const;
 
+const relationObjects = {
+  ...names,
+  minItems: 2,
+  maxItems: 3,
+} as const;
+
 export const REALTIME_TOOL_DEFINITIONS = [
   tool("read_construction", "Read the canonical construction at an exact revision.", {
     type: "object",
@@ -61,7 +67,7 @@ export const REALTIME_TOOL_DEFINITIONS = [
     type: "object",
     properties: {
       relation: { type: "string", enum: ["perpendicular", "passes_midpoint"] },
-      objects: names,
+      objects: relationObjects,
       revision,
     },
     required: ["relation", "objects", "revision"],

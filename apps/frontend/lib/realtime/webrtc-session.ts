@@ -19,6 +19,23 @@ import type {
   CancellationReason,
   EvidenceLog,
 } from "@/lib/pedagogy/evidence-log";
+import type { InvarianceRunCompleted } from "@/lib/invariance/contracts";
+import type {
+  InvarianceGeneralizationDirective,
+  InvarianceVerbalizationContext,
+} from "@/lib/invariance/verbalization";
+import {
+  InvarianceOobSummaryCoordinator,
+  type InvarianceSummaryOutcome,
+  type InvarianceSummaryRender,
+} from "./invariance-summary";
+import type { RealtimeSessionMode } from "./session-route";
+import type {
+  OperationArbiter,
+  OperationLease,
+} from "@/lib/operations/arbiter";
+import { parseAppErrorPayload } from "@/lib/reliability/app-error";
+import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 
 export type RealtimeConnectionState =
   | "idle"
@@ -31,14 +48,21 @@ export type RealtimeServerEvent = {
   type: string;
 };
 
-export type RealtimeSessionSummary = {
-  model: "gpt-realtime-2.1";
-  voice: "marin";
-  reasoningEffort: "low";
-  turnDetection: "server_vad";
-  createResponse: false;
-  interruptResponse: true;
-};
+export type RealtimeSessionSummary =
+  | {
+      model: "gpt-realtime-2.1";
+      voice: "marin";
+      reasoningEffort: "low";
+      turnDetection: "server_vad";
+      createResponse: false;
+      interruptResponse: true;
+    }
+  | {
+      model: "gpt-realtime-2.1";
+      reasoningEffort: "low";
+      outputModalities: readonly ["text"];
+      tools: "none";
+    };
 
 type RealtimeWebRtcCallbacks = {
   onState(state: RealtimeConnectionState): void;
@@ -48,6 +72,7 @@ type RealtimeWebRtcCallbacks = {
   onVoiceTurn(turn: VoiceTurn): void;
   onToolLoop(result: ToolLoopResult): void;
   onRemoteAudio(attached: boolean): void;
+  onTextOutput?(text: string): void;
   onFailure(error: RealtimeSessionError): void;
 };
 
@@ -66,6 +91,22 @@ export type RealtimeProactiveRuntime = {
   cancelForActivity(reason: CancellationReason): boolean;
 };
 
+export type RealtimeCancellationRuntime = {
+  cancelForActivity(reason: CancellationReason): boolean;
+};
+
+export type RealtimeInvarianceSummaryRuntime = {
+  getCurrentContext(): InvarianceVerbalizationContext;
+  renderSummary(summary: InvarianceSummaryRender): void | Promise<void>;
+};
+
+export type RealtimeInvarianceRequestRuntime = {
+  requestInvarianceSummary(
+    result: InvarianceRunCompleted,
+    directive: InvarianceGeneralizationDirective,
+  ): Promise<InvarianceSummaryOutcome>;
+};
+
 type RealtimeWebRtcDependencies = {
   mediaDevices?: Pick<MediaDevices, "getUserMedia">;
   createPeerConnection?: () => RTCPeerConnection;
@@ -73,6 +114,10 @@ type RealtimeWebRtcDependencies = {
   toolRuntime?: ToolRuntime;
   pedagogyRuntime?: RealtimePedagogyRuntime;
   evidenceLog?: EvidenceLog;
+  invarianceSummaryRuntime?: RealtimeInvarianceSummaryRuntime;
+  transportMode?: RealtimeSessionMode;
+  operationArbiter?: OperationArbiter;
+  latencyMonitor?: LatencyBudgetMonitor;
 };
 
 const KNOWN_ROUTE_ERRORS = new Set([
@@ -94,10 +139,39 @@ const EXPECTED_SESSION = {
   interruptResponse: true,
 } as const satisfies RealtimeSessionSummary;
 
+const EXPECTED_TYPED_SESSION = {
+  model: "gpt-realtime-2.1",
+  reasoningEffort: "low",
+  outputModalities: ["text"],
+  tools: "none",
+} as const satisfies RealtimeSessionSummary;
+
+const LIVE_VOICE_SESSION_REASSERTION = {
+  type: "session.update",
+  session: {
+    type: "realtime",
+    reasoning: { effort: "low" },
+    audio: {
+      input: {
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.2,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 400,
+          create_response: false,
+          interrupt_response: true,
+        },
+      },
+    },
+  },
+} as const;
+
 export class RealtimeSessionError extends Error {
   constructor(
     readonly code: string,
     message: string,
+    readonly retryable = false,
+    readonly correlationId?: string,
   ) {
     super(message);
     this.name = "RealtimeSessionError";
@@ -106,15 +180,17 @@ export class RealtimeSessionError extends Error {
 
 async function readRouteError(response: Response): Promise<RealtimeSessionError> {
   try {
-    const payload = (await response.json()) as {
-      error?: { code?: unknown; message?: unknown };
-    };
+    const payload = parseAppErrorPayload(await response.json());
     if (
-      typeof payload.error?.code === "string" &&
-      KNOWN_ROUTE_ERRORS.has(payload.error.code) &&
-      typeof payload.error.message === "string"
+      payload?.domain === "realtime_session" &&
+      KNOWN_ROUTE_ERRORS.has(payload.code)
     ) {
-      return new RealtimeSessionError(payload.error.code, payload.error.message);
+      return new RealtimeSessionError(
+        payload.code,
+        `${payload.userMessage} Reference ${payload.correlationId}.`,
+        payload.retryable,
+        payload.correlationId,
+      );
     }
   } catch {
     // The application never exposes an unknown upstream body to the UI.
@@ -126,11 +202,12 @@ async function readRouteError(response: Response): Promise<RealtimeSessionError>
 }
 
 export class RealtimeWebRtcSession {
-  private readonly mediaDevices: Pick<MediaDevices, "getUserMedia">;
+  private readonly mediaDevices?: Pick<MediaDevices, "getUserMedia">;
   private readonly createPeerConnection: () => RTCPeerConnection;
   private readonly fetchImpl: typeof fetch;
   private readonly callbacks: RealtimeWebRtcCallbacks;
   private readonly audioElement: HTMLAudioElement;
+  private readonly transportMode: RealtimeSessionMode;
 
   private stream?: MediaStream;
   private peer?: RTCPeerConnection;
@@ -140,6 +217,7 @@ export class RealtimeWebRtcSession {
   private resourcesReleased = false;
   private channelOpen = false;
   private sessionVerified = false;
+  private sessionReassertionPending = false;
   private activeResponseId?: string;
   private readonly cancelledResponseIds = new Set<string>();
   private readonly interruptedSpeechItems = new Set<string>();
@@ -152,7 +230,11 @@ export class RealtimeWebRtcSession {
   private readonly pedagogyRuntime?: RealtimePedagogyRuntime;
   private readonly evidenceLog?: EvidenceLog;
   private readonly cancellationCoordinator?: CancellationCoordinator;
+  private readonly invarianceSummaries?: InvarianceOobSummaryCoordinator;
+  private readonly operationArbiter?: OperationArbiter;
+  private studentSpeechOperation?: OperationLease;
   private clientEventSequence = 0;
+  private textTurnSequence = 0;
 
   constructor(
     audioElement: HTMLAudioElement,
@@ -161,6 +243,7 @@ export class RealtimeWebRtcSession {
   ) {
     this.audioElement = audioElement;
     this.callbacks = callbacks;
+    this.transportMode = dependencies.transportMode ?? "live_voice";
     this.mediaDevices = dependencies.mediaDevices ?? navigator.mediaDevices;
     this.createPeerConnection =
       dependencies.createPeerConnection ?? (() => new RTCPeerConnection());
@@ -169,8 +252,22 @@ export class RealtimeWebRtcSession {
     const pedagogyRuntime = dependencies.pedagogyRuntime;
     this.pedagogyRuntime = pedagogyRuntime;
     this.evidenceLog = dependencies.evidenceLog;
+    this.operationArbiter = dependencies.operationArbiter;
+    if (dependencies.invarianceSummaryRuntime) {
+      const runtime = dependencies.invarianceSummaryRuntime;
+      this.invarianceSummaries = new InvarianceOobSummaryCoordinator({
+        send: (event) =>
+          this.state === "live" && this.sendClientEvent({ ...event }),
+        getCurrentContext: () => runtime.getCurrentContext(),
+        renderSummary: (summary) => runtime.renderSummary(summary),
+      });
+    }
     this.voiceTurns = new VoiceTurnManager({
       send: (event) => this.sendClientEvent(event),
+      responseOverrides:
+        this.transportMode === "typed_live"
+          ? { output_modalities: ["text"], tools: [], tool_choice: "none" }
+          : undefined,
       onTurn: (turn) => {
         callbacks.onVoiceTurn(turn);
         if (pedagogyRuntime) this.reduceExplicitTurn(pedagogyRuntime, turn);
@@ -200,6 +297,8 @@ export class RealtimeWebRtcSession {
         onContinuation: () => this.voiceTurns.continueAfterTools(),
         onFailure: () => this.voiceTurns.failAfterTools(),
         evidenceLog: dependencies.evidenceLog,
+        operationArbiter: dependencies.operationArbiter,
+        latencyMonitor: dependencies.latencyMonitor,
       });
     }
     if (pedagogyRuntime) {
@@ -224,24 +323,38 @@ export class RealtimeWebRtcSession {
     }
 
     this.setState("connecting");
-    this.callbacks.onTimeline("Requesting microphone permission");
+    this.callbacks.onTimeline(
+      this.transportMode === "live_voice"
+        ? "Requesting microphone permission"
+        : "Starting text-only Realtime transport",
+    );
 
     try {
-      this.stream = await this.mediaDevices.getUserMedia({ audio: true });
-      if (this.stopped) {
-        this.stopTracks(this.stream);
-        this.stream = undefined;
-        return;
+      if (this.transportMode === "live_voice") {
+        if (!this.mediaDevices?.getUserMedia) {
+          throw new RealtimeSessionError(
+            "microphone_unavailable",
+            "This browser does not expose microphone capture.",
+          );
+        }
+        this.stream = await this.mediaDevices.getUserMedia({ audio: true });
+        if (this.stopped) {
+          this.stopTracks(this.stream);
+          this.stream = undefined;
+          return;
+        }
+        this.callbacks.onTimeline("Microphone acquired");
       }
-
-      this.callbacks.onTimeline("Microphone acquired");
       const peer = this.createPeerConnection();
       this.peer = peer;
+      if (this.transportMode === "typed_live") {
+        peer.addTransceiver("audio", { direction: "inactive" });
+      }
       this.channel = peer.createDataChannel("oai-events");
       this.bindResourceHandlers();
 
-      for (const track of this.stream.getTracks()) {
-        peer.addTrack(track, this.stream);
+      for (const track of this.stream?.getTracks() ?? []) {
+        peer.addTrack(track, this.stream!);
       }
 
       const offer = await peer.createOffer();
@@ -259,7 +372,10 @@ export class RealtimeWebRtcSession {
       this.callbacks.onTimeline("SDP offer created");
       const response = await this.fetchImpl("/api/realtime/session", {
         method: "POST",
-        headers: { "Content-Type": "application/sdp" },
+        headers: {
+          "Content-Type": "application/sdp",
+          "X-GeoTutor-Capability-Mode": this.transportMode,
+        },
         body: offer.sdp,
       });
       if (this.stopped) {
@@ -299,11 +415,22 @@ export class RealtimeWebRtcSession {
     if (this.stopped) {
       return;
     }
-    this.cancelForActivity("application_stop");
-    this.stopped = true;
-    this.releaseResources();
-    this.setState("closed");
-    this.callbacks.onTimeline("Session resources released");
+    try {
+      this.cancelForActivity("application_stop");
+    } catch {
+      this.callbacks.onTimeline("Stop transport cancellation failed safely");
+    } finally {
+      this.stopped = true;
+      try {
+        this.releaseResources();
+      } catch {
+        this.callbacks.onTimeline("Stop resource cleanup encountered an error");
+      } finally {
+        this.setState("closed");
+        this.callbacks.onTimeline("Session resources released");
+        this.evidenceLog?.clear();
+      }
+    }
   }
 
   requestProactive(
@@ -311,6 +438,7 @@ export class RealtimeWebRtcSession {
     directive: InterventionDirective,
   ): ProactiveRequestResult {
     if (
+      this.transportMode !== "live_voice" ||
       !this.proactiveTurns ||
       this.stopped ||
       !this.channelOpen ||
@@ -319,6 +447,48 @@ export class RealtimeWebRtcSession {
       return "unavailable";
     }
     return this.proactiveTurns.request(decision, directive);
+  }
+
+  requestTextTurn(text: string): boolean {
+    const normalized = text.trim();
+    if (
+      normalized.length === 0 ||
+      normalized.length > 1_000 ||
+      this.state !== "live" ||
+      this.stopped ||
+      this.sendsBlocked
+    ) {
+      return false;
+    }
+    const turnId = `text-turn-${++this.textTurnSequence}`;
+    const inputEventId = `rtc-event-${++this.clientEventSequence}`;
+    return this.voiceTurns.requestTextTurn(turnId, inputEventId, () =>
+      this.sendClientEvent({
+        type: "conversation.item.create",
+        event_id: inputEventId,
+        item: {
+          id: turnId,
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: normalized }],
+        },
+      }),
+    );
+  }
+
+  requestInvarianceSummary(
+    result: InvarianceRunCompleted,
+    directive: InvarianceGeneralizationDirective,
+  ): Promise<InvarianceSummaryOutcome> {
+    if (!this.invarianceSummaries) {
+      return Promise.resolve({
+        status: "ignored",
+        reason: "invalid_request",
+        runId: result.runId,
+        revision: result.revision,
+      });
+    }
+    return this.invarianceSummaries.request(result, directive);
   }
 
   cancelActiveResponse(reason: "barge-in" | "stop"): boolean {
@@ -339,39 +509,68 @@ export class RealtimeWebRtcSession {
   }
 
   private cancelTransport(reason: CancellationReason): boolean {
+    const cancelledSummaries = this.invarianceSummaries?.cancelPending() ?? [];
+    let summaryTransportCancelled = false;
+    for (const summary of cancelledSummaries) {
+      if (!summary.responseId) continue;
+      this.cancelledResponseIds.add(summary.responseId);
+      summaryTransportCancelled =
+        this.sendClientEvent({
+          type: "response.cancel",
+          response_id: summary.responseId,
+        }) || summaryTransportCancelled;
+    }
     const proactive = this.proactiveTurns?.snapshot();
     if (proactive) {
-      this.toolLoop?.cancel();
-      this.voiceTurns.cancelOpen();
-      if (proactive.responseId) {
-        this.cancelledResponseIds.add(proactive.responseId);
+      let cancelled = false;
+      try {
+        this.toolLoop?.cancel();
+        this.voiceTurns.cancelOpen();
+        if (proactive.responseId) {
+          this.cancelledResponseIds.add(proactive.responseId);
+        }
+        cancelled = this.proactiveTurns!.cancelForExplicit();
+      } finally {
+        this.activeResponseId = undefined;
+        this.suppressLocalAudio();
+        this.callbacks.onTimeline(`Cancelled proactive response for ${reason}`);
       }
-      const cancelled = this.proactiveTurns!.cancelForExplicit();
-      this.activeResponseId = undefined;
-      this.suppressLocalAudio();
-      this.callbacks.onTimeline(`Cancelled proactive response for ${reason}`);
-      return cancelled;
+      return cancelled || cancelledSummaries.length > 0;
     }
     const responseId = this.activeResponseId;
-    const hadOpenWork = Boolean(
+    const hadVoiceOrToolWork = Boolean(
       responseId || this.voiceTurns.hasOpenWork() || this.toolLoop?.hasInFlight(),
     );
+    const hadOpenWork = Boolean(
+      hadVoiceOrToolWork || cancelledSummaries.length > 0,
+    );
     if (!hadOpenWork) return false;
-    this.toolLoop?.cancel();
-    this.voiceTurns.cancelOpen();
-    if (responseId) this.cancelledResponseIds.add(responseId);
-    this.activeResponseId = undefined;
-    const cancelled = this.sendClientEvent(
-      responseId
-        ? { type: "response.cancel", response_id: responseId }
-        : { type: "response.cancel" },
+    let cancelled = false;
+    let cleared = false;
+    try {
+      this.toolLoop?.cancel();
+      this.voiceTurns.cancelOpen();
+      if (responseId) this.cancelledResponseIds.add(responseId);
+      cancelled = hadVoiceOrToolWork
+        ? this.sendClientEvent(
+            responseId
+              ? { type: "response.cancel", response_id: responseId }
+              : { type: "response.cancel" },
+          )
+        : false;
+      cleared = this.sendClientEvent({ type: "output_audio_buffer.clear" });
+    } finally {
+      this.activeResponseId = undefined;
+      this.suppressLocalAudio();
+      this.callbacks.onTimeline(
+        `Cancelled ${responseId ?? "pending response"} for ${reason}`,
+      );
+    }
+    return (
+      cancelledSummaries.length > 0 ||
+      summaryTransportCancelled ||
+      (cancelled && cleared)
     );
-    const cleared = this.sendClientEvent({ type: "output_audio_buffer.clear" });
-    this.suppressLocalAudio();
-    this.callbacks.onTimeline(
-      `Cancelled ${responseId ?? "pending response"} for ${reason}`,
-    );
-    return cancelled && cleared;
   }
 
   private cancellationScope(): string {
@@ -406,6 +605,13 @@ export class RealtimeWebRtcSession {
     };
 
     this.peer.ontrack = (event) => {
+      if (this.transportMode === "typed_live") {
+        this.fail(
+          "unexpected_audio_track",
+          "The text-only Realtime session unexpectedly exposed audio.",
+        );
+        return;
+      }
       const remoteStream = event.streams[0] ?? new MediaStream([event.track]);
       this.audioElement.srcObject = remoteStream;
       if (!this.audioSuppressed && !this.sendsBlocked) {
@@ -438,6 +644,11 @@ export class RealtimeWebRtcSession {
           this.callbacks.onTimeline(`Ignored late ${event.type}`);
           return;
         }
+        if (this.invarianceSummaries?.handle(event)) {
+          this.callbacks.onEvent({ type: event.type });
+          this.callbacks.onTimeline(`Received ${event.type}`);
+          return;
+        }
         const responseTurnId = readEventTurnId(event);
         if (
           event.type === "response.done" &&
@@ -454,17 +665,57 @@ export class RealtimeWebRtcSession {
           return;
         }
         if (event.type === "input_audio_buffer.speech_started") {
-          const itemId = readString(event.item_id);
-          if (itemId && !this.interruptedSpeechItems.has(itemId)) {
-            this.interruptedSpeechItems.add(itemId);
-            this.cancelForActivity("student_speech");
+          const speechId =
+            readString(event.item_id) ?? readString(event.event_id);
+          if (!speechId || !this.interruptedSpeechItems.has(speechId)) {
+            if (speechId) this.interruptedSpeechItems.add(speechId);
+            const state = this.pedagogyRuntime?.getState();
+            this.studentSpeechOperation?.finish("superseded");
+            this.studentSpeechOperation = this.operationArbiter?.begin({
+              kind: "student_speech",
+              epoch: state?.epoch ?? 0,
+              revision: state?.revision ?? 0,
+            });
+            if (!this.studentSpeechOperation || this.studentSpeechOperation.accepted) {
+              this.cancelForActivity("student_speech");
+            }
           }
         }
         if (this.pedagogyRuntime && event.type === "input_audio_buffer.speech_started") {
-          this.dispatchInteraction(this.pedagogyRuntime, "student_speech_started");
+          const state = this.pedagogyRuntime.getState();
+          const operation = this.studentSpeechOperation;
+          if (operation) {
+            operation.commit(
+              "ui_commit",
+              { epoch: state.epoch, revision: state.revision },
+              () =>
+                this.dispatchInteraction(
+                  this.pedagogyRuntime!,
+                  "student_speech_started",
+                ),
+            );
+          } else {
+            this.dispatchInteraction(this.pedagogyRuntime, "student_speech_started");
+          }
         }
         if (this.pedagogyRuntime && event.type === "input_audio_buffer.speech_stopped") {
-          this.dispatchInteraction(this.pedagogyRuntime, "student_speech_ended");
+          const state = this.pedagogyRuntime.getState();
+          const operation = this.studentSpeechOperation;
+          if (operation) {
+            operation.commit(
+              "ui_commit",
+              { epoch: state.epoch, revision: state.revision },
+              () =>
+                this.dispatchInteraction(
+                  this.pedagogyRuntime!,
+                  "student_speech_ended",
+                ),
+            );
+            operation.finish();
+            this.studentSpeechOperation = undefined;
+          } else {
+            this.dispatchInteraction(this.pedagogyRuntime, "student_speech_ended");
+          }
         }
         if (event.type === "error") {
           this.cancelForActivity("response_error");
@@ -527,6 +778,10 @@ export class RealtimeWebRtcSession {
         if (event.type === "response.done" && responseId === this.activeResponseId) {
           this.activeResponseId = undefined;
         }
+        if (event.type === "response.done" && this.transportMode === "typed_live") {
+          const text = readCompletedTextOutput(event);
+          if (text) this.callbacks.onTextOutput?.(text);
+        }
         this.callbacks.onEvent({ type: event.type });
         this.callbacks.onTimeline(`Received ${event.type}`);
       } catch {
@@ -559,45 +814,79 @@ export class RealtimeWebRtcSession {
     }
     this.resourcesReleased = true;
 
-    if (this.peer) {
-      this.peer.onconnectionstatechange = null;
-      this.peer.ontrack = null;
-    }
-    if (this.channel) {
-      this.channel.onopen = null;
-      this.channel.onmessage = null;
-      this.channel.onerror = null;
-      this.channel.onclose = null;
-      if (this.channel.readyState !== "closed") {
-        this.channel.close();
-      }
-    }
-    this.stopTracks(this.stream);
-    if (this.peer && this.peer.signalingState !== "closed") {
-      this.peer.close();
-    }
-
-    this.audioElement.pause();
-    this.audioElement.srcObject = null;
-    this.callbacks.onRemoteAudio(false);
+    const peer = this.peer;
+    const channel = this.channel;
+    const stream = this.stream;
     this.channel = undefined;
     this.peer = undefined;
     this.stream = undefined;
-    this.voiceTurns.close();
-    this.proactiveTurns?.close();
-    this.toolLoop?.cancel();
+
+    bestEffort(() => {
+      if (!peer) return;
+      peer.onconnectionstatechange = null;
+      peer.ontrack = null;
+    });
+    bestEffort(() => {
+      if (!channel) return;
+      channel.onopen = null;
+      channel.onmessage = null;
+      channel.onerror = null;
+      channel.onclose = null;
+    });
+    bestEffort(() => {
+      if (channel?.readyState !== "closed") channel?.close();
+    });
+    this.stopTracks(stream);
+    bestEffort(() => {
+      if (peer?.signalingState !== "closed") peer?.close();
+    });
+    bestEffort(() => this.audioElement.pause());
+    bestEffort(() => {
+      this.audioElement.srcObject = null;
+    });
+    bestEffort(() => this.callbacks.onRemoteAudio(false));
+    bestEffort(() => this.voiceTurns.close());
+    bestEffort(() => {
+      this.studentSpeechOperation?.quarantine("session_closed");
+      this.studentSpeechOperation = undefined;
+    });
+    bestEffort(() => this.proactiveTurns?.close());
+    bestEffort(() => this.toolLoop?.cancel());
+    bestEffort(() => {
+      void this.invarianceSummaries?.close();
+    });
   }
 
   private acceptSessionCreated(event: RawRealtimeEvent): boolean {
-    const summary = readSessionSummary(event);
-    if (!summary || !sameSessionSummary(summary, EXPECTED_SESSION)) {
-      this.callbacks.onTimeline(`Session mismatch: ${sessionMismatchFields(event).join(", ")}`);
+    const expected =
+      this.transportMode === "live_voice" ? EXPECTED_SESSION : EXPECTED_TYPED_SESSION;
+    const summary = readSessionSummary(event, this.transportMode);
+    if (!summary || !sameSessionSummary(summary, expected)) {
+      const mismatchFields = sessionMismatchFields(event, this.transportMode);
+      if (
+        this.transportMode === "live_voice" &&
+        event.type === "session.created" &&
+        !this.sessionReassertionPending &&
+        mismatchFields.length === 1 &&
+        mismatchFields[0] === "createResponse" &&
+        this.sendClientEvent(LIVE_VOICE_SESSION_REASSERTION)
+      ) {
+        this.sessionReassertionPending = true;
+        this.callbacks.onTimeline(
+          "Reasserted create_response:false; awaiting session.updated",
+        );
+        return true;
+      }
+      this.callbacks.onTimeline(
+        `Session mismatch: ${mismatchFields.join(", ")}`,
+      );
       this.fail(
         "unexpected_session_configuration",
         "Realtime returned an unexpected session configuration.",
       );
       return false;
     }
+    this.sessionReassertionPending = false;
     this.sessionVerified = true;
     this.callbacks.onSessionSummary(summary);
     this.callbacks.onTimeline("Session configuration verified");
@@ -644,17 +933,21 @@ export class RealtimeWebRtcSession {
     this.sendsBlocked = true;
     const state = this.pedagogyRuntime?.getState();
     this.evidenceLog?.append({
-      eventType: "send_blocked",
-      epoch: state?.epoch ?? 0,
       revision: state?.revision ?? 0,
-      ...(state?.activeResponse?.responseId
-        ? { responseId: state.activeResponse.responseId }
-        : {}),
-      ...(state?.verifiedFacts.length
-        ? { evidenceIds: state.verifiedFacts.map(({ evidenceId }) => evidenceId) }
-        : {}),
-      outcome: "blocked",
-      reason: "clear_failed",
+      kind: "capability_scripted_local",
+      correlationIds: {
+        ...(state?.activeResponse?.responseId
+          ? { responseId: state.activeResponse.responseId }
+          : {}),
+        ...(state?.verifiedFacts.length
+          ? {
+              evidenceIds: state.verifiedFacts.map(
+                ({ evidenceId }) => evidenceId,
+              ),
+            }
+          : {}),
+      },
+      status: "blocked",
     });
     this.callbacks.onTimeline("Audio clear failed; new sends are blocked");
   }
@@ -669,11 +962,12 @@ export class RealtimeWebRtcSession {
     this.sendsBlocked = false;
     const state = this.pedagogyRuntime?.getState();
     this.evidenceLog?.append({
-      eventType: "realtime_coherent",
-      epoch: state?.epoch ?? 0,
       revision: state?.revision ?? 0,
-      outcome: "accepted",
-      reason: "audio_buffer_cleared",
+      kind:
+        this.transportMode === "live_voice"
+          ? "capability_live_voice"
+          : "capability_typed_live",
+      status: "coherent",
     });
     this.callbacks.onTimeline("Realtime audio buffer is coherent");
   }
@@ -761,9 +1055,9 @@ export class RealtimeWebRtcSession {
 
   private stopTracks(stream?: MediaStream): void {
     for (const track of stream?.getTracks() ?? []) {
-      if (track.readyState !== "ended") {
-        track.stop();
-      }
+      bestEffort(() => {
+        if (track.readyState !== "ended") track.stop();
+      });
     }
   }
 
@@ -785,6 +1079,14 @@ export class RealtimeWebRtcSession {
     }
     this.state = state;
     this.callbacks.onState(state);
+  }
+}
+
+function bestEffort(action: () => void): void {
+  try {
+    action();
+  } catch {
+    // Local cleanup continues independently for every resource.
   }
 }
 
@@ -855,11 +1157,17 @@ function readString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
-function readSessionSummary(event: RawRealtimeEvent): RealtimeSessionSummary | undefined {
+function readSessionSummary(
+  event: RawRealtimeEvent,
+  mode: RealtimeSessionMode,
+): RealtimeSessionSummary | undefined {
   const session = event.session;
   if (!session || typeof session !== "object") return undefined;
   const value = session as {
     model?: unknown;
+    output_modalities?: unknown;
+    tools?: unknown;
+    tool_choice?: unknown;
     audio?: {
       input?: {
         turn_detection?: {
@@ -872,6 +1180,21 @@ function readSessionSummary(event: RawRealtimeEvent): RealtimeSessionSummary | u
     };
     reasoning?: { effort?: unknown };
   };
+  if (mode === "typed_live") {
+    if (
+      value.model !== EXPECTED_TYPED_SESSION.model ||
+      value.reasoning?.effort !== EXPECTED_TYPED_SESSION.reasoningEffort ||
+      !Array.isArray(value.output_modalities) ||
+      value.output_modalities.length !== 1 ||
+      value.output_modalities[0] !== "text" ||
+      !Array.isArray(value.tools) ||
+      value.tools.length !== 0 ||
+      value.tool_choice !== "none"
+    ) {
+      return undefined;
+    }
+    return { ...EXPECTED_TYPED_SESSION };
+  }
   if (
     value.model !== EXPECTED_SESSION.model ||
     value.audio?.output?.voice !== EXPECTED_SESSION.voice ||
@@ -886,10 +1209,16 @@ function readSessionSummary(event: RawRealtimeEvent): RealtimeSessionSummary | u
   return { ...EXPECTED_SESSION };
 }
 
-function sessionMismatchFields(event: RawRealtimeEvent): string[] {
+function sessionMismatchFields(
+  event: RawRealtimeEvent,
+  mode: RealtimeSessionMode,
+): string[] {
   const session = event.session as
     | {
         model?: unknown;
+        output_modalities?: unknown;
+        tools?: unknown;
+        tool_choice?: unknown;
         audio?: {
           input?: {
             turn_detection?: {
@@ -903,6 +1232,22 @@ function sessionMismatchFields(event: RawRealtimeEvent): string[] {
         reasoning?: { effort?: unknown };
       }
     | undefined;
+  if (mode === "typed_live") {
+    const checks = {
+      model: session?.model === EXPECTED_TYPED_SESSION.model,
+      reasoning:
+        session?.reasoning?.effort === EXPECTED_TYPED_SESSION.reasoningEffort,
+      outputModalities:
+        Array.isArray(session?.output_modalities) &&
+        session.output_modalities.length === 1 &&
+        session.output_modalities[0] === "text",
+      tools: Array.isArray(session?.tools) && session.tools.length === 0,
+      toolChoice: session?.tool_choice === "none",
+    };
+    return Object.entries(checks)
+      .filter(([, matches]) => !matches)
+      .map(([field]) => field);
+  }
   const checks = {
     model: session?.model === EXPECTED_SESSION.model,
     voice: session?.audio?.output?.voice === EXPECTED_SESSION.voice,
@@ -924,6 +1269,17 @@ function sameSessionSummary(
   actual: RealtimeSessionSummary,
   expected: RealtimeSessionSummary,
 ): boolean {
+  if ("outputModalities" in actual || "outputModalities" in expected) {
+    return (
+      "outputModalities" in actual &&
+      "outputModalities" in expected &&
+      actual.model === expected.model &&
+      actual.reasoningEffort === expected.reasoningEffort &&
+      actual.outputModalities.length === 1 &&
+      actual.outputModalities[0] === "text" &&
+      actual.tools === expected.tools
+    );
+  }
   return (
     actual.model === expected.model &&
     actual.voice === expected.voice &&
@@ -932,4 +1288,30 @@ function sameSessionSummary(
     actual.createResponse === expected.createResponse &&
     actual.interruptResponse === expected.interruptResponse
   );
+}
+
+function readCompletedTextOutput(event: RawRealtimeEvent): string | undefined {
+  if (!event.response || typeof event.response !== "object") return undefined;
+  const response = event.response as { status?: unknown; output?: unknown };
+  if (response.status !== "completed" || !Array.isArray(response.output)) {
+    return undefined;
+  }
+  const parts: string[] = [];
+  for (const item of response.output) {
+    if (!item || typeof item !== "object") continue;
+    const content = (item as { content?: unknown }).content;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (
+        part &&
+        typeof part === "object" &&
+        (part as { type?: unknown }).type === "output_text" &&
+        typeof (part as { text?: unknown }).text === "string"
+      ) {
+        const text = (part as { text: string }).text.trim();
+        if (text) parts.push(text);
+      }
+    }
+  }
+  return parts.length > 0 ? parts.join("\n") : undefined;
 }

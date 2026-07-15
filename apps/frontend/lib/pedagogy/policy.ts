@@ -2,6 +2,8 @@ import { createFactSignature, type MeaningfulDelta } from "./meaningful-delta";
 import { getHintLevelProfile, nextUsefulHelpLevel } from "./hint-assistance";
 import {
   getPedagogyInvariantViolations,
+  selectCurrentEvidence,
+  selectHasOpenIntervention,
   selectIsFloorBusy,
   type HelpLevel,
   type PedagogyState,
@@ -52,6 +54,24 @@ export type PolicyTrigger =
     }
   | { type: "explicit_help"; requestId: string };
 
+export type InvarianceGeneralizationPolicyInput = Readonly<{
+  runId: string;
+  revision: number;
+  inputEvidenceIds: readonly string[];
+  evidenceIds: readonly string[];
+  duplicate: boolean;
+}>;
+
+export type InvarianceGeneralizationPolicyDecision =
+  | {
+      type: "silent";
+      reason:
+        | "invalid_or_duplicate_context"
+        | "higher_priority_intervention";
+    }
+  | { type: "queue"; reason: "floor_busy" }
+  | { type: "speak"; reason: "invariance_completed" };
+
 export function decideIntervention(
   state: PedagogyState,
   trigger: PolicyTrigger,
@@ -74,6 +94,41 @@ export function decideIntervention(
       businessReason: intent.reason,
     },
   };
+}
+
+/**
+ * Keeps the T5 generalization prompt behind the same local authority, priority,
+ * and floor rules as the T4 intervention policy. A QUEUE result is deliberately
+ * non-final: the caller must evaluate this function again against fresh state.
+ */
+export function decideInvarianceGeneralization(
+  state: PedagogyState,
+  input: InvarianceGeneralizationPolicyInput,
+): InvarianceGeneralizationPolicyDecision {
+  if (
+    input.duplicate ||
+    input.runId.length === 0 ||
+    input.revision !== state.revision ||
+    input.inputEvidenceIds.length !== 2 ||
+    new Set(input.inputEvidenceIds).size !== 2 ||
+    input.evidenceIds.length !== 5 ||
+    new Set(input.evidenceIds).size !== 5 ||
+    getPedagogyInvariantViolations(state).length > 0 ||
+    !hasCurrentBisectorAuthority(state, input.inputEvidenceIds)
+  ) {
+    return { type: "silent", reason: "invalid_or_duplicate_context" };
+  }
+
+  if (
+    selectHasOpenIntervention(state) ||
+    hasUnfinalizedHigherPrioritySource(state)
+  ) {
+    return { type: "silent", reason: "higher_priority_intervention" };
+  }
+  if (selectIsFloorBusy(state)) {
+    return { type: "queue", reason: "floor_busy" };
+  }
+  return { type: "speak", reason: "invariance_completed" };
 }
 
 function businessIntent(
@@ -177,6 +232,43 @@ function isValidTrigger(
     (!trigger.delta.isMeaningful ||
       trigger.delta.missingRelationKeys.join("|") ===
         state.repeatedBlockState.missingRelationSignature)
+  );
+}
+
+function hasCurrentBisectorAuthority(
+  state: PedagogyState,
+  expectedEvidenceIds: readonly string[],
+): boolean {
+  const expectedRelations = new Set(["perpendicular", "passes_midpoint"]);
+  const factEvidenceIds = state.verifiedFacts.map(({ evidenceId }) => evidenceId);
+  const currentEvidence = selectCurrentEvidence(state);
+  return (
+    state.verifiedFacts.length === 2 &&
+    state.verifiedFacts.every(
+      (fact) =>
+        fact.status === "verified" && expectedRelations.has(fact.relationKey),
+    ) &&
+    currentEvidence.length === 2 &&
+    currentEvidence.every(({ id, pass }) => pass && factEvidenceIds.includes(id)) &&
+    sameIdSet(factEvidenceIds, expectedEvidenceIds)
+  );
+}
+
+function hasUnfinalizedHigherPrioritySource(state: PedagogyState): boolean {
+  const lastActionId = state.attemptState.lastActionId;
+  const lastHelpRequestId = state.attemptState.lastHelpRequestId;
+  return (
+    (lastActionId !== null &&
+      !state.policyState.finalizedActionIds.includes(lastActionId)) ||
+    (lastHelpRequestId !== null &&
+      !state.policyState.finalizedHelpRequestIds.includes(lastHelpRequestId))
+  );
+}
+
+function sameIdSet(actual: readonly string[], expected: readonly string[]): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((id) => expected.includes(id))
   );
 }
 

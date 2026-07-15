@@ -6,9 +6,24 @@ GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une 
 
 ## Utilisateurs
 
-- Élève : comprendre une construction sans recevoir immédiatement la solution.
+- Élève : comprendre une construction sans recevoir immédiatement la solution,
+  dans une interface rassurante qui lui indique toujours la prochaine action utile.
 - Enseignant : disposer d'actions et de propriétés vérifiées, sans notation à enjeu élevé.
 - Jury : observer une boucle multimodale fiable, visible et démontrable de bout en bout.
+
+## Expérience élève
+
+- L'interface publique parle d'exercice, de construction, d'aide et de progrès;
+  elle n'expose pas les noms de tranches, les frontières techniques ou les
+  métriques de qualification dans le parcours principal.
+- Le parcours principal tient en trois étapes visibles : ajouter l'exercice,
+  construire avec GeoTutor, puis vérifier ce que l'on a compris.
+- Une seule action principale domine chaque étape. Les actions secondaires et
+  diagnostics restent disponibles sans concurrencer cette action.
+- Les états vides expliquent quoi faire avec des mots simples. Les détails
+  techniques utiles à la démonstration sont regroupés dans une zone repliable.
+- La direction visuelle est jeune, chaleureuse et expressive, tout en restant
+  lisible au clavier, à 200 % et sur mobile.
 
 ## Golden path
 
@@ -72,6 +87,12 @@ GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une 
 - Toutes les affirmations géométriques du parcours golden sont liées à des preuves.
 - Reset exact vers A/B/AB et suppression de tous les helpers.
 - Un fallback explicite existe pour micro ou API indisponible, sans se présenter comme live.
+- Aucun libellé de tranche (`T0` à `T6`), jargon WebRTC, identifiant de preuve ou
+  budget de latence ne domine le parcours élève.
+- À l'arrivée, l'élève identifie l'action de départ et les trois étapes du
+  parcours sans devoir parcourir une documentation technique.
+- Le parcours reste utilisable à 390 px, 768 px et 1440 px, au clavier et avec
+  `prefers-reduced-motion`.
 
 ## Hypothèses validées
 

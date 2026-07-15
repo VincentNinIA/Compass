@@ -147,7 +147,7 @@ describe("GeoGebraSpike", () => {
       },
     };
     const onConstructionReset = vi.fn();
-    const recover = vi.spyOn(ExerciseInitializationService.prototype, "recover");
+    const reset = vi.spyOn(ExerciseInitializationService.prototype, "reset");
     const view = render(
       <GeoGebraSpike
         toolWorkflowAuthority={authority}
@@ -173,7 +173,7 @@ describe("GeoGebraSpike", () => {
     fireEvent.click(resetButton);
     fireEvent.click(resetButton);
     await act(async () => undefined);
-    expect(recover).toHaveBeenCalledTimes(1);
+    expect(reset).toHaveBeenCalledTimes(1);
     expect(onConstructionReset).toHaveBeenCalledTimes(1);
     expect(api.setBase64).toHaveBeenCalledWith(
       expect.any(String),

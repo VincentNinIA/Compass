@@ -1,6 +1,6 @@
 import type {
-  ExerciseExtractionWireV1,
   ExercisePlanV1,
+  ExerciseReadyClientExtractionV1,
 } from "./exercise-contracts";
 import type { ParseExerciseResultV1 } from "./exercise-parse-route";
 
@@ -33,7 +33,7 @@ export type ExerciseConfirmationState =
     } & ExerciseWithFile)
   | ({
       status: "awaiting_confirmation";
-      extraction: ExerciseExtractionWireV1;
+      extraction: ExerciseReadyClientExtractionV1;
       plan: ExercisePlanV1;
     } & ExerciseWithFile)
   | {

@@ -14,8 +14,14 @@ import {
   type SelectedExerciseImage,
 } from "./exercise-uploader";
 import {
+  EXERCISE_AMBIGUITY_CODES_V1,
+  EXERCISE_REFUSAL_MESSAGE_V1,
+  EXERCISE_UNSUPPORTED_MESSAGE_V1,
+  createExerciseReadyClientExtractionV1,
+  getExerciseClarificationMessageV1,
   validateExerciseExtractionWireV1,
   validateExercisePlanV1,
+  type ExerciseAmbiguityCodeV1,
 } from "@/lib/exercise/exercise-contracts";
 import {
   INITIAL_EXERCISE_CONFIRMATION_STATE,
@@ -27,13 +33,8 @@ import {
   type ExerciseConfirmationState,
 } from "@/lib/exercise/exercise-confirmation";
 import type { ParseExerciseResultV1 } from "@/lib/exercise/exercise-parse-route";
-
-const CLARIFICATION_CODES = new Set([
-  "missing_labels",
-  "unreadable_text",
-  "conflicting_instruction",
-  "missing_segment",
-]);
+import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
+import { parseAppErrorPayload } from "@/lib/reliability/app-error";
 
 type ParseExerciseInput = {
   file: File;
@@ -56,6 +57,7 @@ type ExerciseConfirmationProps = {
   createConfirmationId?: () => string;
   now?: () => number;
   resetToken?: number;
+  latencyMonitor?: LatencyBudgetMonitor;
 };
 
 export type ExerciseInitializationViewState =
@@ -64,7 +66,12 @@ export type ExerciseInitializationViewState =
   | { status: "initializing" }
   | { status: "initialized"; snapshotHash: string }
   | { status: "reset" }
-  | { status: "failed"; code: string; rolledBack: boolean };
+  | {
+      status: "failed";
+      code: string;
+      rolledBack: boolean;
+      retryable: boolean;
+    };
 
 function createId(prefix: string): string {
   const randomId = globalThis.crypto?.randomUUID?.();
@@ -75,7 +82,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseResultPayload(value: unknown): ParseExerciseResultV1 {
+function isExerciseAmbiguityCodeV1(
+  value: unknown,
+): value is ExerciseAmbiguityCodeV1 {
+  return (
+    typeof value === "string" &&
+    (EXERCISE_AMBIGUITY_CODES_V1 as readonly string[]).includes(value)
+  );
+}
+
+export function parseExerciseResultPayload(
+  value: unknown,
+): ParseExerciseResultV1 {
   if (!isRecord(value) || typeof value.status !== "string") {
     throw new Error("invalid_parse_result");
   }
@@ -90,39 +108,51 @@ function parseResultPayload(value: unknown): ParseExerciseResultV1 {
     ) {
       throw new Error("invalid_parse_result");
     }
-    return { status: "ready", extraction: extraction.data, plan: plan.data };
+    return {
+      status: "ready",
+      extraction: createExerciseReadyClientExtractionV1(extraction.data),
+      plan: plan.data,
+    };
   }
 
   if (
     value.status === "needs_clarification" &&
-    typeof value.question === "string" &&
-    value.question.trim().length > 0 &&
-    typeof value.code === "string" &&
-    CLARIFICATION_CODES.has(value.code)
+    isExerciseAmbiguityCodeV1(value.code)
   ) {
-    return value as ParseExerciseResultV1;
+    return {
+      status: "needs_clarification",
+      code: value.code,
+      question: getExerciseClarificationMessageV1(value.code),
+    };
   }
 
-  if (
-    value.status === "unsupported" &&
-    typeof value.reason === "string" &&
-    value.reason.trim().length > 0
-  ) {
-    return { status: "unsupported", reason: value.reason };
+  if (value.status === "unsupported") {
+    return {
+      status: "unsupported",
+      reason: EXERCISE_UNSUPPORTED_MESSAGE_V1,
+    };
   }
 
-  if (
-    value.status === "refused" &&
-    typeof value.message === "string" &&
-    value.message.trim().length > 0
-  ) {
-    return { status: "refused", message: value.message };
+  if (value.status === "refused") {
+    return { status: "refused", message: EXERCISE_REFUSAL_MESSAGE_V1 };
   }
 
   throw new Error("invalid_parse_result");
 }
 
-const fetchExerciseParse: ExerciseParser = async ({
+export class ExerciseParseRequestError extends Error {
+  constructor(
+    readonly code: string,
+    readonly retryable: boolean,
+    readonly correlationId: string,
+    userMessage: string,
+  ) {
+    super(`${userMessage} Reference ${correlationId}.`);
+    this.name = "ExerciseParseRequestError";
+  }
+}
+
+export const fetchExerciseParse: ExerciseParser = async ({
   file,
   clarification,
   signal,
@@ -138,32 +168,48 @@ const fetchExerciseParse: ExerciseParser = async ({
     signal,
   });
   const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) throw new Error("parse_request_failed");
-  return parseResultPayload(payload);
+  if (!response.ok) {
+    const appError = parseAppErrorPayload(payload);
+    if (appError?.domain === "exercise_parse") {
+      throw new ExerciseParseRequestError(
+        appError.code,
+        appError.retryable,
+        appError.correlationId,
+        appError.userMessage,
+      );
+    }
+    throw new ExerciseParseRequestError(
+      "parse_request_failed",
+      true,
+      "exercise_parse_unavailable",
+      "Exercise analysis is temporarily unavailable. Retry manually.",
+    );
+  }
+  return parseExerciseResultPayload(payload);
 };
 
 function stateAnnouncement(state: ExerciseConfirmationState): string {
   switch (state.status) {
     case "idle":
-      return "Choose an exercise image to begin.";
+      return "Add a photo above to begin.";
     case "preview":
-      return "Image ready. Choose Analyze when you want to continue.";
+      return "Your photo is ready. Read it when you want to continue.";
     case "parsing":
-      return "Analyzing the selected exercise image.";
+      return "I’m reading the question and looking for the important details.";
     case "needs_clarification":
       return state.clarificationCount >= MAX_EXERCISE_CLARIFICATIONS
-        ? "Two clarifications were not enough. Replace the image to continue."
-        : "One clarification is needed before confirmation.";
+        ? "I still need a clearer photo to understand this exercise."
+        : "I need one small detail before we continue.";
     case "awaiting_confirmation":
-      return "Exercise understood. Review the summary before confirming.";
+      return "I found the exercise. Check it before we build.";
     case "confirmed":
-      return "Exercise confirmed.";
+      return "Great — your workspace is getting ready.";
     case "unsupported":
-      return "This exercise is not supported by the current demo.";
+      return "I can’t guide this type of exercise yet.";
     case "refused":
-      return "The exercise could not be analyzed from this image.";
+      return "I couldn’t read enough from this photo.";
     case "failed":
-      return "Exercise analysis failed. Retry or replace the image.";
+      return "I couldn’t read the exercise. Try again or choose another photo.";
   }
 }
 
@@ -177,6 +223,7 @@ export function ExerciseConfirmation({
   createConfirmationId = () => createId("confirmation"),
   now = Date.now,
   resetToken = 0,
+  latencyMonitor,
 }: ExerciseConfirmationProps) {
   const [state, dispatch] = useReducer(
     exerciseConfirmationReducer,
@@ -222,6 +269,7 @@ export function ExerciseConfirmation({
 
   const resolveParse = useCallback(
     async (file: File, clarificationText: string | null, requestId: string) => {
+      const startedAt = now();
       cancelPendingRequest();
       const controller = new AbortController();
       pendingRequest.current = { requestId, controller };
@@ -237,19 +285,23 @@ export function ExerciseConfirmation({
           setClarificationError(undefined);
         }
         dispatch({ type: "parse_resolved", requestId, result });
-      } catch {
+      } catch (error) {
         dispatch({
           type: "parse_failed",
           requestId,
-          message: "Analysis is temporarily unavailable. Retry when you are ready.",
+          message:
+            error instanceof ExerciseParseRequestError
+              ? error.message
+              : "Analysis is temporarily unavailable. Retry when you are ready.",
         });
       } finally {
+        latencyMonitor?.record("image", Math.max(0, now() - startedAt));
         if (pendingRequest.current?.requestId === requestId) {
           pendingRequest.current = undefined;
         }
       }
     },
-    [cancelPendingRequest, parseExercise],
+    [cancelPendingRequest, latencyMonitor, now, parseExercise],
   );
 
   const handleSelectionChange = useCallback(
@@ -359,19 +411,18 @@ export function ExerciseConfirmation({
       />
 
       <section
-        className="exercise-confirmation spike"
+        className="exercise-confirmation spike workspace-card workspace-card-check"
         aria-labelledby="exercise-confirmation-title"
         aria-busy={state.status === "parsing"}
         data-state={state.status}
       >
         <div className="spike-heading">
           <div>
-            <p className="section-index">T3 / Human confirmation</p>
-            <h2 id="exercise-confirmation-title">Review before the canvas changes</h2>
+            <p className="section-index">Step 1 · Quick check</p>
+            <h2 id="exercise-confirmation-title">Did I understand it?</h2>
           </div>
           <p>
-            GeoGebra changes only after an explicit confirmation and a transactional
-            preflight.
+            Nothing changes in your workspace until you say the summary looks right.
           </p>
         </div>
 
@@ -382,11 +433,11 @@ export function ExerciseConfirmation({
         {initializationState.status === "reset" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Construction reset
+              Ready for a new exercise
             </h3>
             <p>
-              The construction and the local photo-analysis context were cleared.
-              Choose a new image to start another exercise.
+              Your old construction has been cleared. Add another photo whenever
+              you&apos;re ready.
             </p>
           </div>
         ) : null}
@@ -394,12 +445,12 @@ export function ExerciseConfirmation({
         {state.status === "needs_clarification" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Clarify one detail
+              Help me with one detail
             </h3>
             <p className="exercise-question">{state.question}</p>
             {canClarify ? (
               <form onSubmit={(event) => void handleClarification(event)}>
-                <label htmlFor="exercise-clarification">Your clarification</label>
+                <label htmlFor="exercise-clarification">Your answer</label>
                 <textarea
                   id="exercise-clarification"
                   value={clarification}
@@ -415,12 +466,12 @@ export function ExerciseConfirmation({
                   {clarificationCharacterCount}/500 characters · clarification {state.clarificationCount + 1} of 2
                 </p>
                 {clarificationError ? <p role="alert">{clarificationError}</p> : null}
-                <button type="submit">Submit clarification</button>
+                <button type="submit">Send this detail</button>
               </form>
             ) : (
               <p>
-                Two clarification attempts were not enough. Replace the image with a
-                clearer photo; no plan was created.
+                I still can&apos;t read this one confidently. Try a brighter, straighter
+                photo so we can start cleanly.
               </p>
             )}
           </div>
@@ -432,32 +483,32 @@ export function ExerciseConfirmation({
             aria-labelledby="exercise-summary-title"
           >
             <h3 id="exercise-summary-title" ref={workflowFocus} tabIndex={-1}>
-              Exercise summary
+              Here&apos;s what I found
             </h3>
             <dl>
               <div>
-                <dt>Instruction</dt>
+                <dt>The question</dt>
                 <dd>{state.extraction.instruction}</dd>
               </div>
               <div>
-                <dt>Given</dt>
+                <dt>You already have</dt>
                 <dd>Points A and B, and segment AB</dd>
               </div>
               <div>
-                <dt>Your construction</dt>
+                <dt>You&apos;ll build</dt>
                 <dd>The perpendicular bisector of AB</dd>
               </div>
               <div>
-                <dt>Learning goal</dt>
+                <dt>You&apos;ll discover</dt>
                 <dd>Understand perpendicular bisectors and equidistance</dd>
               </div>
             </dl>
             <p className="exercise-initialization-note">
-              GeoGebra will create A, B and AB only. You will construct the
-              perpendicular bisector.
+              I&apos;ll place A, B and segment AB. The important construction stays
+              yours to make.
             </p>
             <button type="button" onClick={handleConfirm}>
-              Confirm exercise
+              Looks right — start building
             </button>
           </div>
         ) : null}
@@ -465,31 +516,31 @@ export function ExerciseConfirmation({
         {state.status === "unsupported" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Exercise not supported
+              Let&apos;s try another exercise
             </h3>
             <p>{state.reason}</p>
-            <p>Replace the image with a perpendicular-bisector exercise using A and B.</p>
+            <p>For now, choose a perpendicular-bisector exercise using A and B.</p>
           </div>
         ) : null}
 
         {state.status === "refused" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Analysis unavailable for this image
+              This photo needs another try
             </h3>
             <p>{state.message}</p>
-            <p>Replace the image to continue. No plan was created.</p>
+            <p>Choose a clearer photo to continue. Nothing has changed yet.</p>
           </div>
         ) : null}
 
         {state.status === "failed" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Analysis failed
+              I couldn&apos;t read that
             </h3>
             <p role="alert">{state.message}</p>
             <button type="button" onClick={() => void handleRetry()}>
-              Retry analysis
+              Try reading it again
             </button>
           </div>
         ) : null}
@@ -497,21 +548,21 @@ export function ExerciseConfirmation({
         {state.status === "confirmed" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Exercise confirmed
+              Your exercise is ready
             </h3>
             {initializationState.status === "idle" ? (
-              <p>The validated plan is ready for transactional initialization.</p>
+              <p>I understood the plan and I&apos;m preparing your canvas.</p>
             ) : null}
             {initializationState.status === "waiting_for_applet" ? (
-              <p role="status">Waiting for the GeoGebra applet before changing the canvas…</p>
+              <p role="status">Opening your geometry workspace…</p>
             ) : null}
             {initializationState.status === "initializing" ? (
-              <p role="status">Initializing A, B and AB transactionally…</p>
+              <p role="status">Placing A, B and AB for you…</p>
             ) : null}
             {initializationState.status === "initialized" ? (
               <p role="status">
-                Canvas initialized with A, B and AB only. Construct the perpendicular
-                bisector yourself.
+                Canvas initialized with A, B and AB only. Your turn: construct the
+                perpendicular bisector.
               </p>
             ) : null}
             {initializationState.status === "failed" ? (
@@ -523,7 +574,7 @@ export function ExerciseConfirmation({
                       ? "Initialization failed and the previous canvas was restored exactly."
                       : "Initialization was refused before the canvas changed."}
                 </p>
-                {onRetryInitialization ? (
+                {initializationState.retryable && onRetryInitialization ? (
                   <button type="button" onClick={onRetryInitialization}>
                     {initializationState.code === "recovery_required"
                       ? "Restore canvas and retry"

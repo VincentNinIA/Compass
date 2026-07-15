@@ -70,15 +70,16 @@ export class CancellationCoordinator {
         this.dependencies.getScope?.() ?? "-",
       ),
     );
+    const evidenceIds = currentEvidenceIds(initial);
     this.dependencies.evidenceLog?.append({
-      eventType: "cancellation",
-      epoch: initial.epoch,
       revision: initial.revision,
-      ...(pendingId ? { directiveId: pendingId } : {}),
-      ...(responseId ? { responseId } : {}),
-      evidenceIds: currentEvidenceIds(initial),
-      outcome: status,
-      reason,
+      kind: "cancellation",
+      correlationIds: {
+        ...(pendingId ? { directiveId: pendingId } : {}),
+        ...(responseId ? { responseId } : {}),
+        ...(evidenceIds ? { evidenceIds } : {}),
+      },
+      status: status === "cancelled" ? "cancelled" : "completed",
     });
     return Object.freeze({
       reason,

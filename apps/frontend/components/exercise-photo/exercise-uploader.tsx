@@ -204,41 +204,51 @@ export function ExerciseUploader({
   };
 
   return (
-    <section className="spike photo-uploader" aria-labelledby="exercise-photo-title">
+    <section
+      className="spike photo-uploader workspace-card workspace-card-start"
+      aria-labelledby="exercise-photo-title"
+    >
       <div className="spike-heading">
         <div>
-          <p className="section-index">T3 / Exercise photo</p>
-          <h2 id="exercise-photo-title">Start from the exercise sheet</h2>
+          <p className="section-index">Step 1 · Start here</p>
+          <h2 id="exercise-photo-title">Show me your exercise</h2>
         </div>
         <p>
-          Take a photo or choose one image. It is not analyzed until you choose
-          Analyze.
+          A clear photo is enough. I&apos;ll read the question, then let you check
+          what I understood.
         </p>
       </div>
 
       <div className="photo-uploader-grid">
         <div className="photo-picker">
-          <label htmlFor="exercise-photo-input">
-            {selection ? "Replace image" : "Take or choose a photo"}
-          </label>
-          <input
-            id="exercise-photo-input"
-            type="file"
-            accept={EXERCISE_IMAGE_ACCEPT}
-            capture="environment"
-            aria-describedby="exercise-photo-help exercise-photo-state"
-            aria-invalid={state === "client_rejected"}
-            disabled={locked}
-            onChange={handleChange}
-          />
+          <div className="photo-dropzone" data-has-image={selection ? "true" : "false"}>
+            <span className="photo-dropzone-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48" role="presentation">
+                <path d="M8 15.5h8l3-4h10l3 4h8v23H8z" />
+                <circle cx="24" cy="27" r="7" />
+              </svg>
+            </span>
+            <label htmlFor="exercise-photo-input">
+              {selection ? "Choose a different photo" : "Take or choose a photo"}
+            </label>
+            <p>Use a bright, straight photo of the question.</p>
+            <input
+              id="exercise-photo-input"
+              type="file"
+              accept={EXERCISE_IMAGE_ACCEPT}
+              capture="environment"
+              aria-describedby="exercise-photo-help exercise-photo-state"
+              aria-invalid={state === "client_rejected"}
+              disabled={locked}
+              onChange={handleChange}
+            />
+          </div>
           <p id="exercise-photo-help" className="photo-help">
-            One JPEG, PNG, or WebP image, from 1 byte to 10 MiB. Photograph only the
-            exercise statement you want help with.
+            JPEG, PNG or WebP · 10 MB maximum
           </p>
           <p className="photo-privacy-notice">
-            GeoTutor does not save this photo. It is sent to OpenAI for analysis.
-            Reload or Reset construction clears the local exercise context in this
-            tab.
+            <span aria-hidden="true">●</span> Your photo is used only to read this
+            exercise and is not saved by GeoTutor.
           </p>
 
           <p
@@ -248,10 +258,10 @@ export function ExerciseUploader({
             aria-live="polite"
             data-state={state}
           >
-            {state === "empty" && "No image selected."}
-            {state === "selected" && "Image selected and validated locally."}
-            {state === "client_rejected" && "Image rejected locally."}
-            {state === "submitting" && "Preparing the validated image for analysis."}
+            {state === "empty" && "Waiting for your photo"}
+            {state === "selected" && "Photo ready to read"}
+            {state === "client_rejected" && "This photo cannot be used"}
+            {state === "submitting" && "Reading your exercise…"}
           </p>
           {error ? (
             <p role="alert" className="photo-error">
@@ -267,7 +277,7 @@ export function ExerciseUploader({
               }
               onClick={() => void handleAnalyze()}
             >
-              Analyze
+              Read my exercise
             </button>
             <button
               type="button"
@@ -275,7 +285,7 @@ export function ExerciseUploader({
               disabled={locked || !selection}
               onClick={handleCancel}
             >
-              Cancel selection
+              Remove photo
             </button>
           </div>
         </div>
@@ -292,7 +302,11 @@ export function ExerciseUploader({
               </figcaption>
             </figure>
           ) : (
-            <p>Your selected photo will appear here before analysis.</p>
+            <div className="photo-preview-empty">
+              <span aria-hidden="true">AB</span>
+              <p>Your exercise will appear here.</p>
+              <small>Tip: keep the full question inside the frame.</small>
+            </div>
           )}
         </div>
       </div>

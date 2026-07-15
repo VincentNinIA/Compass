@@ -1,17 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-
 import {
-  GEOGEBRA_VERSION,
-  collectGeoGebraEvidence,
-} from "@/lib/geogebra";
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+
+import { collectGeoGebraEvidence } from "@/lib/geogebra";
 import { GeoGebraAdapter } from "@/lib/geogebra/adapter";
+import { GeoGebraAccessibilityGuard } from "@/lib/geogebra/accessibility";
 import { CompletedActionBridge } from "@/lib/geogebra/action-bridge";
 import { initializeMinimalScene, SceneRegistry } from "@/lib/geogebra/scene";
 import { SnapshotService } from "@/lib/geogebra/snapshot";
 import { PerpendicularBisectorValidator } from "@/lib/geogebra/validator";
 import { CheckpointService } from "@/lib/geogebra/checkpoint";
+import type {
+  ResetReason,
+  ResetResult,
+} from "@/lib/geogebra/checkpoint";
 import {
   HintOrchestrator,
   type HintDeliveryResult,
@@ -68,6 +76,8 @@ import {
   type PolicyDecision,
 } from "@/lib/pedagogy/policy";
 import type {
+  RealtimeInvarianceRequestRuntime,
+  RealtimeInvarianceSummaryRuntime,
   RealtimePedagogyRuntime,
   RealtimeProactiveRuntime,
 } from "@/lib/realtime/webrtc-session";
@@ -76,6 +86,34 @@ import type {
   CancellationReason,
   EvidenceLog,
 } from "@/lib/pedagogy/evidence-log";
+import {
+  InvarianceSceneService,
+  type InvarianceSceneReport,
+} from "@/lib/invariance/invariance-scene";
+import { GeoGebraInvarianceSampler } from "@/lib/invariance/geogebra-sampler";
+import { RunInvarianceTestOperation } from "@/lib/invariance/run-invariance-test";
+import type {
+  InvarianceRunCompleted,
+  InvarianceRunHandle,
+  InvarianceInputEvidenceIds,
+  InvarianceRunResult,
+} from "@/lib/invariance/contracts";
+import {
+  InvarianceVerbalizationCoordinator,
+  type InvarianceMeasurementsView,
+  type InvarianceVerbalizationContext,
+  type InvarianceVerbalizationResult,
+} from "@/lib/invariance/verbalization";
+import type { InvarianceSummaryRender } from "@/lib/realtime/invariance-summary";
+import type {
+  OperationArbiter,
+  OperationLease,
+} from "@/lib/operations/arbiter";
+import {
+  InvarianceExperiment,
+  type InvarianceExperimentRuntime,
+} from "./invariance-experiment";
+import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 
 type SpikeState =
   | { phase: "loading" }
@@ -98,8 +136,12 @@ export function GeoGebraSpike({
   toolWorkflowAuthority,
   onPedagogyRuntime,
   requestProactive,
+  requestInvarianceSummary,
+  onInvarianceSummaryRuntime,
   cancelRealtime,
   evidenceLog,
+  operationArbiter,
+  latencyMonitor,
 }: {
   onToolRuntime?(runtime?: ToolRuntime): void;
   onExerciseInitializationRuntime?(runtime?: ExerciseInitializationRuntime): void;
@@ -107,8 +149,12 @@ export function GeoGebraSpike({
   toolWorkflowAuthority?: ToolWorkflowAuthority;
   onPedagogyRuntime?(runtime?: RealtimePedagogyRuntime): void;
   requestProactive?: RealtimeProactiveRuntime["requestProactive"];
+  requestInvarianceSummary?: RealtimeInvarianceRequestRuntime["requestInvarianceSummary"];
+  onInvarianceSummaryRuntime?(runtime?: RealtimeInvarianceSummaryRuntime): void;
   cancelRealtime?(reason: CancellationReason): boolean;
   evidenceLog?: EvidenceLog;
+  operationArbiter?: OperationArbiter;
+  latencyMonitor?: LatencyBudgetMonitor;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<SpikeState>({ phase: "loading" });
@@ -130,11 +176,178 @@ export function GeoGebraSpike({
   const [hintStatus, setHintStatus] = useState<
     "idle" | "delivering" | "confirmation_required" | "delivered" | "failed"
   >("idle");
-  const [resetStatus, setResetStatus] = useState<"idle" | "resetting" | "recovered" | "failed">("idle");
+  const [resetStatus, setResetStatus] = useState<
+    "idle" | "resetting" | "recovered" | "failed" | "fatal"
+  >("idle");
   const resetInFlightRef = useRef(false);
+  const globalResetRef = useRef<
+    | ((
+        reason: ResetReason,
+        recoveryPlan?: ExercisePlanV1,
+      ) => Promise<ResetResult>)
+    | undefined
+  >(undefined);
   const exerciseInitializationRef = useRef<
     ExerciseInitializationService | undefined
   >(undefined);
+  const currentValidationRef = useRef<BisectorValidation | null>(null);
+  const invarianceRuntimeRef = useRef<
+    InvarianceExperimentRuntime | undefined
+  >(undefined);
+  const [invarianceRuntime, setInvarianceRuntime] = useState<
+    InvarianceExperimentRuntime | undefined
+  >(undefined);
+  const [invarianceSummary, setInvarianceSummary] = useState<
+    InvarianceSummaryRender | null
+  >(null);
+  const currentInvarianceResultRef = useRef<InvarianceRunResult | null>(null);
+  const renderedInvarianceRunIdsRef = useRef(new Set<string>());
+  const pendingInvarianceRenderAcksRef = useRef(
+    new Map<
+      string,
+      Readonly<{
+        resolve(): void;
+        reject(reason?: unknown): void;
+        timeoutId: number;
+      }>
+    >(),
+  );
+  const requestInvarianceSummaryRef = useRef(requestInvarianceSummary);
+  const invarianceDirectiveSequenceRef = useRef(0);
+  const invarianceVerbalizationRef = useRef<
+    InvarianceVerbalizationCoordinator | undefined
+  >(undefined);
+  const activeHintDeliveryRef = useRef<Promise<HintDeliveryResult> | undefined>(
+    undefined,
+  );
+
+  useLayoutEffect(() => {
+    requestInvarianceSummaryRef.current = requestInvarianceSummary;
+  }, [requestInvarianceSummary]);
+
+  const rejectPendingInvarianceRenderAcks = useCallback(() => {
+    for (const pending of pendingInvarianceRenderAcksRef.current.values()) {
+      window.clearTimeout(pending.timeoutId);
+      pending.reject(new Error("Invariance render authority was invalidated."));
+    }
+    pendingInvarianceRenderAcksRef.current.clear();
+  }, []);
+
+  const invalidateInvariancePipeline = useCallback(() => {
+    currentInvarianceResultRef.current = null;
+    renderedInvarianceRunIdsRef.current.clear();
+    rejectPendingInvarianceRenderAcks();
+    setInvarianceSummary(null);
+    const debugWindow = window as Window & {
+      __GEOTUTOR_INVARIANCE_VERBALIZATION__?: InvarianceVerbalizationResult;
+      __GEOTUTOR_INVARIANCE_SUMMARY__?: InvarianceSummaryRender;
+    };
+    delete debugWindow.__GEOTUTOR_INVARIANCE_VERBALIZATION__;
+    delete debugWindow.__GEOTUTOR_INVARIANCE_SUMMARY__;
+  }, [rejectPendingInvarianceRenderAcks]);
+
+  const getCurrentInvarianceContext = useCallback(
+    (): InvarianceVerbalizationContext => {
+      const state = pedagogyStateRef.current;
+      const result = currentInvarianceResultRef.current;
+      if (!state || !result) {
+        throw new Error("Current invariance authority is unavailable.");
+      }
+      return Object.freeze({
+        state,
+        currentRunId: result.runId,
+        currentRevision: result.revision,
+        inputEvidenceIds: Object.freeze([...result.inputEvidenceIds]),
+        evidenceIds: Object.freeze([...result.evidenceIds]),
+      });
+    },
+    [],
+  );
+
+  const waitForInvarianceRender = useCallback(
+    (view: InvarianceMeasurementsView): Promise<void> | void => {
+      if (renderedInvarianceRunIdsRef.current.has(view.runId)) return;
+      const existing = pendingInvarianceRenderAcksRef.current.get(view.runId);
+      if (existing) return;
+      return new Promise<void>((resolve, reject) => {
+        const timeoutId = window.setTimeout(() => {
+          pendingInvarianceRenderAcksRef.current.delete(view.runId);
+          reject(new Error("Invariance result render was not acknowledged."));
+        }, 2_000);
+        pendingInvarianceRenderAcksRef.current.set(
+          view.runId,
+          Object.freeze({ resolve, reject, timeoutId }),
+        );
+      });
+    },
+    [],
+  );
+
+  const acknowledgeInvarianceRender = useCallback((runId: string) => {
+    renderedInvarianceRunIdsRef.current.add(runId);
+    const pending = pendingInvarianceRenderAcksRef.current.get(runId);
+    if (!pending) return;
+    pendingInvarianceRenderAcksRef.current.delete(runId);
+    window.clearTimeout(pending.timeoutId);
+    pending.resolve();
+  }, []);
+
+  const renderInvarianceSummary = useCallback(
+    (summary: InvarianceSummaryRender) => {
+      const context = getCurrentInvarianceContext();
+      if (
+        context.currentRunId !== summary.runId ||
+        context.currentRevision !== summary.revision ||
+        context.state.revision !== summary.revision
+      ) {
+        throw new Error("Stale invariance summary rejected.");
+      }
+      setInvarianceSummary(Object.freeze(summary));
+      const debugWindow = window as Window & {
+        __GEOTUTOR_INVARIANCE_SUMMARY__?: InvarianceSummaryRender;
+      };
+      debugWindow.__GEOTUTOR_INVARIANCE_SUMMARY__ = summary;
+    },
+    [getCurrentInvarianceContext],
+  );
+
+  useEffect(() => {
+    invarianceVerbalizationRef.current = new InvarianceVerbalizationCoordinator({
+      getCurrentContext: getCurrentInvarianceContext,
+      renderMeasurements: waitForInvarianceRender,
+      createDirectiveId: () =>
+        `invariance-directive-${++invarianceDirectiveSequenceRef.current}`,
+      onDirectiveReady: async (directive) => {
+        const result = currentInvarianceResultRef.current;
+        const request = requestInvarianceSummaryRef.current;
+        if (
+          !result ||
+          result.status !== "completed" ||
+          !result.pass ||
+          !request
+        ) {
+          throw new Error("Invariance summary request is unavailable.");
+        }
+        const outcome = await request(result as InvarianceRunCompleted, directive);
+        if (outcome.status === "ignored") {
+          throw new Error(`Invariance summary ignored: ${outcome.reason}`);
+        }
+      },
+    });
+    return () => {
+      invarianceVerbalizationRef.current = undefined;
+    };
+  }, [getCurrentInvarianceContext, waitForInvarianceRender]);
+
+  const handleInvarianceResult = useCallback(async (result: InvarianceRunResult) => {
+    currentInvarianceResultRef.current = result;
+    const outcome = await invarianceVerbalizationRef.current?.receive(result);
+    if (!outcome) return;
+    const debugWindow = window as Window & {
+      __GEOTUTOR_INVARIANCE_VERBALIZATION__?: InvarianceVerbalizationResult;
+    };
+    debugWindow.__GEOTUTOR_INVARIANCE_VERBALIZATION__ = outcome;
+  }, []);
 
   useLayoutEffect(() => {
     progressViewRef.current = progressView;
@@ -165,26 +378,20 @@ export function GeoGebraSpike({
   }, []);
 
   const resetConstruction = async () => {
-    const exerciseInitialization = exerciseInitializationRef.current;
-    if (!exerciseInitialization || resetInFlightRef.current) return;
-    if (!(cancelRealtime?.("reset") ?? false)) cancelLocalEffects("reset");
+    const reset = globalResetRef.current;
+    if (!reset || resetInFlightRef.current) return;
     resetInFlightRef.current = true;
     setResetStatus("resetting");
     try {
-      const result = await exerciseInitialization.recover();
-      window.__GEOTUTOR_RESET__ = result;
+      const result = await reset("user_request", activePlanRef.current ?? undefined);
       if (!result.ok) {
-        setResetStatus("failed");
+        setResetStatus(result.error.state === "fatal" ? "fatal" : "failed");
         return;
       }
       delete window.__GEOTUTOR_INITIALIZATION__;
       onConstructionReset?.();
       const evidence = window.__GEOTUTOR_GGB_EVIDENCE__;
       if (evidence) setState({ phase: "ready", evidence });
-      const nextProgress = initialProgress(result.value.snapshot.revision);
-      setProgress(nextProgress);
-      window.__GEOTUTOR_PROGRESS__ = nextProgress;
-      resetPedagogyRef.current();
       delete window.__GEOTUTOR_LAST_ACTION__;
       delete window.__GEOTUTOR_VALIDATION__;
       setResetStatus(result.value.recovered ? "recovered" : "idle");
@@ -235,13 +442,22 @@ export function GeoGebraSpike({
       setHintStatus("failed");
       return;
     }
-    const delivery: HintDeliveryResult = await orchestrator.deliver(
+    const deliveryPromise = orchestrator.deliver(
       authorization,
       {
         revision: directive.baseRevision,
         confirmationToken,
       },
     );
+    activeHintDeliveryRef.current = deliveryPromise;
+    let delivery: HintDeliveryResult;
+    try {
+      delivery = await deliveryPromise;
+    } finally {
+      if (activeHintDeliveryRef.current === deliveryPromise) {
+        activeHintDeliveryRef.current = undefined;
+      }
+    }
     const live = pedagogyStateRef.current;
     if (delivery.status === "delivered" && live) {
       pedagogyStateRef.current = pedagogyReducer(live, {
@@ -315,14 +531,13 @@ export function GeoGebraSpike({
     });
     pedagogyStateRef.current = next;
     evidenceLog?.append({
-      eventType: "directive_queued",
-      epoch: queued.directive.epoch,
       revision: queued.directive.baseRevision,
-      decision: "SPEAK",
-      directiveId: queued.directive.directiveId,
-      evidenceIds: queued.directive.evidenceIds,
-      outcome: "accepted",
-      reason: "explicit_help",
+      kind: "directive",
+      correlationIds: {
+        directiveId: queued.directive.directiveId,
+        evidenceIds: queued.directive.evidenceIds,
+      },
+      status: "queued",
     });
 
     if (authorization.level === 4) {
@@ -365,16 +580,21 @@ export function GeoGebraSpike({
 
   useEffect(() => {
     const container = containerRef.current;
+    const renderedInvarianceRunIds = renderedInvarianceRunIdsRef.current;
     let disposed = false;
     const adapter = new GeoGebraAdapter();
     const registry = new SceneRegistry();
     let bridge: CompletedActionBridge | undefined;
     let highlights: HighlightManager | undefined;
     let hintOrchestrator: HintOrchestrator | undefined;
+    let dragOperation: OperationLease | undefined;
+    let globalResetPromise: Promise<ResetResult> | undefined;
 
     if (!container) {
       return;
     }
+    const accessibilityGuard = new GeoGebraAccessibilityGuard(container);
+    accessibilityGuard.start();
 
     const timeout = window.setTimeout(() => {
       if (!disposed) {
@@ -450,6 +670,10 @@ export function GeoGebraSpike({
           setProgressView(nextView);
         };
         resetPedagogyRef.current = () => {
+          invarianceRuntimeRef.current?.cancelActive?.("reset");
+          invalidateInvariancePipeline();
+          currentValidationRef.current = null;
+          setInvarianceRuntime(undefined);
           const plan = activePlanRef.current;
           const snapshot = snapshots.capture();
           if (!plan || !snapshot.ok) {
@@ -460,25 +684,68 @@ export function GeoGebraSpike({
             setProgressView(nextView);
             return;
           }
-          activatePedagogy(plan, snapshot.value);
+          previousSnapshotRef.current = snapshot.value;
+          const nextState = createInitialPedagogyState(plan, {
+            epoch: pedagogyEpochRef.current,
+            revision: snapshot.value.revision,
+            snapshotHash: snapshot.value.hash,
+          });
+          pedagogyStateRef.current = nextState;
+          const nextView = selectProgressViewModel(
+            nextState,
+            progressViewRef.current,
+          );
+          progressViewRef.current = nextView;
+          setProgressView(nextView);
         };
         const validator = new PerpendicularBisectorValidator(adapter, registry);
         bridge = new CompletedActionBridge(adapter, registry, snapshots, (action) => {
           window.__GEOTUTOR_LAST_ACTION__ = action;
           if (action.studentAffectedNames.length > 0) {
+            const actionEpoch = pedagogyStateRef.current?.epoch ?? 0;
+            const actionOperation = operationArbiter?.begin({
+              kind: "student_action",
+              epoch: actionEpoch,
+              revision: action.revision,
+            });
+            if (actionOperation && !actionOperation.accepted) return;
+            invarianceRuntimeRef.current?.cancelActive?.("stale_revision");
+            invalidateInvariancePipeline();
+            const commitActionUi = (effect: () => void) => {
+              if (actionOperation) {
+                actionOperation.commit(
+                  "ui_commit",
+                  { epoch: actionEpoch },
+                  effect,
+                );
+              } else {
+                effect();
+              }
+            };
+            commitActionUi(() => setInvarianceRuntime(undefined));
             if (!(cancelRealtime?.("stale_revision") ?? false)) {
               cancelLocalEffects("stale_revision");
             }
             const validation = validator.validate(action.revision);
-            window.__GEOTUTOR_VALIDATION__ = validation;
-            setProgress((current) => {
-              const next = applyValidationResult(
-                current,
-                validation,
-                action.revision,
+            currentValidationRef.current = validation.ok
+              ? validation.value
+              : null;
+            if (validation.ok && validation.value.score === 2) {
+              commitActionUi(() =>
+                setInvarianceRuntime(invarianceRuntimeRef.current),
               );
-              window.__GEOTUTOR_PROGRESS__ = next;
-              return next;
+            }
+            commitActionUi(() => {
+              window.__GEOTUTOR_VALIDATION__ = validation;
+              setProgress((current) => {
+                const next = applyValidationResult(
+                  current,
+                  validation,
+                  action.revision,
+                );
+                window.__GEOTUTOR_PROGRESS__ = next;
+                return next;
+              });
             });
             const currentSnapshot = snapshots.capture();
             if (!validation.ok || !currentSnapshot.ok) {
@@ -486,16 +753,29 @@ export function GeoGebraSpike({
                 ...initialProgressViewModel(),
                 announcement: "Local evidence needs revalidation.",
               };
-              progressViewRef.current = nextView;
-              setProgressView(nextView);
+              commitActionUi(() => {
+                progressViewRef.current = nextView;
+                setProgressView(nextView);
+              });
               previousSnapshotRef.current = currentSnapshot.value;
+              actionOperation?.finish("validation_failed");
               return;
             }
             pedagogyPipelineRef.current = pedagogyPipelineRef.current.then(
               async () => {
                 const currentState = pedagogyStateRef.current;
                 const previousSnapshot = previousSnapshotRef.current;
-                if (!currentState || !previousSnapshot || disposed) return;
+                if (
+                  !currentState ||
+                  !previousSnapshot ||
+                  disposed ||
+                  (actionOperation &&
+                    !actionOperation.isCurrent("ui_commit", {
+                      epoch: actionEpoch,
+                    }))
+                ) {
+                  return;
+                }
                 const sourceEpoch = currentState.epoch;
                 const event = createValidatedActionEvent(
                   currentState,
@@ -511,17 +791,35 @@ export function GeoGebraSpike({
                   {
                     renderProgress: (model) =>
                       new Promise<void>((resolve) => {
-                        progressRenderAckRef.current = resolve;
-                        progressViewRef.current = model;
-                        setProgressView(model);
+                        const render = () => {
+                          progressRenderAckRef.current = resolve;
+                          progressViewRef.current = model;
+                          setProgressView(model);
+                        };
+                        if (actionOperation) {
+                          const committed = actionOperation.commit(
+                            "ui_commit",
+                            { epoch: sourceEpoch },
+                            render,
+                          );
+                          if (committed === undefined) resolve();
+                        } else {
+                          render();
+                        }
                       }),
                     evidenceLog,
+                    latencyMonitor,
                   },
                 );
                 if (
                   disposed ||
                   !result.accepted ||
-                  pedagogyStateRef.current?.epoch !== sourceEpoch
+                  pedagogyStateRef.current?.epoch !== sourceEpoch ||
+                  (actionOperation &&
+                    !actionOperation.isCurrent("ui_commit", {
+                      epoch: sourceEpoch,
+                      revision: action.revision,
+                    }))
                 ) {
                   return;
                 }
@@ -557,21 +855,28 @@ export function GeoGebraSpike({
                       snapshotHash: nextPedagogyState.studentSnapshotHash,
                     });
                     evidenceLog?.append({
-                      eventType: "directive_queued",
-                      epoch: directive.epoch,
                       revision: directive.baseRevision,
                       actionId: event.actionId,
-                      decision: "SPEAK",
-                      directiveId: directive.directiveId,
-                      evidenceIds: directive.evidenceIds,
-                      outcome: "accepted",
-                      reason: result.decision.reason,
+                      kind: "directive",
+                      correlationIds: {
+                        directiveId: directive.directiveId,
+                        evidenceIds: directive.evidenceIds,
+                      },
+                      status: "queued",
                     });
-                    pedagogyStateRef.current = nextPedagogyState;
-                    const requestStatus = requestProactive?.(
-                      result.decision,
-                      directive,
-                    ) ?? "unavailable";
+                    commitActionUi(() => {
+                      pedagogyStateRef.current = nextPedagogyState;
+                    });
+                    const sendProactive = () =>
+                      requestProactive?.(result.decision!, directive!) ??
+                      "unavailable";
+                    const requestStatus = actionOperation
+                      ? actionOperation.commit(
+                          "realtime_emit",
+                          { epoch: sourceEpoch, revision: action.revision },
+                          sendProactive,
+                        ) ?? "unavailable"
+                      : sendProactive();
                     if (shouldInvalidateQueuedDirective(requestStatus)) {
                       nextPedagogyState = pedagogyReducer(nextPedagogyState, {
                         type: "directive_invalidated",
@@ -583,41 +888,71 @@ export function GeoGebraSpike({
                     }
                   }
                 }
-                pedagogyStateRef.current = nextPedagogyState;
-                previousSnapshotRef.current = currentSnapshot.value;
-                const debugWindow = window as Window & {
-                  __GEOTUTOR_T4_TRACE__?: readonly LocalFirstTrace[];
-                  __GEOTUTOR_POLICY_DECISION__?: typeof result.decision;
-                };
-                debugWindow.__GEOTUTOR_T4_TRACE__ = result.trace;
-                debugWindow.__GEOTUTOR_POLICY_DECISION__ = result.decision;
+                commitActionUi(() => {
+                  pedagogyStateRef.current = nextPedagogyState;
+                  previousSnapshotRef.current = currentSnapshot.value;
+                  const debugWindow = window as Window & {
+                    __GEOTUTOR_T4_TRACE__?: readonly LocalFirstTrace[];
+                    __GEOTUTOR_POLICY_DECISION__?: typeof result.decision;
+                  };
+                  debugWindow.__GEOTUTOR_T4_TRACE__ = result.trace;
+                  debugWindow.__GEOTUTOR_POLICY_DECISION__ = result.decision;
+                });
               },
-            ).catch(() => {
-              if (disposed) return;
-              const nextView = {
-                ...initialProgressViewModel(),
-                announcement: "Local evidence needs revalidation.",
-              };
-              progressViewRef.current = nextView;
-              setProgressView(nextView);
-            });
+            )
+              .catch(() => {
+                if (disposed) return;
+                const nextView = {
+                  ...initialProgressViewModel(),
+                  announcement: "Local evidence needs revalidation.",
+                };
+                commitActionUi(() => {
+                  progressViewRef.current = nextView;
+                  setProgressView(nextView);
+                });
+              })
+              .finally(() => actionOperation?.finish());
           }
         }, (activity) => {
           let live = pedagogyStateRef.current;
           if (!live) return;
           if (activity.type === "student_drag_started") {
+            dragOperation?.finish("superseded");
+            dragOperation = operationArbiter?.begin({
+              kind: "student_action",
+              epoch: live.epoch,
+              revision: live.revision,
+            });
+            if (dragOperation && !dragOperation.accepted) return;
             if (!(cancelRealtime?.("student_drag") ?? false)) {
               cancelLocalEffects("student_drag");
             }
             live = pedagogyStateRef.current;
             if (!live || live.interaction.studentIsDragging) return;
           } else if (!live.interaction.studentIsDragging) {
+            dragOperation?.finish("drag_ended_without_state");
+            dragOperation = undefined;
             return;
           }
-          pedagogyStateRef.current = pedagogyReducer(live, {
-            type: activity.type,
-            ...pedagogyAnchor(live),
-          });
+          const commit = () => {
+            pedagogyStateRef.current = pedagogyReducer(live, {
+              type: activity.type,
+              ...pedagogyAnchor(live),
+            });
+          };
+          if (dragOperation) {
+            dragOperation.commit(
+              "ui_commit",
+              { epoch: live.epoch, revision: live.revision },
+              commit,
+            );
+          } else {
+            commit();
+          }
+          if (activity.type === "student_drag_ended") {
+            dragOperation?.finish();
+            dragOperation = undefined;
+          }
         });
         const bridgeResult = bridge.start();
         if (!bridgeResult.ok) {
@@ -641,9 +976,211 @@ export function GeoGebraSpike({
           checkpoint,
         );
         exerciseInitializationRef.current = exerciseInitialization;
+        const invarianceScene = new InvarianceSceneService(
+          adapter,
+          registry,
+          snapshots,
+          checkpoint,
+          bridge,
+        );
+        const invarianceSampler = new GeoGebraInvarianceSampler(adapter);
+        let activeInvarianceHandle: InvarianceRunHandle | undefined;
+        const experimentRuntime: InvarianceExperimentRuntime = Object.freeze({
+          start(observer) {
+            const validation = currentValidationRef.current;
+            if (!validation || validation.score !== 2 || activeInvarianceHandle) {
+              return null;
+            }
+            invalidateInvariancePipeline();
+            const operation = new RunInvarianceTestOperation({
+              getCurrentValidation: () => currentValidationRef.current,
+              runInTemporaryScene: (request, execute) =>
+                invarianceScene.run(request, execute),
+              sample: async (request) => {
+                const sample = await invarianceSampler.sample(request);
+                observer.onSample(sample);
+                return sample;
+              },
+              observe: observer.onEvent,
+            });
+            const evidenceIds = Object.freeze(
+              validation.evidence.map(({ id }) => id),
+            ) as InvarianceInputEvidenceIds;
+            const handle = operation.start({
+              candidateLine: validation.candidate,
+              revision: validation.revision,
+              evidenceIds,
+            });
+            activeInvarianceHandle = handle;
+            void handle.result.finally(() => {
+              const debugWindow = window as Window & {
+                __GEOTUTOR_INVARIANCE_SCENE__?: InvarianceSceneReport;
+              };
+              if (invarianceScene.lastReport) {
+                debugWindow.__GEOTUTOR_INVARIANCE_SCENE__ =
+                  invarianceScene.lastReport;
+              }
+              if (activeInvarianceHandle === handle) {
+                activeInvarianceHandle = undefined;
+              }
+            });
+            return handle;
+          },
+          cancelActive(reason) {
+            return activeInvarianceHandle?.cancel(reason) ?? false;
+          },
+          async cancelActiveAndWait(reason) {
+            const handle = activeInvarianceHandle;
+            if (!handle) return false;
+            const cancelled = handle.cancel(reason);
+            await handle.result.catch(() => undefined);
+            return cancelled;
+          },
+        });
+        invarianceRuntimeRef.current = experimentRuntime;
+        if (currentValidationRef.current?.score === 2) {
+          setInvarianceRuntime(experimentRuntime);
+        }
+        onInvarianceSummaryRuntime?.(
+          Object.freeze({
+            getCurrentContext: getCurrentInvarianceContext,
+            renderSummary: renderInvarianceSummary,
+          }),
+        );
+        const runGlobalReset = (
+          reason: ResetReason,
+          recoveryPlan?: ExercisePlanV1,
+        ): Promise<ResetResult> => {
+          if (globalResetPromise) return globalResetPromise;
+          const source = snapshots.capture();
+          const resetOperation = operationArbiter?.begin({
+            kind: "reset",
+            epoch: pedagogyEpochRef.current + 1,
+            revision: source.ok ? source.value.revision : 0,
+          });
+          const run = async (): Promise<ResetResult> => {
+            const result = await exerciseInitialization.reset(reason, {
+            recoveryPlan: recoveryPlan ?? activePlanRef.current ?? undefined,
+            guardMutation: () =>
+              resetOperation
+                ? resetOperation.commit(
+                    "geogebra_mutation",
+                    undefined,
+                    () => true,
+                  ) === true
+                : true,
+            cancelEffects: async () => {
+              const cancelledScopes = new Set<string>();
+              pedagogyEpochRef.current += 1;
+              if (
+                resetOperation &&
+                !resetOperation.isCurrent("ui_commit", {
+                  epoch: pedagogyEpochRef.current,
+                })
+              ) {
+                throw new Error("Reset authority expired before cancellation.");
+              }
+              const live = pedagogyStateRef.current;
+              const plan = activePlanRef.current;
+              if (live && plan) {
+                pedagogyStateRef.current = pedagogyReducer(live, {
+                  type: "epoch_reset",
+                  epoch: pedagogyEpochRef.current,
+                  plan,
+                  stepId: live.stepId,
+                  revision: live.revision,
+                  snapshotHash: live.studentSnapshotHash,
+                });
+              } else {
+                pedagogyStateRef.current = null;
+              }
+              cancelledScopes.add("pedagogy_epoch");
+
+              invalidateInvariancePipeline();
+              currentValidationRef.current = null;
+              setInvarianceRuntime(undefined);
+              cancelledScopes.add("invariance_c04_c05");
+              if (await experimentRuntime.cancelActiveAndWait?.("reset")) {
+                cancelledScopes.add("invariance_c01_c03");
+              }
+
+              const realtimeCancelled = cancelRealtime?.("reset") ?? false;
+              if (realtimeCancelled) {
+                cancelledScopes.add("realtime_responses_audio_tools");
+              }
+              const localCancelled = cancelLocalEffects("reset");
+              const hintDelivery = activeHintDeliveryRef.current;
+              if (hintDelivery) {
+                await hintDelivery.catch(() => undefined);
+              }
+              if (localCancelled || hintDelivery) {
+                cancelledScopes.add("hints");
+              }
+              hintConfirmationsRef.current?.clear();
+              pendingGuidedHintRef.current = undefined;
+              setHintStatus("idle");
+
+              progressRenderAckRef.current?.();
+              progressRenderAckRef.current = null;
+              await pedagogyPipelineRef.current.catch(() => undefined);
+              cancelledScopes.add("pedagogy_pipeline");
+              return Object.freeze([...cancelledScopes].sort());
+            },
+            });
+            const commitResetUi = (effect: () => void) => {
+              if (resetOperation) {
+                resetOperation.commit("ui_commit", undefined, effect);
+              } else {
+                effect();
+              }
+            };
+            commitResetUi(() => {
+              window.__GEOTUTOR_RESET__ = result;
+              if (result.ok && !disposed) {
+                const evidence = adapter.withApi(collectGeoGebraEvidence);
+                if (evidence.ok) {
+                  window.__GEOTUTOR_GGB_EVIDENCE__ = evidence.value;
+                  setState({ phase: "ready", evidence: evidence.value });
+                }
+                const nextProgress = initialProgress(
+                  result.value.snapshot.revision,
+                );
+                window.__GEOTUTOR_PROGRESS__ = nextProgress;
+                setProgress(nextProgress);
+                resetPedagogyRef.current();
+                setResetStatus(result.value.recovered ? "recovered" : "idle");
+              } else if (!result.ok && !disposed) {
+                setResetStatus(
+                  result.error.state === "fatal" ? "fatal" : "failed",
+                );
+              }
+            });
+            return result;
+          };
+          globalResetPromise = run()
+            .then(
+              (result) => {
+                resetOperation?.finish();
+                if (result.ok) evidenceLog?.clear();
+                return result;
+              },
+              (error) => {
+                resetOperation?.finish("failed");
+                throw error;
+              },
+            )
+            .finally(() => {
+              globalResetPromise = undefined;
+            });
+          return globalResetPromise;
+        };
+        globalResetRef.current = runGlobalReset;
         onExerciseInitializationRuntime?.({
-          async initialize(confirmation) {
-            const result = await exerciseInitialization.initialize(confirmation);
+          async initialize(confirmation, options) {
+            const result = await exerciseInitialization.initialize(
+              confirmation,
+              options,
+            );
             window.__GEOTUTOR_INITIALIZATION__ = result;
             if (
               !disposed &&
@@ -666,22 +1203,14 @@ export function GeoGebraSpike({
             }
             return result;
           },
+          reset(reason, options) {
+            return runGlobalReset(reason, options?.recoveryPlan);
+          },
           async recover() {
-            const result = await exerciseInitialization.recover();
-            window.__GEOTUTOR_RESET__ = result;
-            if (result.ok && !disposed) {
-              const evidence = adapter.withApi(collectGeoGebraEvidence);
-              if (evidence.ok) {
-                window.__GEOTUTOR_GGB_EVIDENCE__ = evidence.value;
-                setState({ phase: "ready", evidence: evidence.value });
-              }
-              const nextProgress = initialProgress(result.value.snapshot.revision);
-              window.__GEOTUTOR_PROGRESS__ = nextProgress;
-              setProgress(nextProgress);
-              resetPedagogyRef.current();
-              setResetStatus(result.value.recovered ? "recovered" : "idle");
-            }
-            return result;
+            return runGlobalReset(
+              "recovery_retry",
+              activePlanRef.current ?? undefined,
+            );
           },
         });
         highlights = new HighlightManager(adapter, registry);
@@ -704,8 +1233,8 @@ export function GeoGebraSpike({
             validator,
             getConfirmedExercise: (planId) =>
               toolWorkflowAuthority?.getConfirmedExercise(planId),
-            initializeExercise: (confirmation) =>
-              toolWorkflowAuthority?.initializeExercise(confirmation) ??
+            initializeExercise: (confirmation, options) =>
+              toolWorkflowAuthority?.initializeExercise(confirmation, options) ??
               Promise.resolve({
                 status: "failed" as const,
                 code: "initialization_unavailable",
@@ -753,6 +1282,7 @@ export function GeoGebraSpike({
     return () => {
       disposed = true;
       window.clearTimeout(timeout);
+      accessibilityGuard.stop();
       delete window.__GEOTUTOR_GGB_EVIDENCE__;
       delete window.__GEOTUTOR_LAST_ACTION__;
       delete window.__GEOTUTOR_VALIDATION__;
@@ -765,6 +1295,23 @@ export function GeoGebraSpike({
       };
       delete debugWindow.__GEOTUTOR_T4_TRACE__;
       delete debugWindow.__GEOTUTOR_POLICY_DECISION__;
+      delete (
+        debugWindow as typeof debugWindow & {
+          __GEOTUTOR_INVARIANCE_VERBALIZATION__?: InvarianceVerbalizationResult;
+          __GEOTUTOR_INVARIANCE_SUMMARY__?: InvarianceSummaryRender;
+          __GEOTUTOR_INVARIANCE_SCENE__?: InvarianceSceneReport;
+        }
+      ).__GEOTUTOR_INVARIANCE_VERBALIZATION__;
+      delete (
+        debugWindow as typeof debugWindow & {
+          __GEOTUTOR_INVARIANCE_SUMMARY__?: InvarianceSummaryRender;
+        }
+      ).__GEOTUTOR_INVARIANCE_SUMMARY__;
+      delete (
+        debugWindow as typeof debugWindow & {
+          __GEOTUTOR_INVARIANCE_SCENE__?: InvarianceSceneReport;
+        }
+      ).__GEOTUTOR_INVARIANCE_SCENE__;
       progressRenderAckRef.current?.();
       progressRenderAckRef.current = null;
       pedagogyStateRef.current = null;
@@ -773,7 +1320,14 @@ export function GeoGebraSpike({
       resetPedagogyRef.current = () => undefined;
       pedagogyPipelineRef.current = Promise.resolve();
       resetInFlightRef.current = false;
+      globalResetRef.current = undefined;
       exerciseInitializationRef.current = undefined;
+      invarianceRuntimeRef.current?.cancelActive?.("application_stop");
+      invarianceRuntimeRef.current = undefined;
+      currentValidationRef.current = null;
+      currentInvarianceResultRef.current = null;
+      renderedInvarianceRunIds.clear();
+      rejectPendingInvarianceRenderAcks();
       pendingGuidedHintRef.current = undefined;
       hintConfirmationsRef.current?.clear();
       hintConfirmationsRef.current = undefined;
@@ -782,6 +1336,7 @@ export function GeoGebraSpike({
       onToolRuntime?.(undefined);
       onExerciseInitializationRuntime?.(undefined);
       onPedagogyRuntime?.(undefined);
+      onInvarianceSummaryRuntime?.(undefined);
       highlights?.cleanup();
       bridge?.stop();
       adapter.dispose();
@@ -794,20 +1349,30 @@ export function GeoGebraSpike({
     cancelLocalEffects,
     cancelRealtime,
     evidenceLog,
+    getCurrentInvarianceContext,
+    invalidateInvariancePipeline,
+    latencyMonitor,
+    onInvarianceSummaryRuntime,
+    operationArbiter,
     requestProactive,
+    rejectPendingInvarianceRenderAcks,
+    renderInvarianceSummary,
     toolWorkflowAuthority,
   ]);
 
   return (
-    <section className="spike" aria-labelledby="geogebra-spike-title">
+    <section
+      className="spike workspace-card workspace-card-build"
+      aria-labelledby="geogebra-spike-title"
+    >
       <div className="spike-heading">
         <div>
-          <p className="section-index">T1 / Verifiable construction</p>
-          <h2 id="geogebra-spike-title">A construction the app can verify locally</h2>
+          <p className="section-index">Step 2 · Build</p>
+          <h2 id="geogebra-spike-title">Your canvas, your move</h2>
         </div>
         <p>
-          GeoGebra Geometry {GEOGEBRA_VERSION} · non-commercial prototype ·
-          attribution: GeoGebra
+          Use the tools on the canvas to construct the perpendicular bisector.
+          I&apos;ll quietly check each useful move.
         </p>
       </div>
 
@@ -815,24 +1380,34 @@ export function GeoGebraSpike({
         <div
           ref={containerRef}
           className="geogebra-canvas"
+          role="region"
           aria-label="Interactive GeoGebra geometry workspace"
         />
 
         <aside className="proof-panel">
-          <p className={`proof-status proof-status-${state.phase}`}>
+          <p
+            className={`proof-status proof-status-${state.phase}`}
+            role="status"
+            aria-live="polite"
+          >
             {state.phase === "loading" && "Loading applet"}
-            {state.phase === "ready" && "API verified"}
+            {state.phase === "ready" && (
+              <>
+                <span>Workspace ready</span>
+                <small>API verified</small>
+              </>
+            )}
             {state.phase === "unavailable" && "Applet unavailable"}
           </p>
 
           {state.phase === "loading" && (
-            <p>Waiting for the appletOnLoad API boundary…</p>
+            <p>Setting up your drawing tools…</p>
           )}
 
           {state.phase === "unavailable" && (
             <div className="fallback" role="alert">
               <p>{state.message}</p>
-              <p>The GeoTutor shell remains available. Reload to retry the spike.</p>
+              <p>Your exercise is safe. Reload the page to try opening the canvas again.</p>
             </div>
           )}
 
@@ -884,22 +1459,36 @@ export function GeoGebraSpike({
                 {resetStatus === "failed" && (
                   <p role="alert">Reset failed. Reload the workspace before continuing.</p>
                 )}
+                {resetStatus === "fatal" && (
+                  <p role="alert">
+                    Reset could not restore a verified construction. Retry reset; no success was recorded.
+                  </p>
+                )}
               </div>
-              <p className="proof-intro">
-                Created transactionally, observed after stable actions and verified
-                with independent evidence.
-              </p>
-              <dl>
-                {state.evidence.objects.map((object) => (
-                  <div key={object.label}>
-                    <dt>{object.label}</dt>
-                    <dd>{object.command || "independent point"}</dd>
-                    <dd>
-                      exists: {String(object.exists)} · defined: {String(object.defined)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <InvarianceExperiment
+                runtime={invarianceRuntime}
+                summary={invarianceSummary}
+                onResult={handleInvarianceResult}
+                onTerminalRendered={acknowledgeInvarianceRender}
+              />
+              <details className="proof-details">
+                <summary>How GeoTutor checks the construction</summary>
+                <p className="proof-intro">
+                  The canvas is observed only after a stable action and every geometry
+                  result is checked locally.
+                </p>
+                <dl>
+                  {state.evidence.objects.map((object) => (
+                    <div key={object.label}>
+                      <dt>{object.label}</dt>
+                      <dd>{object.command || "independent point"}</dd>
+                      <dd>
+                        exists: {String(object.exists)} · defined: {String(object.defined)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </details>
             </>
           )}
         </aside>

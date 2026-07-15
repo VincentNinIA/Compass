@@ -10,7 +10,7 @@ export function ProgressFeedback({ model }: { model: ProgressViewModel }) {
       data-testid="construction-progress"
     >
       <p>
-        Construction progress <strong>{model.score}/{model.total}</strong>
+        Your progress <strong>{model.score}/{model.total}</strong>
       </p>
       <ul>
         {model.properties.map((property) => (
@@ -39,7 +39,7 @@ function statusIcon(status: ProgressPropertyViewModel["status"]): string {
 }
 
 function statusText(property: ProgressPropertyViewModel): string {
-  if (property.status === "verified") return "verified";
-  if (property.status === "missing") return "not yet verified";
-  return "waiting for local evidence";
+  if (property.status === "verified") return "you got it";
+  if (property.status === "missing") return "still to find";
+  return "checking your latest move";
 }

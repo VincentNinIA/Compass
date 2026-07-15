@@ -458,18 +458,28 @@ export class ProactiveTurnOrchestrator {
     detail: { responseId?: string; outcome: string; reason: string },
   ): void {
     this.dependencies.evidenceLog?.append({
-      eventType,
-      epoch: directive.epoch,
       revision: directive.baseRevision,
       ...(directive.sourceActionId
         ? { actionId: directive.sourceActionId }
         : {}),
-      decision: "SPEAK",
-      directiveId: directive.directiveId,
-      ...(detail.responseId ? { responseId: detail.responseId } : {}),
-      evidenceIds: directive.evidenceIds,
-      outcome: detail.outcome,
-      reason: detail.reason,
+      kind: eventType.startsWith("response_") ? "response" : "directive",
+      correlationIds: {
+        directiveId: directive.directiveId,
+        ...(detail.responseId ? { responseId: detail.responseId } : {}),
+        evidenceIds: directive.evidenceIds,
+      },
+      status:
+        eventType === "directive_queued"
+          ? "queued"
+          : eventType === "directive_dispatched"
+            ? "accepted"
+            : eventType === "response_started"
+              ? "started"
+              : detail.outcome === "completed"
+                ? "completed"
+                : detail.outcome === "cancelled"
+                  ? "cancelled"
+                  : "failed",
     });
   }
 }

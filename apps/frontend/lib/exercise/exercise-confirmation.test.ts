@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EXERCISE_CLARIFICATION_MESSAGES_V1,
+  EXERCISE_REFUSAL_MESSAGE_V1,
+  EXERCISE_UNSUPPORTED_MESSAGE_V1,
+  createExerciseReadyClientExtractionV1,
   deriveExercisePlanV1,
   type ExerciseExtractionWireV1,
 } from "./exercise-contracts";
@@ -27,13 +31,13 @@ const READY_EXTRACTION: ExerciseExtractionWireV1 = {
 
 const READY_RESULT = {
   status: "ready",
-  extraction: READY_EXTRACTION,
+  extraction: createExerciseReadyClientExtractionV1(READY_EXTRACTION),
   plan: deriveExercisePlanV1(READY_EXTRACTION),
 } as const;
 
 const CLARIFICATION_RESULT = {
   status: "needs_clarification",
-  question: "Which endpoint is labelled A?",
+  question: EXERCISE_CLARIFICATION_MESSAGES_V1.missing_labels,
   code: "missing_labels",
 } as const;
 
@@ -65,8 +69,8 @@ describe("exerciseConfirmationReducer", () => {
     expect(ready.status).toBe("awaiting_confirmation");
 
     for (const result of [
-      { status: "unsupported", reason: "Only the perpendicular bisector is supported." },
-      { status: "refused", message: "The image could not be analyzed." },
+      { status: "unsupported", reason: EXERCISE_UNSUPPORTED_MESSAGE_V1 },
+      { status: "refused", message: EXERCISE_REFUSAL_MESSAGE_V1 },
     ] as const) {
       const state = exerciseConfirmationReducer(parsingState(), {
         type: "parse_resolved",

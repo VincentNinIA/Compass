@@ -7,6 +7,7 @@ import {
   type ExerciseParser,
 } from "@/components/exercise-photo/exercise-confirmation";
 import {
+  createExerciseReadyClientExtractionV1,
   deriveExercisePlanV1,
   type ExerciseExtractionWireV1,
 } from "./exercise-contracts";
@@ -32,7 +33,7 @@ const READY_EXTRACTION: ExerciseExtractionWireV1 = {
 
 const READY_RESULT = {
   status: "ready" as const,
-  extraction: READY_EXTRACTION,
+  extraction: createExerciseReadyClientExtractionV1(READY_EXTRACTION),
   plan: deriveExercisePlanV1(READY_EXTRACTION),
 };
 
@@ -235,10 +236,10 @@ describe("exercise data minimization", () => {
 
     const originalFile = makeFile("original-private.jpg");
     selectImage(originalFile);
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
-    await screen.findByRole("heading", { name: "Exercise summary" });
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
+    await screen.findByRole("heading", { name: "Here's what I found" });
 
-    const analyze = screen.getByRole("button", { name: "Analyze" });
+    const analyze = screen.getByRole("button", { name: "Read my exercise" });
     expect(analyze).toBeDisabled();
     fireEvent.click(analyze);
     await act(() => Promise.resolve());
@@ -248,17 +249,17 @@ describe("exercise data minimization", () => {
       expect.objectContaining({ file: originalFile, clarification: null }),
     );
 
-    const replaceInput = screen.getByLabelText("Replace image");
+    const replaceInput = screen.getByLabelText("Choose a different photo");
     const replacementFile = makeFile("replacement-private.jpg");
     expect(replaceInput).toBeEnabled();
     fireEvent.change(replaceInput, { target: { files: [replacementFile] } });
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:private-1");
     expect(screen.getByText("replacement-private.jpg")).toBeInTheDocument();
 
-    const cancel = screen.getByRole("button", { name: "Cancel selection" });
+    const cancel = screen.getByRole("button", { name: "Remove photo" });
     expect(cancel).toBeEnabled();
     fireEvent.click(cancel);
-    expect(screen.getByText("No image selected.")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for your photo")).toBeInTheDocument();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:private-2");
     expect(parseExercise).toHaveBeenCalledTimes(1);
   });
@@ -275,8 +276,8 @@ describe("exercise data minimization", () => {
     );
 
     selectImage();
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
-    fireEvent.click(await screen.findByRole("button", { name: "Confirm exercise" }));
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Looks right — start building" }));
 
     await waitFor(() =>
       expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:private-1"),
@@ -284,7 +285,7 @@ describe("exercise data minimization", () => {
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
     expect(screen.queryByText(READY_EXTRACTION.instruction!)).not.toBeInTheDocument();
     expect(onConfirmed).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole("heading", { name: "Exercise confirmed" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your exercise is ready" })).toBeInTheDocument();
   });
 
   it("aborts and clears pending client work on reset and unmount", async () => {
@@ -302,7 +303,7 @@ describe("exercise data minimization", () => {
       />,
     );
     selectImage();
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
     expect(signal?.aborted).toBe(false);
 
     rerender(
@@ -315,8 +316,8 @@ describe("exercise data minimization", () => {
     );
     await waitFor(() => expect(signal?.aborted).toBe(true));
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:private-1");
-    expect(screen.getByText(/local photo-analysis context were cleared/i)).toBeInTheDocument();
-    expect(screen.getByText("No image selected.")).toBeInTheDocument();
+    expect(screen.getByText(/old construction has been cleared/i)).toBeInTheDocument();
+    expect(screen.getByText("Waiting for your photo")).toBeInTheDocument();
 
     const second = deferred<typeof READY_RESULT>();
     parseExercise.mockImplementationOnce((input) => {
@@ -324,7 +325,7 @@ describe("exercise data minimization", () => {
       return second.promise;
     });
     selectImage(makeFile("second.jpg"));
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
     expect(signal?.aborted).toBe(false);
     unmount();
     expect(signal?.aborted).toBe(true);
@@ -357,18 +358,20 @@ describe("exercise data minimization", () => {
     );
 
     selectImage(makeFile("first.jpg"));
-    fireEvent.change(screen.getByLabelText("Replace image"), {
+    fireEvent.change(screen.getByLabelText("Choose a different photo"), {
       target: { files: [makeFile("second.jpg")] },
     });
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:private-1");
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
-    await screen.findByRole("heading", { name: "Exercise summary" });
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
+    await screen.findByRole("heading", { name: "Here's what I found" });
 
     expect(localSet).not.toHaveBeenCalled();
     expect(localRemove).not.toHaveBeenCalled();
     expect(indexedOpen).not.toHaveBeenCalled();
     expect(cacheOpen).not.toHaveBeenCalled();
-    expect(screen.getByText(/GeoTutor does not save this photo/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/not saved by GeoTutor/i),
+    ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/zero data retention|zero retention/i);
   });
 

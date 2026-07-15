@@ -2,7 +2,7 @@ import type { GeoGebraAdapter } from "./adapter";
 import type { SceneObject, SceneObjectKind, SceneObjectOwner } from "@/types/geogebra";
 
 export type SceneError = {
-  code: "adapter_unavailable" | "label_collision" | "command_rejected" | "verification_failed";
+  code: "adapter_unavailable" | "label_collision" | "command_rejected" | "verification_failed" | "cancelled";
   message: string;
   labels: string[];
 };
@@ -62,8 +62,15 @@ export function initializeMinimalScene(
 export function initializeExerciseScene(
   adapter: GeoGebraAdapter,
   registry: SceneRegistry,
+  isAuthorityCurrent: () => boolean = () => true,
 ): SceneResult<SceneObject[]> {
-  return initializeCanonicalScene(adapter, registry, EXERCISE_OBJECTS, "exercise");
+  return initializeCanonicalScene(
+    adapter,
+    registry,
+    EXERCISE_OBJECTS,
+    "exercise",
+    isAuthorityCurrent,
+  );
 }
 
 function initializeCanonicalScene(
@@ -71,6 +78,7 @@ function initializeCanonicalScene(
   registry: SceneRegistry,
   objects: typeof BOOTSTRAP_OBJECTS | typeof EXERCISE_OBJECTS,
   owner: Extract<SceneObjectOwner, "system" | "exercise">,
+  isAuthorityCurrent: () => boolean = () => true,
 ): SceneResult<SceneObject[]> {
   const result = adapter.withApi((api): SceneResult<SceneObject[]> => {
     const collisions = objects.filter(({ name }) => api.exists(name)).map(
@@ -89,6 +97,10 @@ function initializeCanonicalScene(
 
     const created: string[] = [];
     for (const object of objects) {
+      if (!isAuthorityCurrent()) {
+        rollback(api.deleteObject, created);
+        return cancelledScene(created);
+      }
       if (!api.evalCommand(object.command)) {
         rollback(api.deleteObject, created);
         return {
@@ -103,6 +115,10 @@ function initializeCanonicalScene(
       created.push(object.name);
     }
 
+    if (!isAuthorityCurrent()) {
+      rollback(api.deleteObject, created);
+      return cancelledScene(created);
+    }
     const invalid = created.filter((name) => !api.exists(name) || !api.isDefined(name));
     if (invalid.length > 0) {
       rollback(api.deleteObject, created);
@@ -117,6 +133,10 @@ function initializeCanonicalScene(
     }
 
     for (const name of created) {
+      if (!isAuthorityCurrent()) {
+        rollback(api.deleteObject, created);
+        return cancelledScene(created);
+      }
       api.setFixed?.(name, true, false);
       api.setLabelVisible(name, true);
     }
@@ -126,6 +146,10 @@ function initializeCanonicalScene(
       owner,
       kind,
     }));
+    if (!isAuthorityCurrent()) {
+      rollback(api.deleteObject, created);
+      return cancelledScene(created);
+    }
     registry.replace(published);
     return { ok: true, value: registry.list() };
   });
@@ -141,6 +165,17 @@ function initializeCanonicalScene(
     };
   }
   return result.value;
+}
+
+function cancelledScene(labels: string[]): SceneResult<never> {
+  return {
+    ok: false,
+    error: {
+      code: "cancelled",
+      message: "Scene initialization authority expired.",
+      labels: [...labels],
+    },
+  };
 }
 
 function rollback(

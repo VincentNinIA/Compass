@@ -43,9 +43,9 @@ describe("CancellationCoordinator", () => {
       expect(harness.cancelHint).toHaveBeenCalledTimes(1);
       expect(harness.log.export()).toHaveLength(1);
       expect(harness.log.export()[0]).toMatchObject({
-        reason,
-        outcome: "cancelled",
-        directiveId: "directive-1",
+        kind: "cancellation",
+        status: "cancelled",
+        correlationIds: { directiveId: "directive-1" },
       });
     },
   );

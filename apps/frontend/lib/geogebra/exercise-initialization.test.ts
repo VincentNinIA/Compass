@@ -5,7 +5,10 @@ import type { ExerciseConfirmedV1 } from "@/lib/exercise/exercise-confirmation";
 import { CompletedActionBridge } from "./action-bridge";
 import { GeoGebraAdapter } from "./adapter";
 import { CheckpointService } from "./checkpoint";
-import { ExerciseInitializationService } from "./exercise-initialization";
+import {
+  ExerciseInitializationService,
+  isInitializationFailureRetryable,
+} from "./exercise-initialization";
 import { initializeMinimalScene, SceneRegistry } from "./scene";
 import { SnapshotService } from "./snapshot";
 import type { GeoGebraApi, GeoGebraAppletParameters } from "@/types/geogebra";
@@ -191,6 +194,50 @@ async function harness(options: HarnessOptions = {}) {
   };
 }
 
+describe("isInitializationFailureRetryable", () => {
+  it.each([
+    "recovery_required",
+    "initialization_unavailable",
+    "applet_not_ready",
+    "checkpoint_unavailable",
+    "bridge_unavailable",
+  ])("retains the confirmed plan for the closed transient code %s", (code) => {
+    expect(
+      isInitializationFailureRetryable({
+        status: "failed",
+        code,
+        rolledBack: false,
+      }),
+    ).toBe(true);
+  });
+
+  it("retains a plan after any exactly verified rollback", () => {
+    expect(
+      isInitializationFailureRetryable({
+        status: "failed",
+        code: "postcondition_failed",
+        rolledBack: true,
+      }),
+    ).toBe(true);
+  });
+
+  it.each([
+    "invalid_confirmation",
+    "canvas_not_empty",
+    "bootstrap_not_verifiable",
+    "cancelled",
+    "unknown_future_failure",
+  ])("fails closed for the definitive or unknown code %s", (code) => {
+    expect(
+      isInitializationFailureRetryable({
+        status: "failed",
+        code,
+        rolledBack: false,
+      }),
+    ).toBe(false);
+  });
+});
+
 describe("ExerciseInitializationService", () => {
   it("creates exactly A(-3,0), B(3,0), AB as exercise givens and no target", async () => {
     const h = await harness();
@@ -342,6 +389,28 @@ describe("ExerciseInitializationService", () => {
     expect(h.coordinates().get("B")).toEqual([3, 0]);
   });
 
+  it("deduplicates a double global reset through the initialization mutex", async () => {
+    const h = await harness();
+    expect(await h.service.initialize(CONFIRMATION)).toMatchObject({
+      status: "initialized",
+    });
+    const reset = vi.spyOn(h.checkpoints, "reset");
+    const epochBefore = h.adapter.epoch;
+    const first = h.service.reset("user_request", {
+      recoveryPlan: CONFIRMATION.plan,
+    });
+    const second = h.service.reset("user_request", {
+      recoveryPlan: CONFIRMATION.plan,
+    });
+    expect(first).toBe(second);
+    const result = await first;
+    expect(result).toMatchObject({
+      ok: true,
+      value: { epoch: epochBefore + 1, reason: "user_request" },
+    });
+    expect(reset).toHaveBeenCalledTimes(1);
+  });
+
   it("queues recovery until a suspended initialization has committed", async () => {
     const h = await harness();
     const captured = await h.checkpoints.captureCheckpoint();
@@ -374,6 +443,40 @@ describe("ExerciseInitializationService", () => {
     expect((await initialization).status).toBe("initialized");
     expect((await recovery).ok).toBe(true);
     expect(events).toEqual(["initialization_committed", "reset_started"]);
+  });
+
+  it("rolls back and never promotes a checkpoint when authority is aborted", async () => {
+    const h = await harness();
+    const delayedCheckpoint = await h.checkpoints.captureCheckpoint();
+    const gate = deferred<typeof delayedCheckpoint>();
+    const captureCheckpoint = h.checkpoints.captureCheckpoint.bind(h.checkpoints);
+    let captureCount = 0;
+    vi.spyOn(h.checkpoints, "captureCheckpoint").mockImplementation(() => {
+      captureCount += 1;
+      return captureCount === 2 ? gate.promise : captureCheckpoint();
+    });
+    const setCurrent = vi.spyOn(h.checkpoints, "setCurrent");
+    const controller = new AbortController();
+
+    const initialization = h.service.initialize(CONFIRMATION, {
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(captureCount).toBe(2));
+    expect(h.coordinates().get("A")).toEqual([-3, 0]);
+    controller.abort();
+
+    expect(await initialization).toEqual({
+      status: "failed",
+      code: "cancelled",
+      rolledBack: true,
+    });
+    expect(setCurrent).not.toHaveBeenCalled();
+    const after = h.snapshots.capture();
+    expect(after.ok && after.value.hash).toBe(h.initialHash);
+    expect(h.coordinates().get("A")).toEqual([-2, 0]);
+    expect(h.coordinates().get("B")).toEqual([2, 0]);
+    expect(h.service.lastTrace).toContain("authority_cancelled");
+    gate.resolve(delayedCheckpoint);
   });
 
   it("queues recovery until a suspended rollback has finished", async () => {

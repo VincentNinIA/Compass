@@ -26,6 +26,7 @@ export type GeoGebraApi = {
   setBase64?(base64: string, callback?: () => void): void;
   setCoordSystem(xMin: number, xMax: number, yMin: number, yMax: number): void;
   setColor?(label: string, red: number, green: number, blue: number): void;
+  setCoords?(label: string, x: number, y: number): void;
   setFixed?(label: string, fixed: boolean, selectionAllowed: boolean): void;
   setLabelVisible(label: string, visible: boolean): void;
   unregisterClientListener?(listener: GeoGebraClientListener): void;

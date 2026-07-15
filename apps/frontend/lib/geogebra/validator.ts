@@ -20,7 +20,20 @@ export class PerpendicularBisectorValidator {
     private readonly registry: SceneRegistry,
   ) {}
 
-  validate(revision: number, candidateName?: string): ValidationResult {
+  validate(
+    revision: number,
+    candidateName?: string,
+    isAuthorityCurrent: () => boolean = () => true,
+  ): ValidationResult {
+    if (!isAuthorityCurrent()) {
+      return {
+        ok: false,
+        error: {
+          code: "adapter_unavailable",
+          message: "Validation authority expired.",
+        },
+      };
+    }
     const candidates = this.registry
       .list()
       .filter((object) => object.owner === "student" && object.kind === "line")
@@ -51,10 +64,16 @@ export class PerpendicularBisectorValidator {
           `${distanceName} = Distance(${midpointName}, ${candidate})`,
         ];
         for (const command of commands) {
+          if (!isAuthorityCurrent()) {
+            return { ok: false as const, message: "Validation authority expired." };
+          }
           if (!api.evalCommand(command)) {
             return { ok: false as const, message: `GeoGebra rejected ${command}.` };
           }
           const name = command.split("=")[0].trim();
+          if (!isAuthorityCurrent()) {
+            return { ok: false as const, message: "Validation authority expired." };
+          }
           this.registry.register(name, "temporary", name === midpointName ? "point" : name === perpendicularName ? "boolean" : "number");
         }
         if (!api.getValue || !api.isDefined(perpendicularName) || !api.isDefined(distanceName)) {
@@ -79,6 +98,15 @@ export class PerpendicularBisectorValidator {
     }
     if (!measured.value.ok) {
       return { ok: false, error: { code: "measurement_failed", message: measured.value.message } };
+    }
+    if (!isAuthorityCurrent()) {
+      return {
+        ok: false,
+        error: {
+          code: "adapter_unavailable",
+          message: "Validation authority expired.",
+        },
+      };
     }
 
     const perpendicularEvidence = evidence(

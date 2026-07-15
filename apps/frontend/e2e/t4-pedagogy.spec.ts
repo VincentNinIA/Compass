@@ -68,23 +68,27 @@ test("T4 golden first block is SILENT and repeated block is SPEAK with evidence"
   });
   const decisions = log
     .export()
-    .filter(({ eventType }) => eventType === "policy_decision");
+    .filter(({ kind }) => kind.startsWith("decision_"));
   expect(decisions).toEqual([
     expect.objectContaining({
       actionId: "action-first",
-      decision: "SILENT",
-      evidenceIds: expect.arrayContaining([
-        "evidence-r1-perpendicular",
-        "evidence-r1-passes_midpoint",
-      ]),
+      kind: "decision_silent",
+      correlationIds: expect.objectContaining({
+        evidenceIds: expect.arrayContaining([
+          "evidence-r1-perpendicular",
+          "evidence-r1-passes_midpoint",
+        ]),
+      }),
     }),
     expect.objectContaining({
       actionId: "action-repeated",
-      decision: "SPEAK",
-      evidenceIds: expect.arrayContaining([
-        "evidence-r2-perpendicular",
-        "evidence-r2-passes_midpoint",
-      ]),
+      kind: "decision_speak",
+      correlationIds: expect.objectContaining({
+        evidenceIds: expect.arrayContaining([
+          "evidence-r2-perpendicular",
+          "evidence-r2-passes_midpoint",
+        ]),
+      }),
     }),
   ]);
 });

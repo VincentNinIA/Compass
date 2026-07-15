@@ -198,6 +198,7 @@ export class HintOrchestrator {
       if (currentStudents?.hash === studentBaseline.hash) {
         const fallback = await this.checkpoint.restoreExact(
           safety.value.checkpoint,
+          { advanceEpoch: false },
         );
         checkpointFallback = fallback.ok;
         cleanupSucceeded = fallback.ok;

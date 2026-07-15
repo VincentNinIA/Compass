@@ -53,6 +53,7 @@ type VoiceTurnDependencies = {
   onTurn(turn: VoiceTurn): void;
   responseGate?: ResponseGate;
   createEventId?: () => string;
+  responseOverrides?: ResponseOverrides;
   createExplicitRequest?(
     turnId: string,
     speechEventId: string | undefined,
@@ -73,24 +74,6 @@ export class VoiceTurnManager {
   }
 
   handle(event: VoiceTurnServerEvent): void {
-    if (
-      event.type === "conversation.item.added" ||
-      event.type === "conversation.item.created"
-    ) {
-      const turnId = stringValue(event.item?.id);
-      if (
-        turnId &&
-        event.item?.type === "message" &&
-        event.item.role === "user" &&
-        !this.turns.has(turnId)
-      ) {
-        if (!this.captureRequest(turnId, stringValue(event.event_id))) return;
-        this.publish({ turnId, state: "committed" });
-        this.pending.push(turnId);
-        this.requestNext();
-      }
-      return;
-    }
     if (event.type === "input_audio_buffer.speech_started") {
       const turnId = stringValue(event.item_id);
       if (turnId && !this.turns.has(turnId)) this.publish({ turnId, state: "speaking" });
@@ -107,10 +90,7 @@ export class VoiceTurnManager {
       if (!turnId) return;
       const existing = this.turns.get(turnId);
       if (existing && existing.state !== "speaking") return;
-      if (!this.captureRequest(turnId, stringValue(event.event_id))) return;
-      this.publish({ turnId, state: "committed" });
-      if (!this.pending.includes(turnId)) this.pending.push(turnId);
-      this.requestNext();
+      this.queueExplicitTurn(turnId, stringValue(event.event_id));
       return;
     }
     if (event.type === "response.created") {
@@ -142,7 +122,10 @@ export class VoiceTurnManager {
       if (responseTurnId !== active.turnId) return;
       if (!this.matchesRequestMetadata(active.turnId, event.response?.metadata)) return;
       if (active.responseId && responseId && active.responseId !== responseId) return;
-      if (hasCompletedFunctionCalls(event)) {
+      if (
+        event.response?.status === "completed" &&
+        hasCompletedFunctionCalls(event)
+      ) {
         this.publish({ ...active, state: "tooling", responseId: responseId ?? active.responseId });
         return;
       }
@@ -161,6 +144,15 @@ export class VoiceTurnManager {
     }
   }
 
+  requestTextTurn(
+    turnId: string,
+    inputEventId: string,
+    publishItem: () => boolean = () => true,
+  ): boolean {
+    if (!turnId || !inputEventId || this.turns.has(turnId)) return false;
+    return this.queueExplicitTurn(turnId, inputEventId, publishItem);
+  }
+
   continueAfterTools(): boolean {
     const active = this.activeTurn();
     if (!active || active.state !== "tooling") return false;
@@ -172,6 +164,7 @@ export class VoiceTurnManager {
           active.turnId,
           this.createEventId(),
           this.requests.get(active.turnId),
+          this.dependencies.responseOverrides,
         ),
       )
     ) {
@@ -246,7 +239,12 @@ export class VoiceTurnManager {
     }
     if (
       !this.dependencies.send(
-        responseRequest(turnId, this.createEventId(), this.requests.get(turnId)),
+        responseRequest(
+          turnId,
+          this.createEventId(),
+          this.requests.get(turnId),
+          this.dependencies.responseOverrides,
+        ),
       )
     ) {
       this.responseGate.release(owner);
@@ -256,6 +254,24 @@ export class VoiceTurnManager {
     }
     this.activeTurnId = turnId;
     this.publish({ ...turn, state: "requested" });
+  }
+
+  private queueExplicitTurn(
+    turnId: string,
+    inputEventId: string | undefined,
+    publishItem?: () => boolean,
+  ): boolean {
+    if (!this.captureRequest(turnId, inputEventId)) return false;
+    this.publish({ turnId, state: "committed" });
+    if (publishItem && !publishItem()) {
+      this.requests.delete(turnId);
+      this.publish({ turnId, state: "failed" });
+      return false;
+    }
+    if (!this.pending.includes(turnId)) this.pending.push(turnId);
+    this.requestNext();
+    const state = this.turns.get(turnId)?.state;
+    return state === "committed" || state === "requested";
   }
 
   private activeTurn(): VoiceTurn | undefined {
@@ -315,6 +331,9 @@ type ResponseCreateEvent = {
   type: "response.create";
   event_id: string;
   response: {
+    output_modalities?: ["text"];
+    tools?: [];
+    tool_choice?: "none";
     metadata: {
       geotutor_turn_id: string;
       geotutor_response_owner?: ResponseOwner;
@@ -326,15 +345,23 @@ type ResponseCreateEvent = {
   };
 };
 
+type ResponseOverrides = Readonly<{
+  output_modalities: ["text"];
+  tools: [];
+  tool_choice: "none";
+}>;
+
 function responseRequest(
   turnId: string,
   eventId: string,
   request?: ExplicitTurnRequest,
+  overrides?: ResponseOverrides,
 ): ResponseCreateEvent {
   return {
     type: "response.create",
     event_id: eventId,
     response: {
+      ...(overrides ?? {}),
       metadata: {
         geotutor_turn_id: turnId,
         ...(request

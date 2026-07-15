@@ -4,6 +4,7 @@ import {
   RealtimeSessionError,
   RealtimeWebRtcSession,
   type RealtimeConnectionState,
+  type RealtimeInvarianceSummaryRuntime,
   type RealtimePedagogyRuntime,
   type RealtimeServerEvent,
 } from "./webrtc-session";
@@ -28,9 +29,28 @@ import {
   type PedagogyState,
   type VerifiedFact,
 } from "@/lib/pedagogy/state";
+import {
+  INVARIANCE_DISTANCE_TOLERANCE,
+  INVARIANCE_DISTANCE_TOLERANCE_VERSION,
+  INVARIANCE_POSITION_VERSION,
+  INVARIANCE_SAMPLE_PARAMETERS,
+  type InvarianceRunCompleted,
+} from "@/lib/invariance/contracts";
+import {
+  INVARIANCE_GENERALIZATION_DIRECTIVE_VERSION,
+  INVARIANCE_GENERALIZATION_GOAL,
+  type InvarianceGeneralizationDirective,
+  type InvarianceVerbalizationContext,
+} from "@/lib/invariance/verbalization";
+import { OperationArbiter } from "@/lib/operations/arbiter";
+import { EvidenceLog } from "@/lib/pedagogy/evidence-log";
 
 const OFFER = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
 const ANSWER = "v=0\r\no=- 2 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
+const DATA_OFFER =
+  "v=0\r\no=- 3 2 IN IP4 127.0.0.1\r\nm=audio 0 RTP/AVP 111\r\na=inactive\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n";
+const DATA_ANSWER =
+  "v=0\r\no=- 4 2 IN IP4 127.0.0.1\r\nm=audio 0 RTP/AVP 111\r\na=inactive\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n";
 const PROACTIVE_SPEAK: PolicyDecision = {
   type: "speak",
   reason: "repeated_block",
@@ -116,6 +136,7 @@ class FakePeerConnection {
   ontrack: ((event: RTCTrackEvent) => void) | null = null;
   createDataChannel = vi.fn(() => this.channel as unknown as RTCDataChannel);
   addTrack = vi.fn();
+  addTransceiver = vi.fn();
   createOffer = vi.fn(async () => ({ type: "offer" as const, sdp: OFFER }));
   setLocalDescription = vi.fn(async () => undefined);
   setRemoteDescription = vi.fn(async () => undefined);
@@ -129,6 +150,10 @@ function createHarness(
   response = new Response(ANSWER, { status: 201 }),
   toolRuntime?: ToolRuntime,
   pedagogyRuntime?: RealtimePedagogyRuntime,
+  invarianceSummaryRuntime?: RealtimeInvarianceSummaryRuntime,
+  transportMode: "live_voice" | "typed_live" = "live_voice",
+  operationArbiter?: OperationArbiter,
+  evidenceLog?: EvidenceLog,
 ) {
   const track = {
     readyState: "live" as MediaStreamTrackState,
@@ -138,6 +163,9 @@ function createHarness(
     getTracks: vi.fn(() => [track]),
   } as unknown as MediaStream;
   const peer = new FakePeerConnection();
+  if (transportMode === "typed_live") {
+    peer.createOffer.mockResolvedValue({ type: "offer", sdp: DATA_OFFER });
+  }
   const audio = {
     srcObject: null,
     play: vi.fn(async () => undefined),
@@ -151,6 +179,7 @@ function createHarness(
   const toolLoops: unknown[] = [];
   const onRemoteAudio = vi.fn();
   const failures: RealtimeSessionError[] = [];
+  const textOutputs: string[] = [];
   const fetchImpl = vi.fn(async () => response);
   const getUserMedia = vi.fn(async () => stream);
 
@@ -164,6 +193,7 @@ function createHarness(
       onVoiceTurn: (turn) => voiceTurns.push(turn),
       onToolLoop: (result) => toolLoops.push(result),
       onRemoteAudio,
+      onTextOutput: (text) => textOutputs.push(text),
       onFailure: (failure) => failures.push(failure),
     },
     {
@@ -172,6 +202,10 @@ function createHarness(
       fetchImpl: fetchImpl as typeof fetch,
       toolRuntime,
       pedagogyRuntime,
+      invarianceSummaryRuntime,
+      transportMode,
+      operationArbiter,
+      evidenceLog,
     },
   );
 
@@ -189,12 +223,38 @@ function createHarness(
     toolLoops,
     onRemoteAudio,
     failures,
+    textOutputs,
     fetchImpl,
     getUserMedia,
   };
 }
 
 describe("RealtimeWebRtcSession", () => {
+  it("clears and rotates the evidence run when the session ends", () => {
+    const log = new EvidenceLog({
+      runId: "run-session",
+      createRunId: () => "after-session",
+    });
+    log.append({ revision: 1, kind: "action", status: "accepted" });
+    const harness = createHarness(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      "live_voice",
+      undefined,
+      log,
+    );
+
+    harness.session.stop();
+
+    expect(log.exportDebug()).toMatchObject({
+      runId: "run-after-session",
+      dropped: 0,
+      entries: [],
+    });
+  });
+
   it("negotiates audio and oai-events, then cleans every resource once", async () => {
     const harness = createHarness();
 
@@ -228,7 +288,10 @@ describe("RealtimeWebRtcSession", () => {
       "/api/realtime/session",
       expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/sdp" },
+        headers: {
+          "Content-Type": "application/sdp",
+          "X-GeoTutor-Capability-Mode": "live_voice",
+        },
         body: OFFER,
       }),
     );
@@ -273,6 +336,104 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.states).toEqual(["connecting", "live", "closed"]);
   });
 
+  it("runs a verified typed_live request over the data channel without microphone or audio", async () => {
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      undefined,
+      undefined,
+      undefined,
+      "typed_live",
+    );
+
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: [],
+          tool_choice: "none",
+        },
+      }),
+    );
+
+    expect(harness.getUserMedia).not.toHaveBeenCalled();
+    expect(harness.peer.addTrack).not.toHaveBeenCalled();
+    expect(harness.peer.addTransceiver).toHaveBeenCalledWith("audio", {
+      direction: "inactive",
+    });
+    expect(harness.fetchImpl).toHaveBeenCalledWith(
+      "/api/realtime/session",
+      expect.objectContaining({
+        body: DATA_OFFER,
+        headers: {
+          "Content-Type": "application/sdp",
+          "X-GeoTutor-Capability-Mode": "typed_live",
+        },
+      }),
+    );
+    expect(harness.states).toEqual(["connecting", "live"]);
+    expect(harness.sessionSummaries).toEqual([
+      {
+        model: "gpt-realtime-2.1",
+        reasoningEffort: "low",
+        outputModalities: ["text"],
+        tools: "none",
+      },
+    ]);
+
+    expect(harness.session.requestTextTurn("How should I reason about this?")).toBe(
+      true,
+    );
+    expect(harness.peer.channel.send.mock.calls.map(([value]) => JSON.parse(value))).toEqual([
+      {
+        type: "conversation.item.create",
+        event_id: "rtc-event-1",
+        item: {
+          id: "text-turn-1",
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "How should I reason about this?" }],
+        },
+      },
+      {
+        type: "response.create",
+        event_id: "voice-event-1",
+        response: {
+          output_modalities: ["text"],
+          tools: [],
+          tool_choice: "none",
+          metadata: { geotutor_turn_id: "text-turn-1" },
+        },
+      },
+    ]);
+
+    harness.peer.channel.message(
+      JSON.stringify(responseCreated("text-turn-1", "response-text-1")),
+    );
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.done",
+        response: {
+          id: "response-text-1",
+          status: "completed",
+          metadata: { geotutor_turn_id: "text-turn-1" },
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "Compare the two distances." }],
+            },
+          ],
+        },
+      }),
+    );
+    expect(harness.textOutputs).toEqual(["Compare the two distances."]);
+    expect(harness.onRemoteAudio).not.toHaveBeenCalledWith(true);
+  });
+
   it("does not become live until session.created matches the server profile", async () => {
     const harness = createHarness();
     await harness.session.start();
@@ -305,6 +466,96 @@ describe("RealtimeWebRtcSession", () => {
       expect.objectContaining({ code: "unexpected_session_configuration" }),
     ]);
     expect(harness.track.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it("reasserts create_response false and waits for a strictly matching session.updated", async () => {
+    const harness = createHarness();
+    await harness.session.start();
+    harness.peer.channel.open();
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        ...sessionProfileEvent("session.created"),
+        session: {
+          ...sessionProfileEvent("session.created").session,
+          audio: {
+            ...sessionProfileEvent("session.created").session.audio,
+            input: {
+              turn_detection: {
+                type: "server_vad",
+                create_response: true,
+                interrupt_response: true,
+              },
+            },
+          },
+        },
+      }),
+    );
+
+    expect(harness.states).toEqual(["connecting"]);
+    expect(harness.peer.channel.send).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(harness.peer.channel.send.mock.calls[0]![0])).toMatchObject({
+      type: "session.update",
+      session: {
+        type: "realtime",
+        reasoning: { effort: "low" },
+        audio: {
+          input: {
+            turn_detection: {
+              type: "server_vad",
+              create_response: false,
+              interrupt_response: true,
+            },
+          },
+        },
+      },
+    });
+
+    harness.peer.channel.message(
+      JSON.stringify(sessionProfileEvent("session.updated")),
+    );
+    expect(harness.states).toEqual(["connecting", "live"]);
+    expect(harness.sessionSummaries).toEqual([
+      {
+        model: "gpt-realtime-2.1",
+        voice: "marin",
+        reasoningEffort: "low",
+        turnDetection: "server_vad",
+        createResponse: false,
+        interruptResponse: true,
+      },
+    ]);
+  });
+
+  it("fails closed when the reasserted session remains auto-responsive", async () => {
+    const harness = createHarness();
+    await harness.session.start();
+    harness.peer.channel.open();
+    const mismatched = {
+      ...sessionProfileEvent("session.created"),
+      session: {
+        ...sessionProfileEvent("session.created").session,
+        audio: {
+          ...sessionProfileEvent("session.created").session.audio,
+          input: {
+            turn_detection: {
+              type: "server_vad",
+              create_response: true,
+              interrupt_response: true,
+            },
+          },
+        },
+      },
+    };
+    harness.peer.channel.message(JSON.stringify(mismatched));
+    harness.peer.channel.message(
+      JSON.stringify({ ...mismatched, type: "session.updated" }),
+    );
+
+    expect(harness.states).toEqual(["connecting", "failed"]);
+    expect(harness.failures).toEqual([
+      expect.objectContaining({ code: "unexpected_session_configuration" }),
+    ]);
   });
 
   it("verifies the locked VAD profile from session.updated", async () => {
@@ -484,6 +735,165 @@ describe("RealtimeWebRtcSession", () => {
     expect(
       sent.filter(({ type }) => type === "response.create"),
     ).toHaveLength(1);
+  });
+
+  it("routes a text-only invariance OOB response before voice ownership filters", async () => {
+    const fixture = invarianceSummaryFixture();
+    const renderSummary = vi.fn();
+    const harness = createHarness(
+      new Response(ANSWER, { status: 201 }),
+      undefined,
+      undefined,
+      {
+        getCurrentContext: () => fixture.context,
+        renderSummary,
+      },
+    );
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(JSON.stringify(sessionProfileEvent("session.updated")));
+
+    const pending = harness.session.requestInvarianceSummary(
+      fixture.result,
+      fixture.directive,
+    );
+    const sent = harness.peer.channel.send.mock.calls.map(([event]) =>
+      JSON.parse(event),
+    );
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({
+      type: "response.create",
+      event_id: "invariance-summary-1",
+      response: {
+        conversation: "none",
+        output_modalities: ["text"],
+        tools: [],
+        metadata: {
+          kind: "geotutor_invariance_summary_v1",
+          runId: fixture.result.runId,
+          revision: String(fixture.result.revision),
+        },
+      },
+    });
+    const metadata = sent[0].response.metadata;
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.created",
+        response: { id: "response-invariance-oob", metadata },
+      }),
+    );
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.done",
+        response: {
+          id: "response-invariance-oob",
+          status: "completed",
+          conversation_id: null,
+          output_modalities: ["text"],
+          metadata,
+          output: [
+            {
+              type: "message",
+              role: "assistant",
+              status: "completed",
+              content: [
+                { type: "output_text", text: "Five positions support the conjecture." },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(await pending).toMatchObject({
+      status: "rendered",
+      render: {
+        source: "realtime",
+        responseId: "response-invariance-oob",
+        text: "Five positions support the conjecture.",
+      },
+    });
+    expect(renderSummary).toHaveBeenCalledOnce();
+    expect(
+      harness.peer.channel.send.mock.calls
+        .map(([event]) => JSON.parse(event))
+        .filter(({ type }) => type === "response.cancel"),
+    ).toEqual([]);
+    expect(harness.audio.play).not.toHaveBeenCalled();
+    expect(harness.timeline).not.toContain("Ignored unowned response.done");
+    expect(harness.timeline).not.toContain(
+      "Rejected unowned response response-invariance-oob",
+    );
+  });
+
+  it("cancels a pending invariance OOB response and clears audio on global reset", async () => {
+    const fixture = invarianceSummaryFixture();
+    const renderSummary = vi.fn();
+    const harness = createHarness(
+      new Response(ANSWER, { status: 201 }),
+      undefined,
+      undefined,
+      {
+        getCurrentContext: () => fixture.context,
+        renderSummary,
+      },
+    );
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify(sessionProfileEvent("session.updated")),
+    );
+    const pending = harness.session.requestInvarianceSummary(
+      fixture.result,
+      fixture.directive,
+    );
+    const createdEvent = JSON.parse(
+      harness.peer.channel.send.mock.calls[0][0],
+    ) as { response: { metadata: Record<string, string> } };
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.created",
+        response: {
+          id: "response-invariance-reset",
+          metadata: createdEvent.response.metadata,
+        },
+      }),
+    );
+
+    expect(harness.session.cancelForActivity("reset")).toBe(true);
+    expect(await pending).toMatchObject({
+      status: "ignored",
+      reason: "cancelled",
+    });
+    expect(renderSummary).not.toHaveBeenCalled();
+    expect(
+      harness.peer.channel.send.mock.calls.map(([serialized]) =>
+        JSON.parse(serialized),
+      ),
+    ).toEqual([
+      expect.objectContaining({ type: "response.create" }),
+      expect.objectContaining({
+        type: "response.cancel",
+        response_id: "response-invariance-reset",
+      }),
+      expect.objectContaining({ type: "output_audio_buffer.clear" }),
+    ]);
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.done",
+        response: {
+          id: "response-invariance-reset",
+          status: "completed",
+          conversation_id: null,
+          output_modalities: ["text"],
+          metadata: createdEvent.response.metadata,
+          output: [],
+        },
+      }),
+    );
+    expect(renderSummary).not.toHaveBeenCalled();
+    expect(harness.timeline).toContain("Ignored late response.done");
   });
 
   it("executes a completed tool batch, publishes its output, then continues once", async () => {
@@ -780,7 +1190,7 @@ describe("RealtimeWebRtcSession", () => {
       }),
     );
     harness.peer.channel.message(
-      JSON.stringify({ type: "conversation.item.added", item: { id: "turn-stop", type: "message", role: "user" } }),
+      JSON.stringify({ type: "input_audio_buffer.committed", item_id: "turn-stop" }),
     );
     harness.peer.channel.message(
       JSON.stringify(responseCreated("turn-stop", "resp-stop")),
@@ -795,6 +1205,111 @@ describe("RealtimeWebRtcSession", () => {
       { type: "output_audio_buffer.clear", event_id: "rtc-event-2" },
     ]);
     expect(harness.peer.channel.close).toHaveBeenCalledTimes(1);
+    expect(harness.peer.close).toHaveBeenCalledTimes(1);
+    expect(harness.track.stop).toHaveBeenCalledTimes(1);
+    expect(harness.states).toEqual(["connecting", "live", "closed"]);
+  });
+
+  it("routes an explicit text prompt through VoiceTurnManager exactly once", async () => {
+    const harness = createHarness();
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(JSON.stringify(sessionProfileEvent("session.created")));
+
+    expect(harness.session.requestTextTurn("  Explain the current figure.  ")).toBe(true);
+    const sent = harness.peer.channel.send.mock.calls.map(([event]) => JSON.parse(event));
+    expect(sent).toEqual([
+      {
+        type: "conversation.item.create",
+        event_id: "rtc-event-1",
+        item: {
+          id: "text-turn-1",
+          type: "message",
+          role: "user",
+          content: [{ type: "input_text", text: "Explain the current figure." }],
+        },
+      },
+      responseRequest("text-turn-1"),
+    ]);
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "conversation.item.created",
+        item: { id: "text-turn-1", type: "message", role: "user" },
+      }),
+    );
+    expect(harness.peer.channel.send).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(["response.cancel", "output_audio_buffer.clear"])(
+    "releases every local resource when sending %s throws during Stop",
+    async (failingEventType) => {
+      const harness = createHarness();
+      await harness.session.start();
+      harness.peer.channel.open();
+      harness.peer.channel.message(JSON.stringify(sessionProfileEvent("session.created")));
+      harness.peer.channel.message(
+        JSON.stringify({ type: "input_audio_buffer.committed", item_id: "turn-stop-send" }),
+      );
+      harness.peer.channel.message(
+        JSON.stringify(responseCreated("turn-stop-send", "resp-stop-send")),
+      );
+      harness.peer.channel.send.mockImplementation((serialized: string) => {
+        if (JSON.parse(serialized).type === failingEventType) {
+          throw new Error(`send failed for ${failingEventType}`);
+        }
+      });
+
+      expect(() => harness.session.stop()).not.toThrow();
+
+      const attemptedControlEvents = harness.peer.channel.send.mock.calls
+        .map(([serialized]) => JSON.parse(serialized).type)
+        .filter((type) =>
+          ["response.cancel", "output_audio_buffer.clear"].includes(type),
+        );
+      expect(attemptedControlEvents).toEqual([
+        "response.cancel",
+        "output_audio_buffer.clear",
+      ]);
+      expect(harness.peer.channel.close).toHaveBeenCalledTimes(1);
+      expect(harness.peer.close).toHaveBeenCalledTimes(1);
+      expect(harness.track.stop).toHaveBeenCalledTimes(1);
+      expect(harness.audio.pause).toHaveBeenCalled();
+      expect(harness.audio.srcObject).toBeNull();
+      expect(harness.onRemoteAudio).toHaveBeenLastCalledWith(false);
+      expect(harness.states).toEqual(["connecting", "live", "closed"]);
+
+      const eventCountAfterStop = harness.events.length;
+      harness.peer.channel.message(
+        JSON.stringify({
+          type: "response.output_audio.delta",
+          response_id: "resp-stop-send",
+          delta: "late-audio",
+        }),
+      );
+      expect(harness.events).toHaveLength(eventCountAfterStop);
+
+      expect(() => harness.session.stop()).not.toThrow();
+      expect(harness.peer.channel.close).toHaveBeenCalledTimes(1);
+      expect(harness.peer.close).toHaveBeenCalledTimes(1);
+      expect(harness.track.stop).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("stops idempotently when the data channel is already closed", async () => {
+    const harness = createHarness();
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(JSON.stringify(sessionProfileEvent("session.created")));
+    harness.peer.channel.message(
+      JSON.stringify({ type: "input_audio_buffer.committed", item_id: "turn-closed" }),
+    );
+    harness.peer.channel.readyState = "closed";
+
+    expect(() => harness.session.stop()).not.toThrow();
+    expect(() => harness.session.stop()).not.toThrow();
+
+    expect(harness.peer.channel.close).not.toHaveBeenCalled();
     expect(harness.peer.close).toHaveBeenCalledTimes(1);
     expect(harness.track.stop).toHaveBeenCalledTimes(1);
     expect(harness.states).toEqual(["connecting", "live", "closed"]);
@@ -875,12 +1390,24 @@ describe("RealtimeWebRtcSession", () => {
   });
 
   it("cancels a tooling turn and drops its late gateway result on barge-in", async () => {
-    let release!: (value: Awaited<ReturnType<ToolGateway["execute"]>>) => void;
+    let toolSignal: AbortSignal | undefined;
     const gateway = {
       execute: vi.fn(
-        () =>
+        (_call, context: { signal?: AbortSignal }) =>
           new Promise<Awaited<ReturnType<ToolGateway["execute"]>>>((resolve) => {
-            release = resolve;
+            toolSignal = context.signal;
+            context.signal?.addEventListener(
+              "abort",
+              () =>
+                resolve({
+                  ok: false,
+                  callId: "call-late",
+                  revision: 4,
+                  error: { code: "cancelled", message: "cancelled" },
+                  evidenceIds: [],
+                }),
+              { once: true },
+            );
           }),
       ),
     } as unknown as ToolGateway;
@@ -939,14 +1466,8 @@ describe("RealtimeWebRtcSession", () => {
     harness.peer.channel.message(
       JSON.stringify({ type: "input_audio_buffer.speech_started", item_id: "turn-new" }),
     );
-    release({
-      ok: true,
-      callId: "call-late",
-      revision: 4,
-      data: {},
-      evidenceIds: [],
-    });
-    await Promise.resolve();
+    expect(toolSignal?.aborted).toBe(true);
+    await vi.waitFor(() => expect(harness.toolLoops).toEqual([]));
 
     expect(harness.peer.channel.send.mock.calls.map(([event]) => JSON.parse(event))).toEqual([
       responseRequest("turn-tools"),
@@ -1005,6 +1526,63 @@ describe("RealtimeWebRtcSession", () => {
     expect(fixture.state.pendingIntervention).toBeNull();
     expect(fixture.state.interaction.studentIsSpeaking).toBe(true);
     expect(harness.peer.channel.send).not.toHaveBeenCalled();
+  });
+
+  it("gives student speech authority over an active action until speech stops", async () => {
+    const fixture = proactiveFixture();
+    const arbiter = new OperationArbiter();
+    const action = arbiter.begin({
+      kind: "student_action",
+      epoch: fixture.state.epoch,
+      revision: fixture.state.revision,
+    });
+    const harness = createHarness(
+      new Response(ANSWER, { status: 201 }),
+      undefined,
+      fixture.runtime,
+      undefined,
+      "live_voice",
+      arbiter,
+    );
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify(sessionProfileEvent("session.updated")),
+    );
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "input_audio_buffer.speech_started",
+        item_id: "student-authority",
+      }),
+    );
+    expect(action.token.abort.aborted).toBe(true);
+    expect(arbiter.snapshot().pending.map(({ kind }) => kind)).toEqual([
+      "student_speech",
+    ]);
+    expect(fixture.state.interaction.studentIsSpeaking).toBe(true);
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "input_audio_buffer.speech_stopped",
+        item_id: "student-authority",
+      }),
+    );
+    expect(fixture.state.interaction.studentIsSpeaking).toBe(false);
+    expect(arbiter.hasPending()).toBe(false);
+    expect(arbiter.snapshot().trace).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "student_action",
+          event: "preempted",
+          reason: "preempted_by_student_speech",
+        }),
+        expect.objectContaining({
+          kind: "student_speech",
+          event: "completed",
+        }),
+      ]),
+    );
   });
 
   it("rejects a proactive response created after its anchored revision changed", async () => {
@@ -1145,8 +1723,11 @@ describe("RealtimeWebRtcSession", () => {
       Response.json(
         {
           error: {
+            domain: "realtime_session",
             code: "realtime_unconfigured",
-            message: "Realtime is not configured on this server.",
+            retryable: false,
+            userMessage: "Realtime is not configured on this server.",
+            correlationId: "realtime_session_test",
           },
         },
         { status: 503 },
@@ -1254,6 +1835,128 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.states).toEqual(["connecting", "failed"]);
   });
 });
+
+function invarianceSummaryFixture(): {
+  result: InvarianceRunCompleted;
+  directive: InvarianceGeneralizationDirective;
+  context: InvarianceVerbalizationContext;
+} {
+  const plan = deriveExercisePlanV1({
+    schemaVersion: "exercise_extraction.v1",
+    outcome: "ready",
+    language: "en",
+    instruction: "Construct the perpendicular bisector of AB.",
+    pointLabels: ["A", "B"],
+    segmentEndpoints: ["A", "B"],
+    requestedConstruction: "perpendicular_bisector",
+    learningObjective: "perpendicular_bisector_equidistance",
+    ambiguityCode: null,
+    clarificationQuestion: null,
+    unsupportedReason: null,
+  });
+  const revision = 5;
+  let state = createInitialPedagogyState(plan, { epoch: 3 });
+  const facts: VerifiedFact[] = (
+    ["perpendicular", "passes_midpoint"] as const
+  ).map((relationKey) => ({
+    relationKey,
+    status: "verified",
+    evidenceId: `evidence-${revision}-${relationKey}`,
+  }));
+  state = pedagogyReducer(state, {
+    type: "validated_action_committed",
+    epoch: state.epoch,
+    exerciseId: state.exerciseId,
+    stepId: state.stepId,
+    actionId: "action-invariance",
+    revision,
+    snapshotHash: "hash-invariance",
+    facts,
+    evidence: facts.map((fact) => ({
+      id: fact.evidenceId,
+      relation: fact.relationKey,
+      pass: true,
+      observed: 0,
+      tolerance: INVARIANCE_DISTANCE_TOLERANCE,
+      revision,
+      objects:
+        fact.relationKey === "perpendicular"
+          ? ["d", "AB"]
+          : ["d", "A", "B"],
+      snapshotHash: "hash-invariance",
+    })),
+    meaningfulDelta: {
+      isMeaningful: true,
+      constructionChanged: true,
+      factsChanged: true,
+      changedStudentObjects: ["d"],
+      previousFactSignature: "",
+      currentFactSignature:
+        "passes_midpoint:verified|perpendicular:verified",
+      missingRelationKeys: [],
+      reason: "construction_and_facts_changed",
+    },
+  });
+  state = pedagogyReducer(state, {
+    type: "policy_evaluated",
+    decision: "SPEAK",
+    sourceActionId: "action-invariance",
+    sourceRequestId: null,
+    ...pedagogyAnchor(state),
+  });
+  const samples = INVARIANCE_SAMPLE_PARAMETERS.map((parameter, index) => ({
+    id: `invariance-webrtc-${index}`,
+    index: index as 0 | 1 | 2 | 3 | 4,
+    parameter,
+    coords: [parameter, 0] as const,
+    pa: index + 2,
+    pb: index + 2,
+    delta: 0,
+    tolerance: INVARIANCE_DISTANCE_TOLERANCE,
+    toleranceVersion: INVARIANCE_DISTANCE_TOLERANCE_VERSION,
+    positionVersion: INVARIANCE_POSITION_VERSION,
+    pass: true,
+    revision,
+  })) as unknown as InvarianceRunCompleted["samples"];
+  const result: InvarianceRunCompleted = {
+    status: "completed",
+    runId: "run-webrtc",
+    revision,
+    inputEvidenceIds: [
+      `evidence-${revision}-perpendicular`,
+      `evidence-${revision}-passes_midpoint`,
+    ],
+    samples,
+    pass: true,
+    evidenceIds: samples.map(({ id }) => id) as unknown as InvarianceRunCompleted["evidenceIds"],
+  };
+  const context: InvarianceVerbalizationContext = {
+    state,
+    currentRunId: result.runId,
+    currentRevision: result.revision,
+    inputEvidenceIds: result.inputEvidenceIds as readonly [string, string],
+    evidenceIds: result.evidenceIds,
+  };
+  const directive: InvarianceGeneralizationDirective = {
+    schemaVersion: INVARIANCE_GENERALIZATION_DIRECTIVE_VERSION,
+    directiveId: "directive-invariance-webrtc",
+    kind: "completion",
+    epoch: state.epoch,
+    exerciseId: state.exerciseId,
+    stepId: state.stepId,
+    baseRevision: revision,
+    snapshotHash: state.studentSnapshotHash,
+    sourceActionId: "action-invariance",
+    sourceRunId: result.runId,
+    inputEvidenceIds: result.inputEvidenceIds as readonly [string, string],
+    evidenceIds: result.evidenceIds,
+    helpLevel: 1,
+    goal: INVARIANCE_GENERALIZATION_GOAL,
+    allowedTools: [],
+    status: "draft",
+  };
+  return { result, directive, context };
+}
 
 function proactiveFixture(): {
   runtime: RealtimePedagogyRuntime;

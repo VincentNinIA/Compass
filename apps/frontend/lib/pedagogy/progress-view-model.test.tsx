@@ -38,7 +38,7 @@ describe("T4-C04 progress view model", () => {
     render(<ProgressFeedback model={model} />);
 
     expect(screen.getByText("0/2")).toBeInTheDocument();
-    expect(screen.getAllByText(/waiting for local evidence/)).toHaveLength(2);
+    expect(screen.getAllByText(/checking your latest move/)).toHaveLength(2);
     expect(screen.getByRole("status")).toHaveTextContent("");
   });
 
@@ -79,7 +79,7 @@ describe("T4-C04 progress view model", () => {
 
     expect(model.score).toBe(2);
     expect(screen.getByText("2/2")).toBeInTheDocument();
-    expect(screen.getAllByText(/: verified$/)).toHaveLength(2);
+    expect(screen.getAllByText(/: you got it$/)).toHaveLength(2);
   });
 
   it("does not repeat aria-live text when the fact statuses are unchanged", () => {

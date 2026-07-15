@@ -3,6 +3,40 @@ import { z } from "zod";
 const EXTRACTION_SCHEMA_VERSION = "exercise_extraction.v1" as const;
 const PLAN_SCHEMA_VERSION = "exercise_plan.v1" as const;
 
+export const EXERCISE_AMBIGUITY_CODES_V1 = [
+  "missing_labels",
+  "unreadable_text",
+  "conflicting_instruction",
+  "missing_segment",
+] as const;
+
+export type ExerciseAmbiguityCodeV1 =
+  (typeof EXERCISE_AMBIGUITY_CODES_V1)[number];
+
+export const EXERCISE_CLARIFICATION_MESSAGES_V1 = Object.freeze({
+  missing_labels: "What are the labels of the segment endpoints?",
+  unreadable_text: "Which construction does the instruction ask for?",
+  conflicting_instruction:
+    "Should you construct the perpendicular bisector of AB?",
+  missing_segment: "Which two points define the segment?",
+} satisfies Record<ExerciseAmbiguityCodeV1, string>);
+
+export type ExerciseClarificationMessageV1 =
+  (typeof EXERCISE_CLARIFICATION_MESSAGES_V1)[ExerciseAmbiguityCodeV1];
+
+export const EXERCISE_READY_INSTRUCTION_V1 =
+  "Construct the perpendicular bisector of segment AB." as const;
+export const EXERCISE_UNSUPPORTED_MESSAGE_V1 =
+  "This exercise is outside the supported demo." as const;
+export const EXERCISE_REFUSAL_MESSAGE_V1 =
+  "The model declined to analyze this exercise." as const;
+
+export function getExerciseClarificationMessageV1(
+  code: ExerciseAmbiguityCodeV1,
+): ExerciseClarificationMessageV1 {
+  return EXERCISE_CLARIFICATION_MESSAGES_V1[code];
+}
+
 export const ExerciseExtractionWireV1 = z.strictObject({
   schemaVersion: z.literal(EXTRACTION_SCHEMA_VERSION),
   outcome: z.enum(["ready", "needs_clarification", "unsupported"]),
@@ -16,20 +50,31 @@ export const ExerciseExtractionWireV1 = z.strictObject({
   learningObjective: z
     .literal("perpendicular_bisector_equidistance")
     .nullable(),
-  ambiguityCode: z
-    .enum([
-      "missing_labels",
-      "unreadable_text",
-      "conflicting_instruction",
-      "missing_segment",
-    ])
-    .nullable(),
+  ambiguityCode: z.enum(EXERCISE_AMBIGUITY_CODES_V1).nullable(),
   clarificationQuestion: z.string().nullable(),
   unsupportedReason: z.string().nullable(),
 });
 
 export type ExerciseExtractionWireV1 = z.infer<
   typeof ExerciseExtractionWireV1
+>;
+
+export const ExerciseReadyClientExtractionV1 = z.strictObject({
+  schemaVersion: z.literal(EXTRACTION_SCHEMA_VERSION),
+  outcome: z.literal("ready"),
+  language: z.enum(["en", "fr", "unknown"]),
+  instruction: z.literal(EXERCISE_READY_INSTRUCTION_V1),
+  pointLabels: z.tuple([z.literal("A"), z.literal("B")]),
+  segmentEndpoints: z.tuple([z.literal("A"), z.literal("B")]),
+  requestedConstruction: z.literal("perpendicular_bisector"),
+  learningObjective: z.literal("perpendicular_bisector_equidistance"),
+  ambiguityCode: z.null(),
+  clarificationQuestion: z.null(),
+  unsupportedReason: z.null(),
+});
+
+export type ExerciseReadyClientExtractionV1 = z.infer<
+  typeof ExerciseReadyClientExtractionV1
 >;
 
 const PlanPointA = z.strictObject({
@@ -172,13 +217,26 @@ function hasCoherentClarificationAmbiguity(
 ): boolean {
   switch (extraction.ambiguityCode) {
     case "missing_labels":
-      return !hasCanonicalPointLabels(extraction.pointLabels);
+      return (
+        extraction.segmentEndpoints === null &&
+        extraction.pointLabels.length < 2 &&
+        new Set(extraction.pointLabels).size === extraction.pointLabels.length &&
+        extraction.pointLabels.every((label) => label === "A" || label === "B")
+      );
     case "unreadable_text":
-      return !isUsefulText(extraction.instruction);
+      return extraction.instruction === null;
     case "conflicting_instruction":
-      return extraction.requestedConstruction === null;
+      return (
+        isUsefulText(extraction.instruction) &&
+        hasCanonicalPointLabels(extraction.pointLabels) &&
+        hasCanonicalSegment(extraction.segmentEndpoints) &&
+        extraction.requestedConstruction === null
+      );
     case "missing_segment":
-      return !hasCanonicalSegment(extraction.segmentEndpoints);
+      return (
+        hasCanonicalPointLabels(extraction.pointLabels) &&
+        extraction.segmentEndpoints === null
+      );
     case null:
       return false;
   }
@@ -259,6 +317,32 @@ export function validateExercisePlanV1(
   return parsed.success
     ? { success: true, data: parsed.data }
     : { success: false, error: invalidPlan() };
+}
+
+export function createExerciseReadyClientExtractionV1(
+  input: unknown,
+): ExerciseReadyClientExtractionV1 {
+  const extraction = validateExerciseExtractionWireV1(input);
+  if (!extraction.success) {
+    throw new ExerciseContractError(extraction.error);
+  }
+  if (extraction.data.outcome !== "ready") {
+    throw new ExerciseContractError(invalidExtraction("outcome_not_ready"));
+  }
+
+  return ExerciseReadyClientExtractionV1.parse({
+    schemaVersion: EXTRACTION_SCHEMA_VERSION,
+    outcome: "ready",
+    language: extraction.data.language,
+    instruction: EXERCISE_READY_INSTRUCTION_V1,
+    pointLabels: ["A", "B"],
+    segmentEndpoints: ["A", "B"],
+    requestedConstruction: "perpendicular_bisector",
+    learningObjective: "perpendicular_bisector_equidistance",
+    ambiguityCode: null,
+    clarificationQuestion: null,
+    unsupportedReason: null,
+  });
 }
 
 const CANONICAL_PLAN_INPUT = {

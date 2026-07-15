@@ -142,7 +142,7 @@ describe("VoiceTurnManager", () => {
     expect(test.manager.snapshot()).toEqual([{ turnId: "turn-1", state: "requested" }]);
   });
 
-  it("treats an added user text item as one explicit turn", () => {
+  it("never infers a voice turn from an added or created user item", () => {
     const test = harness();
     const event = {
       type: "conversation.item.added",
@@ -151,8 +151,37 @@ describe("VoiceTurnManager", () => {
     test.manager.handle(event);
     test.manager.handle(event);
     test.manager.handle({ ...event, type: "conversation.item.created" });
+    expect(test.sent).toEqual([]);
+    expect(test.manager.snapshot()).toEqual([]);
+  });
+
+  it("accepts text only through the explicit text-turn API", () => {
+    const test = harness();
+
+    expect(test.manager.requestTextTurn("text-turn", "text-event-1")).toBe(true);
+    test.manager.handle({
+      type: "conversation.item.created",
+      item: { id: "text-turn", type: "message", role: "user" },
+    });
+    expect(test.manager.requestTextTurn("text-turn", "text-event-2")).toBe(false);
+
     expect(test.sent).toEqual([request("text-turn")]);
-    expect(test.manager.snapshot()).toEqual([{ turnId: "text-turn", state: "requested" }]);
+    expect(test.manager.snapshot()).toEqual([
+      { turnId: "text-turn", state: "requested" },
+    ]);
+
+    const rejected = harness();
+    expect(
+      rejected.manager.requestTextTurn(
+        "rejected-text-turn",
+        "text-event-3",
+        () => false,
+      ),
+    ).toBe(false);
+    expect(rejected.sent).toEqual([]);
+    expect(rejected.manager.snapshot()).toEqual([
+      { turnId: "rejected-text-turn", state: "failed" },
+    ]);
   });
 
   it("locks a second committed turn until the active response is terminal", () => {
@@ -242,6 +271,54 @@ describe("VoiceTurnManager", () => {
     test.manager.handle({ type: "input_audio_buffer.committed", item_id: "turn-1" });
     test.manager.handle({ type: "response.done", response: { id: "resp-1", status, metadata: { geotutor_turn_id: "turn-1" } } });
     expect(test.manager.snapshot()[0]?.state).toBe(status === "cancelled" ? "cancelled" : "failed");
+  });
+
+  it.each(["failed", "incomplete"])(
+    "never enters tooling for a %s response containing a function call",
+    (status) => {
+      const test = harness();
+      test.manager.handle({ type: "input_audio_buffer.committed", item_id: "turn-1" });
+      test.manager.handle(created("turn-1", "resp-1"));
+      test.manager.handle({
+        type: "response.done",
+        response: {
+          id: "resp-1",
+          status,
+          metadata: { geotutor_turn_id: "turn-1" },
+          output: [{ type: "function_call", status: "completed" }],
+        },
+      });
+
+      expect(test.manager.snapshot()).toEqual([
+        { turnId: "turn-1", state: "failed", responseId: "resp-1" },
+      ]);
+      expect(test.manager.currentTurnId()).toBeUndefined();
+    },
+  );
+
+  it("starts the queued turn after a failed function-call response", () => {
+    const test = harness();
+    test.manager.handle({ type: "input_audio_buffer.committed", item_id: "turn-1" });
+    test.manager.handle(created("turn-1", "resp-1"));
+    test.manager.handle({ type: "input_audio_buffer.committed", item_id: "turn-2" });
+    test.manager.handle({
+      type: "response.done",
+      response: {
+        id: "resp-1",
+        status: "failed",
+        metadata: { geotutor_turn_id: "turn-1" },
+        output: [{ type: "function_call", status: "completed" }],
+      },
+    });
+
+    expect(test.sent).toEqual([
+      request("turn-1"),
+      request("turn-2", "voice-event-2"),
+    ]);
+    expect(test.manager.snapshot()).toEqual([
+      { turnId: "turn-1", state: "failed", responseId: "resp-1" },
+      { turnId: "turn-2", state: "requested" },
+    ]);
   });
 
   it("does not request for silence or malformed commits and fails closed channels", () => {

@@ -215,9 +215,11 @@ test("T0 Realtime failure preserves GeoGebra and releases resources", async ({
       contentType: "application/json",
       body: JSON.stringify({
         error: {
+          domain: "realtime_session",
           code: "upstream_unavailable",
-          message: "Realtime is temporarily unavailable.",
           retryable: true,
+          userMessage: "Realtime is temporarily unavailable.",
+          correlationId: "realtime_session_t0_failure",
         },
       }),
     }),
@@ -248,9 +250,11 @@ test("T0 GeoGebra failure still reaches the isolated Realtime boundary", async (
       contentType: "application/json",
       body: JSON.stringify({
         error: {
+          domain: "realtime_session",
           code: "upstream_unavailable",
-          message: "Realtime is temporarily unavailable.",
           retryable: true,
+          userMessage: "Realtime is temporarily unavailable.",
+          correlationId: "realtime_session_t0_applet_failure",
         },
       }),
     });
@@ -288,19 +292,8 @@ test("@live T0 credentialed WebRTC receives audio and cleans up with GeoGebra do
   });
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();
 
-  await page.evaluate(() => {
-    const channel = (window as T0Window).__T0_CHANNEL__;
-    channel?.send(
-      JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [{ type: "input_text", text: "Say exactly: Geometry ready." }],
-        },
-      }),
-    );
-  });
+  await page.getByLabel("Ask your question").fill("Say exactly: Geometry ready.");
+  await page.getByRole("button", { name: "Send question" }).click();
   await page.waitForFunction(() =>
     (window as T0Window).__T0_EVENTS__?.includes("response.done"),
   );
@@ -405,23 +398,10 @@ test("@live T2 completes a correlated read_construction tool loop", async ({ pag
 
   await page.getByRole("button", { name: "Start voice" }).click();
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();
-  await page.evaluate((currentRevision) => {
-    (window as T0Window).__T0_CHANNEL__?.send(
-      JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `Use read_construction exactly once with revision ${currentRevision} before answering.`,
-            },
-          ],
-        },
-      }),
-    );
-  }, revision);
+  await page
+    .getByLabel("Ask your question")
+    .fill(`Use read_construction exactly once with revision ${revision} before answering.`);
+  await page.getByRole("button", { name: "Send question" }).click();
 
   await page.waitForFunction(
     () => (window as T0Window).__T2_FUNCTION_OUTPUTS__?.length === 1,
@@ -459,23 +439,10 @@ test("@live T2 Stop cancels and clears an active audio response", async ({ page 
   await installSyntheticMicrophone(page);
   await page.getByRole("button", { name: "Start voice" }).click();
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();
-  await page.evaluate(() => {
-    (window as T0Window).__T0_CHANNEL__?.send(
-      JSON.stringify({
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: "Count upward slowly for at least thirty seconds, saying one number per second.",
-            },
-          ],
-        },
-      }),
-    );
-  });
+  await page
+    .getByLabel("Ask your question")
+    .fill("Count upward slowly for at least thirty seconds, saying one number per second.");
+  await page.getByRole("button", { name: "Send question" }).click();
   await page.waitForFunction(() =>
     (window as T0Window).__T0_EVENTS__?.includes("output_audio_buffer.started"),
   );

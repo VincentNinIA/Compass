@@ -9,6 +9,7 @@ import {
   type PedagogyState,
 } from "./state";
 import type { EvidenceLog } from "./evidence-log";
+import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 
 type ValidatedActionEvent = Extract<
   PedagogyEvent,
@@ -50,10 +51,16 @@ export async function runLocalFirstAction(
     decide?: typeof decideIntervention;
     now?: () => number;
     evidenceLog?: EvidenceLog;
+    latencyMonitor?: LatencyBudgetMonitor;
+    latencyNow?: () => number;
   },
 ): Promise<LocalFirstActionResult> {
   const trace: LocalFirstTrace[] = [];
   const now = dependencies.now ?? Date.now;
+  const latencyNow = dependencies.latencyNow ?? Date.now;
+  const feedbackStartedAt = dependencies.latencyMonitor
+    ? latencyNow()
+    : undefined;
   const state = pedagogyReducer(current, event);
   const accepted =
     state.attemptState.lastActionId === event.actionId &&
@@ -74,25 +81,31 @@ export async function runLocalFirstAction(
   }
   mark(trace, "validation_committed", now);
   dependencies.evidenceLog?.append({
-    eventType: "action_committed",
-    epoch: state.epoch,
     revision: state.revision,
     actionId: event.actionId,
-    evidenceIds: event.evidence.map(({ id }) => id).sort(),
-    outcome: "accepted",
-    reason: event.meaningfulDelta.isMeaningful ? "meaningful" : "no_delta",
+    kind: "action",
+    correlationIds: {
+      evidenceIds: event.evidence.map(({ id }) => id).sort(),
+    },
+    status: "accepted",
   });
   dependencies.evidenceLog?.append({
-    eventType: "evidence_committed",
-    epoch: state.epoch,
     revision: state.revision,
     actionId: event.actionId,
-    evidenceIds: event.evidence.map(({ id }) => id).sort(),
-    outcome: "accepted",
-    reason: "deterministic_validation",
+    kind: "evidence",
+    correlationIds: {
+      evidenceIds: event.evidence.map(({ id }) => id).sort(),
+    },
+    status: "completed",
   });
   await dependencies.renderProgress(progress);
   mark(trace, "progress_rendered", now);
+  if (feedbackStartedAt !== undefined) {
+    dependencies.latencyMonitor?.record(
+      "feedback_local",
+      Math.max(0, latencyNow() - feedbackStartedAt),
+    );
+  }
 
   const decide = dependencies.decide ?? decideIntervention;
   let decision: PolicyDecision;
@@ -104,14 +117,13 @@ export async function runLocalFirstAction(
     });
     mark(trace, "policy_evaluated", now);
     dependencies.evidenceLog?.append({
-      eventType: "policy_decision",
-      epoch: state.epoch,
       revision: state.revision,
       actionId: event.actionId,
-      decision: decisionType(decision),
-      evidenceIds: event.evidence.map(({ id }) => id).sort(),
-      outcome: "accepted",
-      reason: decision.reason,
+      kind: decisionKind(decision),
+      correlationIds: {
+        evidenceIds: event.evidence.map(({ id }) => id).sort(),
+      },
+      status: "accepted",
     });
   } catch {
     return {
@@ -163,10 +175,12 @@ export async function runLocalFirstAction(
   };
 }
 
-function decisionType(decision: PolicyDecision): "SILENT" | "QUEUE" | "SPEAK" {
-  if (decision.type === "silent") return "SILENT";
-  if (decision.type === "queue") return "QUEUE";
-  return "SPEAK";
+function decisionKind(
+  decision: PolicyDecision,
+): "decision_silent" | "decision_queue" | "decision_speak" {
+  if (decision.type === "silent") return "decision_silent";
+  if (decision.type === "queue") return "decision_queue";
+  return "decision_speak";
 }
 
 function mark(

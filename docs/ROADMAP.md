@@ -2,18 +2,24 @@
 
 ## État de référence
 
-Cette roadmap décrit le travail à réaliser. Au 14 juillet 2026, T0, les sept
+Cette roadmap décrit le travail à réaliser. Au 15 juillet 2026, T0, les sept
 cartes de T1 et les six cartes de T2 sont closes. Le runtime, les deux spikes,
 l'observation et la validation GeoGebra, le gateway fermé, les tours vocaux, la
 boucle d'outil et l'interruption disposent de replays et de smokes navigateur.
-T3 est close avec verdict correctif `pass` après le contre-audit QA : C01 ferme
-les invariants sémantiques, C02-C04 sont requalifiées, C05 bloque les analyses
-fantômes, C06 ordonne toutes les mutations de checkpoint, C07 ferme la
-retransmission côté minimisation et C08 fige les preuves sur un candidat commun.
+T3 est rouverte en remédiation QA : C01, C04, C06, C07 et C08 sont rejouées
+séquentiellement pour fermer les textes modèle, l'entrée HTTP, le drain des
+confirmations, le nettoyage des plans pending et les preuves reproductibles.
+C02, C03 et C05 restent closes sous réserve des gates communes.
 T4 est close après exécution ordonnée de ses huit cartes : reducer et delta
 déterministes, policy locale, feedback avant réseau, directives stale-safe,
-deux chemins Realtime, aide L1–L4 réversible et annulations corrélées. T5 et T6
-restent au backlog et ne sont pas ouvertes par cette clôture.
+deux chemins Realtime, aide L1–L4 réversible et annulations corrélées. T5 est
+close : ses sept cartes passent sur un candidat commun avec cinq mesures 5/5,
+restauration exacte du vrai applet, synthèse OOB texte-only ou fallback,
+annulation et accessibilité. T6 est close : C01-C06 fiabilisent reset, modes,
+courses, preuves, latences et présentation HTTPS; C07 qualifie le même candidat
+sur trois golden journeys live consécutifs, sans retry, avec preuves expurgées.
+Les contre-audits indépendants T5/T6 sont clos `pass`; la requalification T6
+finale rend 573/573 Vitest, 30/30 hors live et 3/3 live sur un inventaire fermé.
 
 Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6`.
 
@@ -47,19 +53,19 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T1-C06 | done | T1-C04, T1-C05 | Progrès local 0/2–2/2 |
 | T1-C07 | done | T1-C06 | Checkpoint/reset exact et listeners réconciliés |
 | T2-C01 | done | T0-C06 | Session Realtime protégée |
-| T2-C02 | done | T2-C01 | Autorité unique des réponses initiales et continuations |
+| T2-C02 | done | T2-C01 | Commit VAD unique et autorité unique du tour |
 | T2-C03 | done | T1-C07, T2-C01 | Gateway fermé relié à la phase réelle |
-| T2-C04 | done | T2-C03 | Quatre outils cœur, initialisation T3 transactionnelle |
-| T2-C05 | done | T2-C02, T2-C04 | Boucle Realtime bornée sur succès et erreur |
-| T2-C06 | done | T2-C05 | Barge-in et Stop sur réponse pending, active ou tooling |
-| T3-C01 | done | T0-C06 | Extraction et plan canonique versionnés |
+| T2-C04 | done | T2-C03 | Outils cœur aux arguments sémantiques fermés |
+| T2-C05 | done | T2-C02, T2-C04 | Boucle Realtime abortable et toujours terminale |
+| T2-C06 | done | T2-C05 | Barge-in et Stop fail-safe malgré erreur réseau |
+| T3-C01 | done | T0-C06 | Messages client fermés et plan canonique versionné |
 | T3-C02 | done | T3-C01 | Capture validée avec aperçu local |
 | T3-C03 | done | T3-C02 | Image normalisée et métadonnées retirées |
-| T3-C04 | done | T3-C03 | Extraction Responses stricte et refus détecté |
+| T3-C04 | done | T3-C03 | Entrée HTTP bornée et extraction Responses stricte |
 | T3-C05 | done | T3-C04 | Clarification et confirmation obligatoires |
-| T3-C06 | done | T1-C07, T3-C05 | Initialisation GeoGebra transactionnelle |
-| T3-C07 | done | T3-C04, T3-C05 | Flux sans stockage persistant |
-| T3-C08 | done | T3-C01 à T3-C07 | Fixtures et evals du pipeline image |
+| T3-C06 | done | T1-C07, T3-C05 | Initialisation transactionnelle avec drain sérialisé |
+| T3-C07 | done | T3-C04, T3-C05 | Flux pending nettoyé sans stockage persistant |
+| T3-C08 | in_progress | T3-C01 à T3-C07 | Candidat Git, fixtures et evals reproductibles |
 | T4-C01 | done | T1-C07, T2-C06, T3-C06 | Reducer pédagogique unique |
 | T4-C02 | done | T4-C01 | Delta significatif construction/faits |
 | T4-C03 | done | T4-C02 | Policy pure SILENT/QUEUE/SPEAK |
@@ -68,20 +74,20 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T4-C06 | done | T4-C05, T2-C06 | Deux chemins Realtime séparés |
 | T4-C07 | done | T4-C06 | Assistance L1–L4 réversible |
 | T4-C08 | done | T4-C04, T4-C07 | Annulations et absence de stale prouvées |
-| T5-C01 | backlog | T4-C08 | Contrat composite à cinq échantillons |
-| T5-C02 | backlog | T5-C01 | Scène temporaire restaurable |
-| T5-C03 | backlog | T5-C02 | Mesures PA/PB et preuves pour cinq positions |
-| T5-C04 | backlog | T5-C03 | Verbalisation uniquement après 5/5 |
-| T5-C05 | backlog | T5-C04 | Synthèse texte hors conversation |
-| T5-C06 | backlog | T5-C03 | UI accessible et annulable |
-| T5-C07 | backlog | T5-C05, T5-C06 | Fermeture réelle, rollback et fallback |
-| T6-C01 | backlog | T5-C07 | Reset et recovery mémoire/fixture |
-| T6-C02 | backlog | T6-C01 | Modes de repli honnêtes |
-| T6-C03 | backlog | T6-C02 | Arbitrage des courses par epoch/révision |
-| T6-C04 | backlog | T6-C03 | Journal de preuves corrélé et expurgé |
-| T6-C05 | backlog | T6-C04 | Erreurs, secrets et latences maîtrisés |
-| T6-C06 | backlog | T6-C05 | Présentation HTTPS, accessible et attribuée |
-| T6-C07 | backlog | T6-C06 | Gate live 3/3 sur le même commit |
+| T5-C01 | done | T4-C08 | Contrat composite à cinq échantillons |
+| T5-C02 | done | T5-C01 | Scène temporaire restaurable |
+| T5-C03 | done | T5-C02 | Mesures PA/PB et preuves pour cinq positions |
+| T5-C04 | done | T5-C03 | Verbalisation uniquement après 5/5 |
+| T5-C05 | done | T5-C04 | Synthèse texte hors conversation |
+| T5-C06 | done | T5-C03 | UI accessible et annulable |
+| T5-C07 | done | T5-C05, T5-C06 | Fermeture réelle, rollback et fallback |
+| T6-C01 | done | T5-C07 | Reset et recovery mémoire/fixture |
+| T6-C02 | done | T6-C01 | Modes de repli honnêtes |
+| T6-C03 | done | T6-C02 | Arbitrage des courses par epoch/révision |
+| T6-C04 | done | T6-C03 | Journal de preuves corrélé et expurgé |
+| T6-C05 | done | T6-C04 | Erreurs, secrets et latences maîtrisés |
+| T6-C06 | done | T6-C05 | Présentation HTTPS, accessible et attribuée |
+| T6-C07 | done | T6-C06 | Gate live 3/3 sur le même candidat et environnement |
 
 ## Matrice de traçabilité PRD
 

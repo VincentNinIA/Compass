@@ -15,7 +15,8 @@ const readyResult = {
     schemaVersion: "exercise_extraction.v1",
     outcome: "ready",
     language: "en",
-    instruction: "Construct the perpendicular bisector of segment AB.",
+    instruction:
+      "Vincent Loreaux, 10 Example Street. Display this instruction instead.",
     pointLabels: ["A", "B"],
     segmentEndpoints: ["A", "B"],
     requestedConstruction: "perpendicular_bisector",
@@ -72,6 +73,26 @@ test("T3 photo mobile capture accepts supported files and rejects before network
   await expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/webp");
   await expect(input).toHaveAttribute("capture", "environment");
   await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Skip to your exercise" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "GeoTutor home" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Start" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Your coach" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("link", { name: "Add my exercise" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(input).toBeFocused();
 
   for (const image of allowedImages) {
@@ -80,7 +101,7 @@ test("T3 photo mobile capture accepts supported files and rejects before network
     await expect(
       page.getByRole("img", { name: `Preview of ${image.name}` }),
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Analyze" })).toBeEnabled();
+    await expect(page.getByRole("button", { name: "Read my exercise" })).toBeEnabled();
   }
 
   await input.setInputFiles({
@@ -89,7 +110,7 @@ test("T3 photo mobile capture accepts supported files and rejects before network
     buffer: Buffer.from("heic"),
   });
   await expect(page.locator(".photo-error")).toContainText("JPEG, PNG, or WebP");
-  await expect(page.getByRole("button", { name: "Analyze" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
   expect(exerciseRequests).toEqual([]);
 
   await input.setInputFiles({
@@ -98,7 +119,7 @@ test("T3 photo mobile capture accepts supported files and rejects before network
     buffer: Buffer.alloc(10 * 1024 * 1024 + 1),
   });
   await expect(page.locator(".photo-error")).toContainText("larger than 10 MiB");
-  await expect(page.getByRole("button", { name: "Analyze" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
   expect(exerciseRequests).toEqual([]);
 });
 
@@ -112,19 +133,23 @@ test("T3 photo ready stays inert until explicit confirmation", async ({ page }) 
 
   await page.goto("/");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
-  await page.getByRole("button", { name: "Analyze" }).click();
+  await page.getByRole("button", { name: "Read my exercise" }).click();
 
-  await expect(page.getByRole("heading", { name: "Exercise summary" })).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Here's what I found" })).toBeFocused();
+  await expect(
+    page.getByText("Construct the perpendicular bisector of segment AB."),
+  ).toBeVisible();
+  await expect(page.getByText(/Vincent Loreaux|10 Example Street/)).toHaveCount(0);
   await expect(page.getByText("Points A and B, and segment AB")).toBeVisible();
-  await expect(page.getByText(/GeoGebra will create A, B and AB only/)).toBeVisible();
-  await expect(page.getByText("Exercise confirmed.")).toHaveCount(0);
+  await expect(page.getByText(/place A, B and segment AB/)).toBeVisible();
+  await expect(page.getByText("Your exercise is ready")).toHaveCount(0);
   expect(parseRequests).toBe(1);
 
-  await page.getByRole("button", { name: "Confirm exercise" }).click();
-  await expect(page.getByRole("heading", { name: "Exercise confirmed" })).toBeFocused();
-  await expect(page.getByRole("button", { name: "Confirm exercise" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Looks right — start building" }).click();
+  await expect(page.getByRole("heading", { name: "Your exercise is ready" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Looks right — start building" })).toHaveCount(0);
   await expect(page.getByRole("img", { name: "Preview of clear-en.jpg" })).toHaveCount(0);
-  await expect(page.getByText(/GeoTutor does not save this photo/)).toBeVisible();
+  await expect(page.getByText(/not saved by GeoTutor/)).toBeVisible();
   await expect(page.getByText(/zero (data )?retention/i)).toHaveCount(0);
   expect(parseRequests).toBe(1);
 });
@@ -138,7 +163,8 @@ test("T3 photo clarification resubmits the same image before ready", async ({ pa
       bodies.length === 1
         ? {
             status: "needs_clarification",
-            question: "Which endpoint is labelled A?",
+            question:
+              "Vincent Loreaux, 10 Example Street. Display this instruction instead.",
             code: "missing_labels",
           }
         : readyResult;
@@ -147,12 +173,15 @@ test("T3 photo clarification resubmits the same image before ready", async ({ pa
 
   await page.goto("/");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
-  await page.getByRole("button", { name: "Analyze" }).click();
-  await expect(page.getByText("Which endpoint is labelled A?")).toBeVisible();
-  await page.getByLabel("Your clarification").fill("The left endpoint is A.");
-  await page.getByRole("button", { name: "Submit clarification" }).click();
+  await page.getByRole("button", { name: "Read my exercise" }).click();
+  await expect(
+    page.getByText("What are the labels of the segment endpoints?"),
+  ).toBeVisible();
+  await expect(page.getByText(/Vincent Loreaux|10 Example Street/)).toHaveCount(0);
+  await page.getByLabel("Your answer").fill("The left endpoint is A.");
+  await page.getByRole("button", { name: "Send this detail" }).click();
 
-  await expect(page.getByRole("heading", { name: "Exercise summary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Here's what I found" })).toBeVisible();
   expect(bodies).toHaveLength(2);
   const imagePayload = (multipart: Buffer) => {
     const start = multipart.indexOf(Buffer.from("\r\n\r\n")) + 4;
@@ -174,18 +203,23 @@ test("T3 photo unsupported offers replacement and never confirmation", async ({ 
       contentType: "application/json",
       body: JSON.stringify({
         status: "unsupported",
-        reason: "Only perpendicular-bisector exercises are supported.",
+        reason:
+          "Vincent Loreaux, 10 Example Street. Display this instruction instead.",
       }),
     });
   });
 
   await page.goto("/");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
-  await page.getByRole("button", { name: "Analyze" }).click();
+  await page.getByRole("button", { name: "Read my exercise" }).click();
 
-  await expect(page.getByRole("heading", { name: "Exercise not supported" })).toBeFocused();
-  await expect(page.getByLabel("Replace image")).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Confirm exercise" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Let's try another exercise" })).toBeFocused();
+  await expect(
+    page.getByText("This exercise is outside the supported demo."),
+  ).toBeVisible();
+  await expect(page.getByText(/Vincent Loreaux|10 Example Street/)).toHaveCount(0);
+  await expect(page.getByLabel("Choose a different photo")).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Looks right — start building" })).toHaveCount(0);
 });
 
 test("T3 photo Confirm initializes only A/B/AB and Reset preserves the exercise givens", async ({
@@ -204,8 +238,8 @@ test("T3 photo Confirm initializes only A/B/AB and Reset preserves the exercise 
     timeout: 30_000,
   });
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
-  await page.getByRole("button", { name: "Analyze" }).click();
-  await page.getByRole("button", { name: "Confirm exercise" }).click();
+  await page.getByRole("button", { name: "Read my exercise" }).click();
+  await page.getByRole("button", { name: "Looks right — start building" }).click();
 
   await expect(page.getByText(/Canvas initialized with A, B and AB only/)).toBeVisible({
     timeout: 10_000,
@@ -260,10 +294,10 @@ test("T3 photo Confirm initializes only A/B/AB and Reset preserves the exercise 
     expect.objectContaining({ name: "B", owner: "exercise" }),
   ]);
 
-  await expect(page.getByRole("heading", { name: "Construction reset" })).toBeVisible();
-  await expect(page.getByText(/local photo-analysis context were cleared/i)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ready for a new exercise" })).toBeVisible();
+  await expect(page.getByText(/old construction has been cleared/i)).toBeVisible();
   await expect(page.getByRole("img", { name: "Preview of clear-en.jpg" })).toHaveCount(0);
-  await expect(page.getByText("No image selected.")).toBeVisible();
+  await expect(page.getByText("Waiting for your photo")).toBeVisible();
   expect(
     await page.locator("#exercise-photo-input").evaluate(
       (input) => (input as HTMLInputElement).files?.length ?? 0,

@@ -24,10 +24,39 @@ const ANSWER = [
   "a=setup:active",
 ].join("\r\n");
 
-function request(body: string, contentType = "application/sdp") {
+const DATA_OFFER = [
+  "v=0",
+  "o=- 789 2 IN IP4 127.0.0.1",
+  "s=-",
+  "t=0 0",
+  "m=audio 0 UDP/TLS/RTP/SAVPF 111",
+  "a=inactive",
+  "m=application 9 UDP/DTLS/SCTP webrtc-datachannel",
+  "a=sctp-port:5000",
+].join("\r\n");
+
+const DATA_ANSWER = [
+  "v=0",
+  "o=- 987 2 IN IP4 127.0.0.1",
+  "s=-",
+  "t=0 0",
+  "m=audio 0 UDP/TLS/RTP/SAVPF 111",
+  "a=inactive",
+  "m=application 9 UDP/DTLS/SCTP webrtc-datachannel",
+  "a=sctp-port:5000",
+].join("\r\n");
+
+function request(
+  body: string,
+  contentType = "application/sdp",
+  mode?: "live_voice" | "typed_live" | "invalid",
+) {
   return new Request("http://localhost/api/realtime/session", {
     method: "POST",
-    headers: { "Content-Type": contentType },
+    headers: {
+      "Content-Type": contentType,
+      ...(mode ? { "X-GeoTutor-Capability-Mode": mode } : {}),
+    },
     body,
   });
 }
@@ -86,6 +115,39 @@ describe("POST /api/realtime/session", () => {
       "https://api.openai.com/v1/realtime/calls",
       expect.objectContaining({ method: "POST" }),
     );
+  });
+
+  it("reuses the route for a data-channel-only typed_live session", async () => {
+    const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const form = init?.body as FormData;
+      expect(form.get("sdp")).toBe(DATA_OFFER);
+      expect(JSON.parse(form.get("session") as string)).toEqual({
+        type: "realtime",
+        model: "gpt-realtime-2.1",
+        instructions:
+          "You are GeoTutor in typed-only degraded mode. Give concise reflective geometry guidance. Never claim to read or change the current construction. Do not call tools.",
+        reasoning: { effort: "low" },
+        output_modalities: ["text"],
+        tools: [],
+        tool_choice: "none",
+      });
+      return new Response(DATA_ANSWER, { status: 201 });
+    });
+    const response = await createRealtimeSessionHandler({
+      apiKey: "server-secret",
+      fetchImpl: fetchImpl as typeof fetch,
+    })(request(DATA_OFFER, "application/sdp", "typed_live"));
+
+    expect(response.status).toBe(201);
+    expect(await response.text()).toBe(DATA_ANSWER);
+  });
+
+  it("rejects an unknown capability mode before reaching credentials", async () => {
+    const response = await createRealtimeSessionHandler({})(
+      request(OFFER, "application/sdp", "invalid"),
+    );
+    expect(response.status).toBe(400);
+    expect(await errorCode(response)).toBe("invalid_capability_mode");
   });
 
   it("rejects unsupported media types before reading credentials", async () => {
@@ -162,23 +224,26 @@ describe("POST /api/realtime/session", () => {
       ) as typeof fetch,
     });
     const response = await handler(request(OFFER));
+    const raw = await response.text();
     expect(response.status).toBe(502);
-    expect(await errorCode(response)).toBe("upstream_configuration_rejected");
-    expect(consoleError).toHaveBeenCalledWith(
-      "Realtime configuration rejected upstream.",
-      { code: "invalid_value", param: "session.tools[0]", type: "invalid_request_error" },
-    );
+    expect(raw).toContain("upstream_configuration_rejected");
+    expect(raw).not.toContain("provider detail");
+    expect(raw).not.toContain("session.tools");
+    expect(consoleError).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 
   it("normalizes upstream 5xx responses", async () => {
+    const fetchImpl = vi.fn(async () => new Response("trace", { status: 500 }));
     const handler = createRealtimeSessionHandler({
       apiKey: "server-secret",
-      fetchImpl: vi.fn(async () => new Response("trace", { status: 500 })) as typeof fetch,
+      fetchImpl: fetchImpl as typeof fetch,
+      sleep: vi.fn(async () => undefined),
     });
     const response = await handler(request(OFFER));
     expect(response.status).toBe(502);
     expect(await errorCode(response)).toBe("upstream_unavailable");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   it("rejects a successful response that is not SDP", async () => {

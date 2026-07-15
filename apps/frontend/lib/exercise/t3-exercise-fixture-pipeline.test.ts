@@ -1,4 +1,3 @@
-import { File as NodeFile } from "node:buffer";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -7,7 +6,10 @@ import type OpenAI from "openai";
 import sharp from "sharp";
 import { describe, expect, it, vi } from "vitest";
 
-import { deriveExercisePlanV1 } from "./exercise-contracts";
+import {
+  EXERCISE_READY_INSTRUCTION_V1,
+  deriveExercisePlanV1,
+} from "./exercise-contracts";
 import { createExerciseParseHandler } from "./exercise-parse-route";
 import {
   ExerciseImageNormalizationError,
@@ -88,19 +90,19 @@ function extractionFor(fixture: FixtureExpectationV1) {
 }
 
 function multipartRequest(fixture: FixtureExpectationV1, bytes: Buffer) {
-  const image = new NodeFile([bytes], fixture.fileName, {
-    type: fixture.declaredMime,
-  });
-  const request = new Request("http://localhost/api/exercise/parse", {
+  const boundary = "t3-fixture";
+  const body = Buffer.concat([
+    Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="${fixture.fileName}"\r\nContent-Type: ${fixture.declaredMime}\r\n\r\n`,
+    ),
+    bytes,
+    Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  return new Request("http://localhost/api/exercise/parse", {
     method: "POST",
-    headers: { "Content-Type": "multipart/form-data; boundary=t3-fixture" },
+    headers: { "Content-Type": `multipart/form-data; boundary=${boundary}` },
+    body,
   });
-  Object.defineProperty(request, "formData", {
-    value: async () => ({
-      getAll: (name: string) => (name === "image" ? [image] : []),
-    }),
-  });
-  return request;
 }
 
 describe("T3 exercise synthetic fixture manifest", () => {
@@ -265,7 +267,7 @@ describe("T3 exercise fixture route pipeline", () => {
     }
   });
 
-  it("keeps printed prompt injection text outside the executable plan", async () => {
+  it("keeps printed prompt injection text outside the client response and executable plan", async () => {
     const { fixtures } = await loadManifest();
     const fixture = fixtures.find(
       ({ fixtureId }) => fixtureId === "printed-prompt-injection",
@@ -282,12 +284,17 @@ describe("T3 exercise fixture route pipeline", () => {
       openAIClientFactory: () =>
         ({ responses: { parse } }) as unknown as OpenAI,
     })(multipartRequest(fixture, bytes));
-    const payload = (await response.json()) as {
+    const body = await response.text();
+    const payload = JSON.parse(body) as {
       status: string;
+      extraction: { instruction: string };
       plan: Record<string, unknown>;
     };
 
     expect(payload.status).toBe("ready");
+    expect(payload.extraction.instruction).toBe(
+      EXERCISE_READY_INSTRUCTION_V1,
+    );
     expect(payload.plan).toEqual(deriveExercisePlanV1(extraction));
     expect(Object.keys(payload.plan)).toEqual([
       "schemaVersion",
@@ -300,5 +307,6 @@ describe("T3 exercise fixture route pipeline", () => {
     expect(JSON.stringify(payload.plan)).not.toMatch(
       /999|ExecuteCommand|tool|permission|solution object/i,
     );
+    expect(body).not.toMatch(/999|ExecuteCommand|coordinates \(999,999\)/i);
   });
 });

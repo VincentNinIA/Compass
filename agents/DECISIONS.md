@@ -317,3 +317,290 @@
   les envois sont bloqués jusqu'à l'acquittement de cohérence. L'export volontaire
   corrèle seulement IDs, ancres, outcome et reason; il n'est ni persistant ni
   distant et exclut tout payload libre.
+
+## D-031 - Invariance fermée sous autorité 2/2 courante
+
+- Décision : garder `run_invariance_test` comme composite applicatif interne et
+  versionner cinq paramètres normalisés `[-1,-0.5,0,0.5,1]`. L'opération relit
+  avant et après chaque sample le candidat, la révision, le score 2/2, les deux
+  preuves passantes et leurs tuples canoniques. Elle ne publie un tableau que
+  lorsqu'il contient cinq samples finis, corrélés et d'IDs uniques; stale,
+  exception et annulation retournent un tableau vide.
+- Raison : ni le modèle ni un résultat partiel ne doivent pouvoir choisir les
+  positions, prolonger une ancienne validation ou produire une réussite
+  géométrique plausible mais non fondée.
+- Impact : C02 et C03 implémentent la scène puis les mesures derrière le délégué
+  fermé sans modifier l'entrée publique. Toute évolution des cinq paramètres
+  exige une nouvelle version et de nouvelles fixtures. C04 ne peut généraliser
+  qu'un résultat `completed` de cinq samples; l'exposition Realtime éventuelle
+  reste hors de C01 et ne peut jamais introduire de commande GeoGebra libre.
+
+## D-032 - Scène d'invariance restaurée avant tout résultat
+
+- Décision : exécuter les cinq délégations C01 dans un scope unique dont les
+  labels normalisent le `runId` en namespace GeoGebra
+  `gtInv_<runId_normalisé>_*` et dont chaque helper est pré-enregistré
+  `owner:"temporary"`. Capturer avant mutation Base64, inventaire, hash,
+  registre, empreinte élève et listeners, puis suspendre le bridge jusqu'au
+  cleanup et à leur comparaison exacte.
+- Raison : un namespace seul n'empêche ni collision avec le travail élève, ni
+  suppression partielle, ni reclassification par listener. Le résultat ne doit
+  quitter la scène qu'après preuve que la construction observée est identique.
+- Impact : le succès nominal supprime les helpers en `finally` sans reload;
+  collision, exception, annulation, divergence élève ou cleanup incomplet
+  forcent `setBase64`, reconstruction du registre et réconciliation des quatre
+  listeners. Un fallback invérifiable échoue fermé. C03 reçoit le scope mais
+  reste seul propriétaire de P, des positions et des mesures PA/PB.
+- Compatibilité vérifiée : le préfixe réservé commence par une lettre, car le
+  vrai applet GeoGebra 5.4.920.0 refuse les labels commençant par `_` lors de
+  `evalCommand`; ce garde est couvert par test et smoke navigateur.
+
+## D-033 - Positions d'invariance projetées et mesures bornées
+
+- Décision : positionner P à partir de
+  `ClosestPoint(candidate,Midpoint(A,B)) + parameter × Distance(A,B) ×
+  UnitVector(candidate)`, avec la version
+  `projected-midpoint-distance-ab-v1`. Après `setCoords`, accepter uniquement
+  deux lectures consécutives concordantes à `1e-9` dans une fenêtre de huit;
+  utiliser la tolérance PA/PB `absolute-distance-v1` de `1e-6`.
+- Raison : le path parameter brut `Point(line,parameter)` ne produit pas cinq
+  coordonnées finies pour `[-1,-0.5,0,0.5,1]` sur le vrai applet, tandis que la
+  projection garde aussi une candidate incorrecte sur sa propre droite et
+  adapte l'expérience à l'échelle de AB.
+- Impact : chaque sample conserve paramètre, coordonnées, PA, PB, delta et
+  versions; NaN, point hors droite, instabilité, stale ou annulation échouent
+  tout-ou-rien. Une candidate incorrecte peut rendre cinq samples finis mais
+  ne passe jamais l'agrégation 5/5.
+
+## D-034 - Généralisation local-first derrière la policy partagée
+
+- Décision : recevoir le résultat C03 dans un coordinator sans transport,
+  acquitter d'abord un view-model local des mesures, puis relire run, révision,
+  autorité 2/2 et cinq evidence IDs avant de créer une directive fermée v1 L1
+  `generalize_invariance`. Le guard dédié est rejouable avant dispatch.
+- Raison : les cinq mesures doivent rester visibles même sans réseau, tandis
+  qu'un résultat partiel, stale ou dupliqué ne doit jamais acquérir une autorité
+  de parole. La directive T4 ne peut pas être détournée : son evidence scope est
+  celui des deux preuves de médiatrice, pas celui des cinq samples.
+- Impact : C04 appelle seulement `onDirectiveReady`; aucun `response.create`
+  n'est envoyé. Une intervention déjà ouverte garde la priorité. `QUEUE` ne
+  finalise ni ne matérialise rien et doit être recalculé sur un floor courant;
+  au plus une directive est remise par run et signature de cinq preuves.
+
+## D-035 - Synthèse Realtime OOB fermée avec fallback identique
+
+- Décision : demander la synthèse par un unique `response.create` sans item de
+  conversation, avec `conversation:"none"`, un `input` neuf contenant seulement
+  les cinq tuples mesure/preuve, `output_modalities:["text"]`, `tools:[]`,
+  `tool_choice:"none"` et metadata string kind/runId/revision. Conserver deux
+  maps event ID/response ID, router ces événements avant les owners voix, puis
+  accepter uniquement un `response.done` completed, hors conversation et
+  composé exclusivement de texte après revalidation du guard C04.
+- Raison : une session Realtime peut produire plusieurs réponses OOB en
+  parallèle et échoit metadata jusqu'au terminal; le contexte implicite de la
+  conversation, une modalité audio ou un outil élargiraient inutilement les
+  données et les effets autorisés. `response.done` existe aussi pour les états
+  cancelled, failed et incomplete, qui ne sont donc jamais assimilés à un
+  succès.
+- Impact : timeout, erreur corrélée, send impossible, fermeture, statut non
+  completed, texte vide, payload invalide ou autorité stale rendent le même
+  résumé local déterministe, construit mot pour mot à partir des cinq mesures.
+  Le run et sa signature de preuves sont dédupliqués; aucune sortie modèle ne
+  touche le flux audio, le gateway d'outils ou la conversation par défaut. C06
+  reste seule propriétaire de la surface accessible qui affiche cette sortie.
+
+## D-036 - Surface d'invariance pilotée par un handle fermé
+
+- Décision : exposer à React une interface `start(observer)` qui retourne le
+  handle C01 et ne devient disponible qu'avec une validation locale 2/2
+  courante. Le workspace compose cette interface avec la scène C02 et le sampler
+  C03; `onResult` et `summary` restent les points d'injection de C04/C05.
+- Raison : la progression et l'annulation doivent refléter une exécution réelle
+  sans donner à l'UI une commande GeoGebra générique, recréer la policy C04 ou
+  présenter une synthèse modèle fictive. Un résultat ancien ne doit pas survivre
+  à la disparition de son autorité.
+- Impact : Cancel appelle directement le handle courant; reset, stale et unmount
+  l'annulent aussi. La surface groupe les annonces à start/3 sur 5/terminal,
+  déduplique samples et messages, retire toute sortie partielle, place le focus
+  sur l'issue et supprime son seul mouvement décoratif sous reduced motion. C07
+  peut brancher les coordinateurs existants sans changer ce contrat UI.
+
+## D-037 - Acquittement terminal avant synthèse OOB texte-only
+
+- Décision : composer C04, C05 et C06 par interfaces relayées dans le workspace,
+  puis attendre un acquittement React du résultat terminal avant la policy et la
+  requête OOB. Le renderer relit run et révision avant d'afficher; reset, action,
+  perte d'autorité et unmount invalident tout contexte en vol. Une réponse OOB
+  n'est acceptée que si `conversation_id` est nul, `output_modalities` vaut
+  exactement `["text"]` et toutes ses parts sont `output_text`; la présence
+  éventuelle d'une configuration audio de session ré-émise dans `response.done`
+  n'est pas une sortie audio.
+- Raison : l'ordre local-first doit être prouvé par le commit de rendu, pas par
+  le seul calcul du résultat, et une session créée avant le runtime GeoGebra ne
+  doit pas figer une référence absente. Le smoke credentialed montre que le
+  serveur peut échoir sa configuration audio tout en respectant une réponse
+  exclusivement textuelle.
+- Impact : la session utilise un proxy vers le runtime courant; la voie
+  déconnectée traverse la même méthode et tombe sur le fallback `send_failed`.
+  Aucun item de conversation, outil ou événement audio n'est créé. Le gate T5
+  vérifie sur le vrai applet que les réponses tardives ne ressuscitent pas une
+  synthèse et que scène, objets élève et listeners sont restaurés avant rendu.
+
+## D-038 - Reset global ordonné, vérifié et reconstructible
+
+- Décision : faire de `ExerciseInitializationService.reset(reason)` l'unique
+  autorité de reset, derrière le mutex d'initialisation. Avancer l'epoch avant
+  toute annulation, attendre la fin des opérations, réponses/audio/outils,
+  aides et pipelines, puis suspendre le bridge avant `setBase64`. N'accepter la
+  restauration qu'après égalité du hash checkpoint et de l'inventaire/registre,
+  puis réconciliation exacte des quatre listeners.
+- Raison : un reset visuellement terminé ne suffit pas si un effet ancien peut
+  encore écrire, parler ou rendre une synthèse, et un accusé `setBase64` ne
+  prouve pas que l'état élève a été restauré. Le même ordre doit couvrir clic
+  utilisateur et retry de recovery, y compris deux demandes simultanées.
+- Impact : un checkpoint absent, silencieusement corrompu ou divergent déclenche
+  uniquement une reconstruction A/B/AB depuis un `ExercisePlanV1` confirmé en
+  mémoire. Le checkpoint reconstruit est recapturé, réécrit, revérifié puis
+  promu; sans plan confirmé ou si les deux voies échouent, l'UI reçoit un état
+  `fatal` explicite et `retryable:true`, sans callback de succès. Les réponses
+  OOB connues reçoivent `response.cancel`, l'audio est ensuite vidé et leurs
+  terminaux tardifs sont ignorés, conformément à la séquence Realtime officielle.
+
+## D-039 - Autorité de capacité fermée et reprises explicitement manuelles
+
+- Décision : conserver une seule autorité visible
+  `CapabilityMode{kind,reason,since}` avec exactement `live_voice`, `typed_live`
+  et `scripted_local`. Une montée live n'est publiée qu'après clic utilisateur,
+  état pédagogique sûr, data channel ouvert et profil de session vérifié;
+  `live_voice` exige en plus microphone et piste audio distante.
+- Raison : l'état `RTCPeerConnection` ou un simple SDP accepté ne prouve ni la
+  voix ni le texte réellement utilisable. Une panne ne doit pas se déguiser en
+  live ni relancer silencieusement des requêtes sur une machine jury.
+- Impact : `scripted_local` est le défaut sans transport modèle et préserve les
+  opérations GeoGebra/invariance locales. `typed_live` réutilise
+  `/api/realtime/session` et `oai-events` sans `getUserMedia`; il configure
+  `output_modalities:["text"]`, `tools:[]` et `tool_choice:"none"`. Le endpoint
+  `/v1/realtime/calls` exige en pratique une offre avec m-line audio et data :
+  le client ajoute donc une transceiver audio `inactive`, sans piste ni sortie,
+  et échoue fermé si une piste distante apparaît. Les échecs redescendent en
+  local avec backoff observable 1/2/4/5 s, plafonné à 5 s; aucun timer n'ouvre
+  de session et seule une nouvelle action utilisateur peut retenter.
+
+## D-040 - Arbitre local unique aux quatre frontières d'effet
+
+- Décision : partager un `OperationArbiter` mémoire entre GeoGebra et Realtime.
+  Il ne connaît que reset, parole utilisateur, drag/action et outil, avec la
+  priorité totale 400 > 300 > 200 > 100. Chaque lease porte un token immuable
+  `{id,kind,epoch,revision,priority,abort}` et doit être revalidé avant mutation
+  GeoGebra, commit UI, émission Realtime et publication d'output outil.
+- Raison : les annulations spécialisées existantes coupent bien leurs propres
+  effets, mais ne prouvent pas un ordre total lorsqu'un reset, une parole, un
+  drag et un outil se chevauchent. Attendre une promesse non coopérative après
+  abort laisserait aussi un pending sans borne.
+- Impact : une autorité supérieure abort et retire les inférieures ; une
+  opération inférieure arrivée sous autorité supérieure est rejetée et son
+  résultat n'est jamais rejoué. Reset reste dédupliqué, parole vit de
+  `speech_started` à `speech_stopped`, action garde le pipeline local-first et
+  outil compose son signal avec le gateway. Timeout et watchdog abandonnent les
+  tardifs sans les attendre. La trace read-only est allowlistée, bornée à 512
+  entrées et ne contient aucun payload ; T6-C04 reste propriétaire du journal
+  de preuve de démonstration complet.
+
+## D-041 - Journal de démonstration fermé, borné et éphémère
+
+- Décision : n'exporter qu'un événement v1 fermé
+  `{timestamp,runId,actionId?,revision,kind,correlationIds,status,durationMs}`.
+  Les corrélations ne représentent que operation, directive, response, call et
+  evidence IDs; les décisions sont des kinds distincts SILENT/QUEUE/SPEAK.
+- Raison : une allowlist structurelle empêche qu'un transcript, nom, audio,
+  image, SDP, secret ou payload outil libre devienne un champ de log, tout en
+  rendant la chaîne action → décision → réponse → outil → preuve inspectable.
+- Impact : le buffer mémoire et ses spans sont bornés à 512 entrées, les listes
+  de preuves à 32 IDs et chaque éviction incrémente `dropped`. Réponse et outil
+  mesurent leur durée entre start et terminal; les quatre frontières de
+  l'arbitre conservent leur operation ID. Un Reset réussi ou la fin d'une
+  session Realtime vide entrées, spans et compteur puis crée un nouveau run.
+  L'export debug est volontaire, immuable, sans persistance ni envoi distant.
+
+## D-042 - Erreurs fermées et budgets de latence à fallback exécutable
+
+- Décision : normaliser les pannes des routes image et Realtime derrière
+  `AppError{domain,code,retryable,userMessage,correlationId}`, sans diagnostic
+  amont. Ne jamais retenter 401/403/429 automatiquement, transmettre sur 429 un
+  backoff `Retry-After` borné 1–5 s et limiter 5xx à un retry après 50 ms sous
+  timeout global.
+- Raison : la machine jury doit distinguer configuration, quota, indisponibilité
+  et timeout sans recevoir de clé, corps provider ou message arbitraire. Un
+  retry SDK implicite rendrait aussi les délais et le nombre d'appels
+  impossibles à prouver.
+- Impact : un moniteur mémoire conserve au plus 64 durées par budget, calcule
+  p50/p95 et n'exporte que nom, durée, seuil, statut et fallback. Les seuils
+  sont image 20 s, feedback local 250 ms, session 12 s, premier audio 5 s et
+  outil 2 s. Session et premier audio ferment le live en dépassement; l'outil
+  applique son plafond au lot avant output/continuation. La surface accessible
+  annonce tout fallback et laisse les chemins non mesurés à `unmeasured`.
+
+## D-043 - Candidat HTTPS et garde d'accessibilité du codebase épinglé
+
+- Décision : servir le build jury en HTTPS/TLS 1.2 avec certificat et clé lus à
+  l'exécution hors bundle, permissions microphone/camera same-origin et aucun
+  secret public. Conserver une garde d'intégration dédiée au codebase GeoGebra
+  5.4.920.0 : sous-arbres `aria-hidden` inert, tabindex positifs normalisés,
+  disabled natifs, icônes décoratives sans tab stop et panneau scrollable nommé
+  et atteignable au clavier; restaurer chaque attribut au cleanup.
+- Raison : microphone/camera exigent un contexte sécurisé et une permission
+  explicite. Le vrai DOM GeoGebra épinglé expose sinon des contrôles cachés
+  focalisables, un ordre tab positif et une région scrollable inaccessible dans
+  Safari, ce qui échoue axe/Lighthouse malgré une surface React conforme.
+- Impact : le harness local peut utiliser un certificat SAN auto-signé avec
+  ignore explicite, mais le jury exige un certificat de confiance. Le build
+  envoie les headers de permission/sécurité, les attributions GeoGebra et la
+  limite non-commerciale restent visibles, et tout upgrade GeoGebra doit
+  rejouer axe, Lighthouse, clavier et les tests de restauration de la garde.
+
+## D-044 - Profil Realtime réaffirmé et gate live lié au candidat
+
+- Décision : qualifier T6 par un runner qui empreinte les sources exécutables et
+  l'environnement, exécute le préflight, puis exige trois runs live isolés,
+  séquentiels et sans retry. Le compteur est lié aux deux identités et revient à
+  zéro sur erreur, étape/preuve manquante ou dérive. Pour la voix, si le premier
+  `session.created` diverge uniquement parce que `create_response` vaut sa
+  valeur serveur par défaut `true`, émettre une unique `session.update` avec le
+  profil VAD exact (`create_response:false`, `interrupt_response:true`, seuil,
+  padding et silence verrouillés), puis attendre un `session.updated` strict.
+- Raison : la référence Realtime rend `create_response` optionnel et vrai par
+  défaut; l'offre `/v1/realtime/calls` peut donc établir le transport avant que
+  le profil applicatif demandé soit effectivement confirmé. Accepter la valeur
+  initiale créerait une réponse automatique contraire à l'autorité locale,
+  tandis qu'un échec immédiat empêcherait de négocier le profil par l'événement
+  client prévu à cet effet. Une preuve live n'est reproductible que si code,
+  runtime, neuf étapes et compteur appartiennent au même candidat.
+- Impact : toute autre divergence de session, ou une divergence qui persiste
+  après réaffirmation, échoue fermé. Le gate prouve SILENT sans réponse, SPEAK L1
+  au bloc répété, audio distant, 2/2, invariance 5/5, synthèse OOB texte-only,
+  reset exact et cleanup. Les manifests sont allowlistés et les seuls binaires
+  conservés sont PNG/WEBM; les traces réseau Playwright sont désactivées car
+  elles contiennent le SDP brut. Le harness automatisé documente honnêtement sa
+  piste micro synthétique et son certificat local, distincts des contrôles jury.
+
+## D-045 - Le contre-audit propage l'annulation et ferme l'identité des preuves
+
+- Décision : publier une autorité d'annulation Realtime distincte dès la
+  création de toute session, puis faire du Reset un terminal qui annule la
+  réponse, ferme transport/micro/audio et rejette tout événement tardif.
+  Propager aussi le lease reset dans `CheckpointService` et le revalider avant
+  et après chaque attente puis avant toute mutation, listener ou promotion.
+- Raison : l'autorité proactive n'existait qu'après promotion `live_voice`, ce
+  qui laissait `typed_live` et la connexion voix initiale hors du reset. Une
+  garde posée seulement avant l'I/O ne bloquait pas non plus les mutations
+  suivant l'expiration du watchdog.
+- Décision de preuve : recalculer candidat et environnement après préflight et
+  avant/après chaque run; l'identité opaque inclut la configuration credential
+  sans l'exposer. Accepter exactement 12 artefacts : 6 JSON schématisés,
+  3 PNG et 3 WEBM. Supprimer `.last-run.json`; tout fichier, champ ou durée
+  inattendu remet le compteur à zéro.
+- Impact : les deux premières séries du contre-audit T6 sont invalidées sans
+  retry. La série QA `series_f4ec3e800c0c0dfa76455a24` requalifie 3/3 le
+  candidat `candidate_e9d7884f850fb105e3cc290c` et l'environnement
+  `environment_0f52328722a31843a91e9d4b`, avec 573/573 Vitest, 30/30 hors live
+  et aucun finding restant.

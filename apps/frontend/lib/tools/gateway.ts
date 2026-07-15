@@ -13,6 +13,8 @@ export type GatewayContext = {
   phase: ToolPhase;
   epoch?: number;
   revision: number;
+  signal?: AbortSignal;
+  isAuthorityCurrent?: () => boolean;
   directive?: {
     directiveId: string;
     sourceActionId?: string | null;
@@ -41,6 +43,7 @@ export type GatewayErrorCode =
   | "plan_unconfirmed"
   | "highlight_active"
   | "rollback_failed"
+  | "cancelled"
   | "execution_failed";
 
 export type GatewayEnvelope =
@@ -70,7 +73,7 @@ export class ToolHandlerError extends Error {
   constructor(
     readonly code: Extract<
       GatewayErrorCode,
-      "object_missing" | "plan_unconfirmed" | "highlight_active" | "rollback_failed" | "stale_revision"
+      "invalid_arguments" | "object_missing" | "plan_unconfirmed" | "highlight_active" | "rollback_failed" | "stale_revision"
     >,
     message: string,
   ) {
@@ -127,19 +130,23 @@ export class ToolGateway {
       return failure(call.callId, context.revision, "unknown_tool", "Tool is not allowed.");
     }
     const name = call.name;
-    if (
-      context.directive &&
-      !context.directive.authorize({
-        callId: call.callId,
-        name,
-        revision: context.revision,
-      })
-    ) {
+    const callAuthority = () =>
+      !context.signal?.aborted &&
+      (context.isAuthorityCurrent?.() ?? true) &&
+      (!context.directive ||
+        context.directive.authorize({
+          callId: call.callId,
+          name,
+          revision: context.revision,
+        }));
+    if (!callAuthority()) {
       return failure(
         call.callId,
         context.revision,
-        "rejected_stale",
-        "Directive is stale or the tool call is not correlated.",
+        context.signal?.aborted ? "cancelled" : "rejected_stale",
+        context.signal?.aborted
+          ? "Tool execution was cancelled."
+          : "Directive is stale or the tool call is not correlated.",
       );
     }
     const parsed = parseArguments(name, call.arguments, this.limits.maxArgumentBytes);
@@ -160,7 +167,18 @@ export class ToolGateway {
         arguments_: ToolArguments[ToolName],
         context: GatewayContext,
       ) => Promise<ToolHandlerResult> | ToolHandlerResult;
-      const result = await handler(parsed.value, context);
+      const handlerContext = { ...context, isAuthorityCurrent: callAuthority };
+      const result = await handler(parsed.value, handlerContext);
+      if (!callAuthority()) {
+        return failure(
+          call.callId,
+          context.revision,
+          context.signal?.aborted ? "cancelled" : "rejected_stale",
+          context.signal?.aborted
+            ? "Tool execution was cancelled."
+            : "Tool authority expired during execution.",
+        );
+      }
       return {
         ok: true,
         callId: call.callId,
@@ -169,6 +187,14 @@ export class ToolGateway {
         evidenceIds: [...(result.evidenceIds ?? [])],
       };
     } catch (error) {
+      if (context.signal?.aborted || isAbortError(error)) {
+        return failure(
+          call.callId,
+          context.revision,
+          "cancelled",
+          "Tool execution was cancelled.",
+        );
+      }
       if (error instanceof ToolHandlerError) {
         return failure(call.callId, context.revision, error.code, error.message);
       }
@@ -189,6 +215,10 @@ export class ToolGateway {
     this.usage.set(turnId, { calls: current.calls + 1, mutations });
     return true;
   }
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 type ParsedArguments<Name extends ToolName> =

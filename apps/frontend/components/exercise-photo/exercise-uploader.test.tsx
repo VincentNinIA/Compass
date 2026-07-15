@@ -56,7 +56,7 @@ describe("ExerciseUploader", () => {
     ["exercise.jpg", "image/jpeg"],
     ["exercise.png", "image/png"],
     ["exercise.webp", "image/webp"],
-  ])("accepts one locally valid %s and emits it only on Analyze", async (name, type) => {
+  ])("accepts one locally valid %s and emits it only on Read my exercise", async (name, type) => {
     const onAnalyze = vi.fn<(selection: SelectedExerciseImage) => void>();
     render(<ExerciseUploader onAnalyze={onAnalyze} />);
 
@@ -75,7 +75,7 @@ describe("ExerciseUploader", () => {
     expect(screen.getByText(name)).toBeInTheDocument();
     expect(onAnalyze).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
     await waitFor(() => expect(onAnalyze).toHaveBeenCalledTimes(1));
     expect(onAnalyze).toHaveBeenCalledWith({
       file,
@@ -109,8 +109,8 @@ describe("ExerciseUploader", () => {
         "client_rejected",
       );
       expect(screen.getByRole("alert")).toHaveTextContent(expectedMessage);
-      expect(screen.getByRole("button", { name: "Analyze" })).toBeDisabled();
-      fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+      expect(screen.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
+      fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
       await act(() => Promise.resolve());
       expect(onAnalyze).not.toHaveBeenCalled();
       expect(createObjectURL).not.toHaveBeenCalled();
@@ -132,7 +132,7 @@ describe("ExerciseUploader", () => {
     });
 
     expect(screen.getByRole("alert")).toHaveTextContent("exactly one");
-    expect(screen.getByRole("button", { name: "Analyze" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
     expect(onAnalyze).not.toHaveBeenCalled();
   });
 
@@ -156,7 +156,7 @@ describe("ExerciseUploader", () => {
     fireEvent.change(input, {
       target: { files: [makeFile("third.webp", "image/webp")] },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Cancel selection" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
     expect(revokeObjectURL).toHaveBeenNthCalledWith(3, "blob:exercise-3");
 
     createObjectURL.mockReturnValueOnce("blob:exercise-4");
@@ -181,11 +181,11 @@ describe("ExerciseUploader", () => {
       target: { files: [makeFile("exercise.jpg", "image/jpeg")] },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze" }));
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
 
     expect(screen.getByRole("status")).toHaveAttribute("data-state", "submitting");
     expect(input).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Cancel selection" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Remove photo" })).toBeEnabled();
 
     fireEvent.change(input, {
       target: { files: [makeFile("replacement.png", "image/png")] },
@@ -216,7 +216,7 @@ describe("ExerciseUploader", () => {
       target: { files: [makeFile("bad.heic", "image/heic")] },
     });
     fireEvent.change(input, { target: { files: [first] } });
-    fireEvent.click(screen.getByRole("button", { name: "Cancel selection" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove photo" }));
 
     expect(onSelectionChange.mock.calls.map(([selection]) => selection?.file)).toEqual([
       first,
@@ -227,7 +227,7 @@ describe("ExerciseUploader", () => {
     ]);
   });
 
-  it("blocks Analyze independently while keeping replacement and cancellation available", async () => {
+  it("blocks Read my exercise independently while keeping replacement and cancellation available", async () => {
     const onAnalyze = vi.fn();
     render(<ExerciseUploader onAnalyze={onAnalyze} analyzeEnabled={false} />);
     const input = screen.getByLabelText("Take or choose a photo");
@@ -236,10 +236,10 @@ describe("ExerciseUploader", () => {
       target: { files: [makeFile("exercise.jpg", "image/jpeg")] },
     });
 
-    const analyze = screen.getByRole("button", { name: "Analyze" });
+    const analyze = screen.getByRole("button", { name: "Read my exercise" });
     expect(analyze).toBeDisabled();
     expect(input).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Cancel selection" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Remove photo" })).toBeEnabled();
 
     fireEvent.click(analyze);
     await act(() => Promise.resolve());

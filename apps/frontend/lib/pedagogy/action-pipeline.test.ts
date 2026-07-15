@@ -18,6 +18,7 @@ import {
   type PedagogyState,
   type VerifiedFact,
 } from "./state";
+import { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 
 const PLAN = deriveExercisePlanV1({
   schemaVersion: "exercise_extraction.v1",
@@ -228,5 +229,33 @@ describe("T4-C04 local-first action pipeline", () => {
     expect(renderProgress).not.toHaveBeenCalled();
     expect(decide).not.toHaveBeenCalled();
     expect(requestNetwork).not.toHaveBeenCalled();
+  });
+
+  it("measures validation-to-render feedback and exposes its closed fallback", async () => {
+    const initial = createInitialPedagogyState(PLAN, { epoch: 2 });
+    const monitor = new LatencyBudgetMonitor({ now: () => 9 });
+    const clock = [0, 251];
+
+    await runLocalFirstAction(
+      initial,
+      actionEvent(initial, ["verified", "missing"]),
+      initialProgressViewModel(),
+      {
+        renderProgress: vi.fn(),
+        latencyMonitor: monitor,
+        latencyNow: () => clock.shift() ?? 251,
+      },
+    );
+
+    expect(
+      monitor.exportDebug().distributions.find(
+        ({ name }) => name === "feedback_local",
+      ),
+    ).toMatchObject({
+      sampleCount: 1,
+      latestMs: 251,
+      status: "degraded",
+      fallback: "local_feedback_delayed",
+    });
   });
 });

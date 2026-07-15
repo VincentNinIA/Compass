@@ -10,6 +10,7 @@ export const EXERCISE_PARSE_LOG_CODES = [
   "image_too_large",
   "image_normalization_unavailable",
   "openai_not_configured",
+  "parse_rate_limited",
   "parse_unavailable",
   "parse_timeout",
   "invalid_model_output",

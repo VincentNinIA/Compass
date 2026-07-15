@@ -15,6 +15,8 @@
     "build": "pnpm --dir apps/frontend build",
     "test:docs:t0": "node scripts/validate-t0-docs.mjs",
     "test:e2e:t0": "pnpm --dir apps/frontend test:e2e:t0",
-    "test:e2e:t0:live": "pnpm --dir apps/frontend test:e2e:t0:live"
+    "test:e2e:t0:live": "pnpm --dir apps/frontend test:e2e:t0:live",
+    "gate:t6:identity": "set -a; [ ! -f .env ] || . ./.env; set +a; pnpm --dir apps/frontend gate:t6:identity",
+    "gate:t6:live": "set -a; [ ! -f .env ] || . ./.env; set +a; pnpm --dir apps/frontend gate:t6:live"
   }
 }

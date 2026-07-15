@@ -3,8 +3,16 @@ import { describe, expect, it, vi } from "vitest";
 import { ToolGateway, type GatewayContext, type ToolHandlers } from "@/lib/tools/gateway";
 import { RealtimeToolLoop } from "./tool-loop";
 import { EvidenceLog } from "@/lib/pedagogy/evidence-log";
+import { OperationArbiter } from "@/lib/operations/arbiter";
+import { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 
-function harness(options: { timeoutMs?: number; gateway?: ToolGateway } = {}) {
+function harness(options: {
+  timeoutMs?: number;
+  gateway?: ToolGateway;
+  operationArbiter?: OperationArbiter;
+  latencyMonitor?: LatencyBudgetMonitor;
+  now?: () => number;
+} = {}) {
   const handlers: ToolHandlers = {
     read_construction: vi.fn(({ revision }) => ({ data: { revision }, evidenceIds: [`snapshot-r${revision}`] })),
     initialize_exercise: vi.fn(() => ({ data: {} })),
@@ -22,6 +30,9 @@ function harness(options: { timeoutMs?: number; gateway?: ToolGateway } = {}) {
     onContinuation: continuations,
     onFailure: failures,
     timeoutMs: options.timeoutMs,
+    operationArbiter: options.operationArbiter,
+    latencyMonitor: options.latencyMonitor,
+    now: options.now,
   });
   return { loop, handlers, sent, continuations, failures };
 }
@@ -90,19 +101,23 @@ describe("RealtimeToolLoop", () => {
 
     expect(log.export()).toEqual([
       expect.objectContaining({
-        eventType: "tool_call",
-        epoch: 7,
+        kind: "tool",
+        status: "started",
         revision: 4,
         actionId: "action-tool",
-        directiveId: "directive-tool",
-        responseId: "response-tool",
-        callId: "call-1",
-        evidenceIds: ["evidence-anchor"],
+        correlationIds: {
+          directiveId: "directive-tool",
+          responseId: "response-tool",
+          callId: "call-1",
+          evidenceIds: ["evidence-anchor"],
+        },
       }),
       expect.objectContaining({
-        eventType: "tool_result",
-        epoch: 7,
-        evidenceIds: ["evidence-tool-result"],
+        kind: "tool",
+        status: "completed",
+        correlationIds: expect.objectContaining({
+          evidenceIds: ["evidence-tool-result"],
+        }),
       }),
     ]);
     expect(JSON.stringify(log.export())).not.toContain('{"revision":4}');
@@ -124,20 +139,48 @@ describe("RealtimeToolLoop", () => {
     expect(test.sent).toEqual([]);
   });
 
-  it("sends a timeout output and continues so the turn can terminate", async () => {
-    const gateway = { execute: vi.fn(() => new Promise(() => undefined)) } as unknown as ToolGateway;
+  it("aborts a timed-out handler, publishes its error, and terminalizes", async () => {
+    let signal: AbortSignal | undefined;
+    let mutated = false;
+    const gateway = {
+      execute: vi.fn((_call, context: GatewayContext) => {
+        signal = context.signal;
+        return new Promise((resolve) => {
+          const lateMutation = setTimeout(() => {
+            mutated = true;
+          }, 25);
+          context.signal?.addEventListener(
+            "abort",
+            () => {
+              clearTimeout(lateMutation);
+              resolve({
+                ok: false,
+                callId: "call-1",
+                revision: 4,
+                error: { code: "cancelled", message: "cancelled" },
+                evidenceIds: [],
+              });
+            },
+            { once: true },
+          );
+        });
+      }),
+    } as unknown as ToolGateway;
     const test = harness({ gateway, timeoutMs: 5 });
     const event = done();
     event.response.output = [event.response.output[0]];
     const result = await test.loop.handle(event, "turn-1");
-    expect(result).toEqual(expect.objectContaining({ outputCount: 1, continued: true }));
+    expect(result).toEqual(expect.objectContaining({ outputCount: 1, continued: false }));
+    expect(signal?.aborted).toBe(true);
     expect(test.sent).toHaveLength(1);
     expect(JSON.stringify(test.sent[0])).toContain("timed out safely");
-    expect(test.continuations).toHaveBeenCalledTimes(1);
-    expect(test.failures).not.toHaveBeenCalled();
+    expect(test.continuations).not.toHaveBeenCalled();
+    expect(test.failures).toHaveBeenCalledTimes(1);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    expect(mutated).toBe(false);
   });
 
-  it("turns a rejected gateway promise into an output and continuation", async () => {
+  it("turns a rejected gateway promise into an output and terminal failure", async () => {
     const gateway = {
       execute: vi.fn(() => Promise.reject(new Error("private failure"))),
     } as unknown as ToolGateway;
@@ -146,9 +189,11 @@ describe("RealtimeToolLoop", () => {
     event.response.output = [event.response.output[0]];
 
     expect(await test.loop.handle(event, "turn-1")).toEqual(
-      expect.objectContaining({ outputCount: 1, continued: true }),
+      expect.objectContaining({ outputCount: 1, continued: false }),
     );
     expect(JSON.stringify(test.sent)).toContain("Tool execution failed safely");
+    expect(test.continuations).not.toHaveBeenCalled();
+    expect(test.failures).toHaveBeenCalledTimes(1);
   });
 
   it("fails the tooling state if an output cannot be published", async () => {
@@ -176,16 +221,91 @@ describe("RealtimeToolLoop", () => {
   });
 
   it("drops late gateway results after cancellation", async () => {
-    let release!: (value: never) => void;
-    const pending = new Promise<never>((resolve) => { release = resolve; });
-    const gateway = { execute: vi.fn(() => pending) } as unknown as ToolGateway;
+    let signal: AbortSignal | undefined;
+    const gateway = {
+      execute: vi.fn((_call, context: GatewayContext) => {
+        signal = context.signal;
+        return new Promise((resolve) => {
+          context.signal?.addEventListener(
+            "abort",
+            () =>
+              resolve({
+                ok: false,
+                callId: "call-1",
+                revision: 4,
+                error: { code: "cancelled", message: "cancelled" },
+                evidenceIds: [],
+              }),
+            { once: true },
+          );
+        });
+      }),
+    } as unknown as ToolGateway;
     const test = harness({ gateway, timeoutMs: 1_000 });
     const event = done();
     event.response.output = [event.response.output[0]];
     const handling = test.loop.handle(event, "turn-1");
+    await vi.waitFor(() => expect(signal).toBeDefined());
     test.loop.cancel();
-    release({ ok: true, callId: "call-1", revision: 4, data: {}, evidenceIds: [] } as never);
+    expect(signal?.aborted).toBe(true);
     expect(await handling).toBeUndefined();
     expect(test.sent).toEqual([]);
+  });
+
+  it("lets reset preempt a non-cooperative tool without output or continuation", async () => {
+    let signal: AbortSignal | undefined;
+    const gateway = {
+      execute: vi.fn((_call, context: GatewayContext) => {
+        signal = context.signal;
+        return new Promise<never>(() => undefined);
+      }),
+    } as unknown as ToolGateway;
+    const arbiter = new OperationArbiter({ watchdogMs: 100 });
+    const test = harness({
+      gateway,
+      timeoutMs: 10,
+      operationArbiter: arbiter,
+    });
+    const event = done();
+    event.response.output = [event.response.output[0]];
+    const handling = test.loop.handle(event, "turn-1");
+    await vi.waitFor(() => expect(signal).toBeDefined());
+
+    const reset = arbiter.begin({ kind: "reset", epoch: 1, revision: 4 });
+    expect(signal?.aborted).toBe(true);
+    expect(await handling).toBeUndefined();
+    expect(test.sent).toEqual([]);
+    expect(test.continuations).not.toHaveBeenCalled();
+    expect(arbiter.snapshot().pending.map(({ kind }) => kind)).toEqual([
+      "reset",
+    ]);
+    reset.finish();
+    expect(await arbiter.waitForIdle(20)).toBe(true);
+  });
+
+  it("records the bounded tool path without retaining arguments or outputs", async () => {
+    const monitor = new LatencyBudgetMonitor({ now: () => 12 });
+    const clock = [0, 2_001];
+    const test = harness({
+      latencyMonitor: monitor,
+      now: () => clock.shift() ?? 2_001,
+    });
+
+    const result = await test.loop.handle(done(), "turn-1");
+
+    const exported = monitor.exportDebug();
+    expect(
+      exported.distributions.find(({ name }) => name === "tool"),
+    ).toMatchObject({
+      latestMs: 2_001,
+      status: "degraded",
+      fallback: "stop_tool_turn",
+    });
+    expect(JSON.stringify(exported)).not.toContain("revision");
+    expect(JSON.stringify(exported)).not.toContain("perpendicular");
+    expect(result).toMatchObject({ outputCount: 0, continued: false });
+    expect(test.sent).toEqual([]);
+    expect(test.continuations).not.toHaveBeenCalled();
+    expect(test.failures).toHaveBeenCalledTimes(1);
   });
 });

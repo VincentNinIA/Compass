@@ -621,3 +621,19 @@
   d'exercice, modèle, permission, autorité pédagogique, stockage ou protocole
   Realtime n'est modifié par T7; tout changement visuel doit encore passer Axe,
   clavier, reduced motion, 200 % et les viewports 390/768/1440.
+
+## D-047 - Compass bilingue par contexte client éphémère
+
+- Décision : adopter `Compass` comme seule marque publique et fournir EN/FR par
+  un contexte React client partagé. Le contrôle de langue est un bouton à
+  drapeau dans le header; il met aussi à jour l'attribut `lang` du document.
+- Raison : le prototype possède une page et une session mémoire uniques. Une
+  infrastructure de routes localisées ou une dépendance i18n ajouterait de la
+  complexité sans bénéfice pour ce périmètre, tandis qu'un contexte typé garde
+  la copie cohérente dans les composants déjà montés.
+- Impact : l'anglais reste la valeur initiale déterministe, le français est
+  activé explicitement et aucune préférence n'est persistée. La marque interne,
+  les packages `@geotutor/*`, les globals `__GEOTUTOR_*`, les payloads, preuves
+  et textes libres issus des modèles ne sont pas renommés ni traduits. Toute
+  nouvelle copie publique doit fournir ses deux variantes et passer les mêmes
+  gates responsive/accessibilité.

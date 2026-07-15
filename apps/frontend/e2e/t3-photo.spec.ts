@@ -78,7 +78,7 @@ test("T3 photo mobile capture accepts supported files and rejects before network
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "GeoTutor home" }),
+    page.getByRole("link", { name: "Compass home" }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
@@ -87,6 +87,10 @@ test("T3 photo mobile capture accepts supported files and rejects before network
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Your coach" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Passer en français" }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
@@ -149,7 +153,7 @@ test("T3 photo ready stays inert until explicit confirmation", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Your exercise is ready" })).toBeFocused();
   await expect(page.getByRole("button", { name: "Looks right — start building" })).toHaveCount(0);
   await expect(page.getByRole("img", { name: "Preview of clear-en.jpg" })).toHaveCount(0);
-  await expect(page.getByText(/not saved by GeoTutor/)).toBeVisible();
+  await expect(page.getByText(/not saved by Compass/)).toBeVisible();
   await expect(page.getByText(/zero (data )?retention/i)).toHaveCount(0);
   expect(parseRequests).toBe(1);
 });

@@ -35,6 +35,7 @@ import {
 import type { ParseExerciseResultV1 } from "@/lib/exercise/exercise-parse-route";
 import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 import { parseAppErrorPayload } from "@/lib/reliability/app-error";
+import { useLanguage } from "@/components/language-provider";
 
 type ParseExerciseInput = {
   file: File;
@@ -188,29 +189,75 @@ export const fetchExerciseParse: ExerciseParser = async ({
   return parseExerciseResultPayload(payload);
 };
 
-function stateAnnouncement(state: ExerciseConfirmationState): string {
+type Localize = (english: string, french: string) => string;
+
+function stateAnnouncement(
+  state: ExerciseConfirmationState,
+  text: Localize,
+): string {
   switch (state.status) {
     case "idle":
-      return "Add a photo above to begin.";
+      return text("Add a photo above to begin.", "Ajoute une photo ci-dessus pour commencer.");
     case "preview":
-      return "Your photo is ready. Read it when you want to continue.";
+      return text(
+        "Your photo is ready. Read it when you want to continue.",
+        "Ta photo est prête. Lance la lecture quand tu veux continuer.",
+      );
     case "parsing":
-      return "I’m reading the question and looking for the important details.";
+      return text(
+        "I’m reading the question and looking for the important details.",
+        "Je lis l'énoncé et je repère les informations importantes.",
+      );
     case "needs_clarification":
       return state.clarificationCount >= MAX_EXERCISE_CLARIFICATIONS
-        ? "I still need a clearer photo to understand this exercise."
-        : "I need one small detail before we continue.";
+        ? text(
+            "I still need a clearer photo to understand this exercise.",
+            "J'ai encore besoin d'une photo plus nette pour comprendre cet exercice.",
+          )
+        : text(
+            "I need one small detail before we continue.",
+            "Il me manque un petit détail avant de continuer.",
+          );
     case "awaiting_confirmation":
-      return "I found the exercise. Check it before we build.";
+      return text(
+        "I found the exercise. Check it before we build.",
+        "J'ai trouvé l'exercice. Vérifie-le avant de construire.",
+      );
     case "confirmed":
-      return "Great — your workspace is getting ready.";
+      return text(
+        "Great — your workspace is getting ready.",
+        "Parfait — ton espace de travail se prépare.",
+      );
     case "unsupported":
-      return "I can’t guide this type of exercise yet.";
+      return text(
+        "I can’t guide this type of exercise yet.",
+        "Je ne peux pas encore guider ce type d'exercice.",
+      );
     case "refused":
-      return "I couldn’t read enough from this photo.";
+      return text(
+        "I couldn’t read enough from this photo.",
+        "Je n'ai pas réussi à lire suffisamment cette photo.",
+      );
     case "failed":
-      return "I couldn’t read the exercise. Try again or choose another photo.";
+      return text(
+        "I couldn’t read the exercise. Try again or choose another photo.",
+        "Je n'ai pas pu lire l'exercice. Réessaie ou choisis une autre photo.",
+      );
   }
+}
+
+function localizedClarification(
+  code: ExerciseAmbiguityCodeV1,
+  fallback: string,
+  text: Localize,
+) {
+  const french = {
+    missing_labels: "Quelles sont les lettres des extrémités du segment ?",
+    unreadable_text: "Quelle construction l'énoncé demande-t-il ?",
+    conflicting_instruction: "Dois-tu construire la médiatrice de AB ?",
+    missing_segment: "Quels sont les deux points qui définissent le segment ?",
+  } satisfies Record<ExerciseAmbiguityCodeV1, string>;
+  return text(fallback, french[code]);
 }
 
 export function ExerciseConfirmation({
@@ -225,6 +272,7 @@ export function ExerciseConfirmation({
   resetToken = 0,
   latencyMonitor,
 }: ExerciseConfirmationProps) {
+  const { text } = useLanguage();
   const [state, dispatch] = useReducer(
     exerciseConfirmationReducer,
     INITIAL_EXERCISE_CONFIRMATION_STATE,
@@ -291,8 +339,14 @@ export function ExerciseConfirmation({
           requestId,
           message:
             error instanceof ExerciseParseRequestError
-              ? error.message
-              : "Analysis is temporarily unavailable. Retry when you are ready.",
+              ? text(
+                  error.message,
+                  `L'analyse de l'exercice est indisponible. Référence ${error.correlationId}.`,
+                )
+              : text(
+                  "Analysis is temporarily unavailable. Retry when you are ready.",
+                  "L'analyse est temporairement indisponible. Réessaie quand tu veux.",
+                ),
         });
       } finally {
         latencyMonitor?.record("image", Math.max(0, now() - startedAt));
@@ -301,7 +355,7 @@ export function ExerciseConfirmation({
         }
       }
     },
-    [cancelPendingRequest, latencyMonitor, now, parseExercise],
+    [cancelPendingRequest, latencyMonitor, now, parseExercise, text],
   );
 
   const handleSelectionChange = useCallback(
@@ -338,11 +392,21 @@ export function ExerciseConfirmation({
     const trimmed = clarification.trim();
     const characterCount = countClarificationCharacters(trimmed);
     if (characterCount === 0) {
-      setClarificationError("Enter a short answer before continuing.");
+      setClarificationError(
+        text(
+          "Enter a short answer before continuing.",
+          "Écris une réponse courte avant de continuer.",
+        ),
+      );
       return;
     }
     if (characterCount > MAX_EXERCISE_CLARIFICATION_CHARACTERS) {
-      setClarificationError("Keep the clarification to 500 characters or fewer.");
+      setClarificationError(
+        text(
+          "Keep the clarification to 500 characters or fewer.",
+          "Limite ta précision à 500 caractères.",
+        ),
+      );
       return;
     }
     if (state.clarificationCount >= MAX_EXERCISE_CLARIFICATIONS) return;
@@ -374,7 +438,10 @@ export function ExerciseConfirmation({
     if (!plan.success) {
       dispatch({
         type: "confirmation_rejected",
-        message: "The exercise plan changed and must be analyzed again.",
+        message: text(
+          "The exercise plan changed and must be analyzed again.",
+          "Le plan de l'exercice a changé et doit être analysé à nouveau.",
+        ),
       });
       return;
     }
@@ -418,26 +485,35 @@ export function ExerciseConfirmation({
       >
         <div className="spike-heading">
           <div>
-            <p className="section-index">Step 1 · Quick check</p>
-            <h2 id="exercise-confirmation-title">Did I understand it?</h2>
+            <p className="section-index">
+              {text("Step 1 · Quick check", "Étape 1 · Vérification rapide")}
+            </p>
+            <h2 id="exercise-confirmation-title">
+              {text("Did I understand it?", "Ai-je bien compris ?")}
+            </h2>
           </div>
           <p>
-            Nothing changes in your workspace until you say the summary looks right.
+            {text(
+              "Nothing changes in your workspace until you say the summary looks right.",
+              "Rien ne change dans ton espace tant que tu n'as pas validé le résumé.",
+            )}
           </p>
         </div>
 
         <p className="exercise-flow-status" role="status" aria-live="polite">
-          {stateAnnouncement(state)}
+          {stateAnnouncement(state, text)}
         </p>
 
         {initializationState.status === "reset" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Ready for a new exercise
+              {text("Ready for a new exercise", "Prêt pour un nouvel exercice")}
             </h3>
             <p>
-              Your old construction has been cleared. Add another photo whenever
-              you&apos;re ready.
+              {text(
+                "Your old construction has been cleared. Add another photo whenever you're ready.",
+                "Ton ancienne construction a été effacée. Ajoute une autre photo quand tu es prêt.",
+              )}
             </p>
           </div>
         ) : null}
@@ -445,12 +521,16 @@ export function ExerciseConfirmation({
         {state.status === "needs_clarification" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Help me with one detail
+              {text("Help me with one detail", "Aide-moi avec un détail")}
             </h3>
-            <p className="exercise-question">{state.question}</p>
+            <p className="exercise-question">
+              {localizedClarification(state.code, state.question, text)}
+            </p>
             {canClarify ? (
               <form onSubmit={(event) => void handleClarification(event)}>
-                <label htmlFor="exercise-clarification">Your answer</label>
+                <label htmlFor="exercise-clarification">
+                  {text("Your answer", "Ta réponse")}
+                </label>
                 <textarea
                   id="exercise-clarification"
                   value={clarification}
@@ -463,15 +543,19 @@ export function ExerciseConfirmation({
                   }}
                 />
                 <p id="exercise-clarification-count">
-                  {clarificationCharacterCount}/500 characters · clarification {state.clarificationCount + 1} of 2
+                  {clarificationCharacterCount}/500 {text("characters", "caractères")} · {text("clarification", "précision")} {state.clarificationCount + 1} {text("of", "sur")} 2
                 </p>
                 {clarificationError ? <p role="alert">{clarificationError}</p> : null}
-                <button type="submit">Send this detail</button>
+                <button type="submit">
+                  {text("Send this detail", "Envoyer ce détail")}
+                </button>
               </form>
             ) : (
               <p>
-                I still can&apos;t read this one confidently. Try a brighter, straighter
-                photo so we can start cleanly.
+                {text(
+                  "I still can't read this one confidently. Try a brighter, straighter photo so we can start cleanly.",
+                  "Je n'arrive toujours pas à le lire avec certitude. Essaie une photo plus droite et plus lumineuse.",
+                )}
               </p>
             )}
           </div>
@@ -483,32 +567,39 @@ export function ExerciseConfirmation({
             aria-labelledby="exercise-summary-title"
           >
             <h3 id="exercise-summary-title" ref={workflowFocus} tabIndex={-1}>
-              Here&apos;s what I found
+              {text("Here's what I found", "Voici ce que j'ai trouvé")}
             </h3>
             <dl>
               <div>
-                <dt>The question</dt>
-                <dd>{state.extraction.instruction}</dd>
+                <dt>{text("The question", "La consigne")}</dt>
+                <dd>
+                  {text(
+                    state.extraction.instruction,
+                    "Construis la médiatrice du segment AB.",
+                  )}
+                </dd>
               </div>
               <div>
-                <dt>You already have</dt>
-                <dd>Points A and B, and segment AB</dd>
+                <dt>{text("You already have", "Tu as déjà")}</dt>
+                <dd>{text("Points A and B, and segment AB", "Les points A et B, et le segment AB")}</dd>
               </div>
               <div>
-                <dt>You&apos;ll build</dt>
-                <dd>The perpendicular bisector of AB</dd>
+                <dt>{text("You'll build", "Tu vas construire")}</dt>
+                <dd>{text("The perpendicular bisector of AB", "La médiatrice de AB")}</dd>
               </div>
               <div>
-                <dt>You&apos;ll discover</dt>
-                <dd>Understand perpendicular bisectors and equidistance</dd>
+                <dt>{text("You'll discover", "Tu vas comprendre")}</dt>
+                <dd>{text("Understand perpendicular bisectors and equidistance", "La médiatrice et l'équidistance")}</dd>
               </div>
             </dl>
             <p className="exercise-initialization-note">
-              I&apos;ll place A, B and segment AB. The important construction stays
-              yours to make.
+              {text(
+                "I'll place A, B and segment AB. The important construction stays yours to make.",
+                "Je place A, B et le segment AB. La construction importante reste à toi.",
+              )}
             </p>
             <button type="button" onClick={handleConfirm}>
-              Looks right — start building
+              {text("Looks right — start building", "C'est bon — commencer à construire")}
             </button>
           </div>
         ) : null}
@@ -516,31 +607,51 @@ export function ExerciseConfirmation({
         {state.status === "unsupported" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Let&apos;s try another exercise
+              {text("Let's try another exercise", "Essayons un autre exercice")}
             </h3>
-            <p>{state.reason}</p>
-            <p>For now, choose a perpendicular-bisector exercise using A and B.</p>
+            <p>
+              {text(
+                state.reason,
+                "Cet exercice n'est pas encore pris en charge.",
+              )}
+            </p>
+            <p>
+              {text(
+                "For now, choose a perpendicular-bisector exercise using A and B.",
+                "Pour le moment, choisis un exercice de médiatrice avec A et B.",
+              )}
+            </p>
           </div>
         ) : null}
 
         {state.status === "refused" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              This photo needs another try
+              {text("This photo needs another try", "Cette photo mérite un nouvel essai")}
             </h3>
-            <p>{state.message}</p>
-            <p>Choose a clearer photo to continue. Nothing has changed yet.</p>
+            <p>
+              {text(
+                state.message,
+                "Je n'ai pas pu analyser cet exercice.",
+              )}
+            </p>
+            <p>
+              {text(
+                "Choose a clearer photo to continue. Nothing has changed yet.",
+                "Choisis une photo plus nette pour continuer. Rien n'a encore changé.",
+              )}
+            </p>
           </div>
         ) : null}
 
         {state.status === "failed" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              I couldn&apos;t read that
+              {text("I couldn't read that", "Je n'ai pas réussi à lire ça")}
             </h3>
             <p role="alert">{state.message}</p>
             <button type="button" onClick={() => void handleRetry()}>
-              Try reading it again
+              {text("Try reading it again", "Réessayer la lecture")}
             </button>
           </div>
         ) : null}
@@ -548,37 +659,57 @@ export function ExerciseConfirmation({
         {state.status === "confirmed" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
-              Your exercise is ready
+              {text("Your exercise is ready", "Ton exercice est prêt")}
             </h3>
             {initializationState.status === "idle" ? (
-              <p>I understood the plan and I&apos;m preparing your canvas.</p>
+              <p>
+                {text(
+                  "I understood the plan and I'm preparing your canvas.",
+                  "J'ai compris le plan et je prépare ton espace.",
+                )}
+              </p>
             ) : null}
             {initializationState.status === "waiting_for_applet" ? (
-              <p role="status">Opening your geometry workspace…</p>
+              <p role="status">
+                {text("Opening your geometry workspace…", "Ouverture de ton espace de géométrie…")}
+              </p>
             ) : null}
             {initializationState.status === "initializing" ? (
-              <p role="status">Placing A, B and AB for you…</p>
+              <p role="status">
+                {text("Placing A, B and AB for you…", "Placement de A, B et AB…")}
+              </p>
             ) : null}
             {initializationState.status === "initialized" ? (
               <p role="status">
-                Canvas initialized with A, B and AB only. Your turn: construct the
-                perpendicular bisector.
+                {text(
+                  "Canvas initialized with A, B and AB only. Your turn: construct the perpendicular bisector.",
+                  "L'espace contient seulement A, B et AB. À toi de construire la médiatrice.",
+                )}
               </p>
             ) : null}
             {initializationState.status === "failed" ? (
               <div>
                 <p role="alert">
                   {initializationState.code === "recovery_required"
-                    ? "The exact rollback could not be verified. Use Reset construction or reload before continuing."
+                    ? text(
+                        "The exact rollback could not be verified. Use Reset construction or reload before continuing.",
+                        "La restauration exacte n'a pas pu être vérifiée. Réinitialise la construction ou recharge la page.",
+                      )
                     : initializationState.rolledBack
-                      ? "Initialization failed and the previous canvas was restored exactly."
-                      : "Initialization was refused before the canvas changed."}
+                      ? text(
+                          "Initialization failed and the previous canvas was restored exactly.",
+                          "L'initialisation a échoué et l'espace précédent a été restauré exactement.",
+                        )
+                      : text(
+                          "Initialization was refused before the canvas changed.",
+                          "L'initialisation a été refusée avant toute modification de l'espace.",
+                        )}
                 </p>
                 {initializationState.retryable && onRetryInitialization ? (
                   <button type="button" onClick={onRetryInitialization}>
                     {initializationState.code === "recovery_required"
-                      ? "Restore canvas and retry"
-                      : "Retry initialization"}
+                      ? text("Restore canvas and retry", "Restaurer puis réessayer")
+                      : text("Retry initialization", "Réessayer l'initialisation")}
                   </button>
                 ) : null}
               </div>

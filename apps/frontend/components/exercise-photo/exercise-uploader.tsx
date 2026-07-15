@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react";
+import { useLanguage } from "@/components/language-provider";
 
 const ALLOWED_IMAGE_MIMES = [
   "image/jpeg",
@@ -34,7 +35,11 @@ export type ExerciseUploaderState =
 
 type ValidationResult =
   | { ok: true; file: File; declaredMime: ExerciseImageMime }
-  | { ok: false; message: string };
+  | {
+      ok: false;
+      code: "count" | "format" | "empty" | "too_large";
+      message: string;
+    };
 
 type ExerciseUploaderProps = {
   onAnalyze: (selection: SelectedExerciseImage) => void | Promise<void>;
@@ -52,6 +57,7 @@ export function validateExerciseImageFiles(files: File[]): ValidationResult {
   if (files.length !== 1) {
     return {
       ok: false,
+      code: "count",
       message: "Choose exactly one JPEG, PNG, or WebP image.",
     };
   }
@@ -60,18 +66,21 @@ export function validateExerciseImageFiles(files: File[]): ValidationResult {
   if (!isAllowedImageMime(file.type)) {
     return {
       ok: false,
+      code: "format",
       message: "This format is not supported. Choose a JPEG, PNG, or WebP image.",
     };
   }
   if (file.size < 1) {
     return {
       ok: false,
+      code: "empty",
       message: "This image is empty. Choose a non-empty JPEG, PNG, or WebP image.",
     };
   }
   if (file.size > MAX_EXERCISE_IMAGE_BYTES) {
     return {
       ok: false,
+      code: "too_large",
       message: "This image is larger than 10 MiB. Choose a smaller image.",
     };
   }
@@ -92,6 +101,7 @@ export function ExerciseUploader({
   analyzeEnabled = true,
   locked = false,
 }: ExerciseUploaderProps) {
+  const { language, text } = useLanguage();
   const [state, setState] = useState<ExerciseUploaderState>("empty");
   const [selection, setSelection] = useState<SelectedExerciseImage>();
   const [error, setError] = useState<string>();
@@ -147,7 +157,13 @@ export function ExerciseUploader({
     (files: File[]) => {
       const result = validateExerciseImageFiles(files);
       if (!result.ok) {
-        rejectSelection(result.message);
+        const frenchMessage = {
+          count: "Choisis exactement une image JPEG, PNG ou WebP.",
+          format: "Ce format n'est pas accepté. Choisis une image JPEG, PNG ou WebP.",
+          empty: "Cette image est vide. Choisis une image JPEG, PNG ou WebP non vide.",
+          too_large: "Cette image dépasse 10 Mio. Choisis une image plus légère.",
+        }[result.code];
+        rejectSelection(language === "fr" ? frenchMessage : result.message);
         return;
       }
 
@@ -167,7 +183,7 @@ export function ExerciseUploader({
       setError(undefined);
       setState("selected");
     },
-    [onSelectionChange, rejectSelection, revokeCurrentPreview],
+    [language, onSelectionChange, rejectSelection, revokeCurrentPreview],
   );
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +207,12 @@ export function ExerciseUploader({
       await onAnalyze(selection);
     } catch {
       if (!mounted.current || analyzedVersion !== selectionVersion.current) return;
-      setError("Analysis could not be started. Your validated image is still selected.");
+      setError(
+        text(
+          "Analysis could not be started. Your validated image is still selected.",
+          "L'analyse n'a pas pu démarrer. Ton image validée reste sélectionnée.",
+        ),
+      );
     } finally {
       if (
         mounted.current &&
@@ -210,12 +231,18 @@ export function ExerciseUploader({
     >
       <div className="spike-heading">
         <div>
-          <p className="section-index">Step 1 · Start here</p>
-          <h2 id="exercise-photo-title">Show me your exercise</h2>
+          <p className="section-index">
+            {text("Step 1 · Start here", "Étape 1 · Commence ici")}
+          </p>
+          <h2 id="exercise-photo-title">
+            {text("Show me your exercise", "Montre-moi ton exercice")}
+          </h2>
         </div>
         <p>
-          A clear photo is enough. I&apos;ll read the question, then let you check
-          what I understood.
+          {text(
+            "A clear photo is enough. I'll read the question, then let you check what I understood.",
+            "Une photo nette suffit. Je lis l'énoncé, puis tu vérifies ce que j'ai compris.",
+          )}
         </p>
       </div>
 
@@ -229,9 +256,16 @@ export function ExerciseUploader({
               </svg>
             </span>
             <label htmlFor="exercise-photo-input">
-              {selection ? "Choose a different photo" : "Take or choose a photo"}
+              {selection
+                ? text("Choose a different photo", "Choisir une autre photo")
+                : text("Take or choose a photo", "Prendre ou choisir une photo")}
             </label>
-            <p>Use a bright, straight photo of the question.</p>
+            <p>
+              {text(
+                "Use a bright, straight photo of the question.",
+                "Cadre tout l'énoncé avec une photo droite et lumineuse.",
+              )}
+            </p>
             <input
               id="exercise-photo-input"
               type="file"
@@ -244,11 +278,14 @@ export function ExerciseUploader({
             />
           </div>
           <p id="exercise-photo-help" className="photo-help">
-            JPEG, PNG or WebP · 10 MB maximum
+            {text("JPEG, PNG or WebP · 10 MB maximum", "JPEG, PNG ou WebP · 10 Mo maximum")}
           </p>
           <p className="photo-privacy-notice">
-            <span aria-hidden="true">●</span> Your photo is used only to read this
-            exercise and is not saved by GeoTutor.
+            <span aria-hidden="true">●</span>{" "}
+            {text(
+              "Your photo is used only to read this exercise and is not saved by Compass.",
+              "Ta photo sert uniquement à lire cet exercice et n'est pas enregistrée par Compass.",
+            )}
           </p>
 
           <p
@@ -258,10 +295,10 @@ export function ExerciseUploader({
             aria-live="polite"
             data-state={state}
           >
-            {state === "empty" && "Waiting for your photo"}
-            {state === "selected" && "Photo ready to read"}
-            {state === "client_rejected" && "This photo cannot be used"}
-            {state === "submitting" && "Reading your exercise…"}
+            {state === "empty" && text("Waiting for your photo", "En attente de ta photo")}
+            {state === "selected" && text("Photo ready to read", "Photo prête à être lue")}
+            {state === "client_rejected" && text("This photo cannot be used", "Cette photo ne peut pas être utilisée")}
+            {state === "submitting" && text("Reading your exercise…", "Lecture de ton exercice…")}
           </p>
           {error ? (
             <p role="alert" className="photo-error">
@@ -277,7 +314,7 @@ export function ExerciseUploader({
               }
               onClick={() => void handleAnalyze()}
             >
-              Read my exercise
+              {text("Read my exercise", "Lire mon exercice")}
             </button>
             <button
               type="button"
@@ -285,17 +322,29 @@ export function ExerciseUploader({
               disabled={locked || !selection}
               onClick={handleCancel}
             >
-              Remove photo
+              {text("Remove photo", "Retirer la photo")}
             </button>
           </div>
         </div>
 
-        <div className="photo-preview" aria-label="Selected exercise image preview">
+        <div
+          className="photo-preview"
+          aria-label={text(
+            "Selected exercise image preview",
+            "Aperçu de l'image de l'exercice sélectionné",
+          )}
+        >
           {selection ? (
             <figure>
               {/* A local Object URL is the intended preview source for this client boundary. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={selection.previewUrl} alt={`Preview of ${selection.file.name}`} />
+              <img
+                src={selection.previewUrl}
+                alt={text(
+                  `Preview of ${selection.file.name}`,
+                  `Aperçu de ${selection.file.name}`,
+                )}
+              />
               <figcaption>
                 <strong>{selection.file.name}</strong>
                 <span>{formatByteLength(selection.byteLength)}</span>
@@ -304,8 +353,13 @@ export function ExerciseUploader({
           ) : (
             <div className="photo-preview-empty">
               <span aria-hidden="true">AB</span>
-              <p>Your exercise will appear here.</p>
-              <small>Tip: keep the full question inside the frame.</small>
+              <p>{text("Your exercise will appear here.", "Ton exercice apparaîtra ici.")}</p>
+              <small>
+                {text(
+                  "Tip: keep the full question inside the frame.",
+                  "Astuce : garde tout l'énoncé dans le cadre.",
+                )}
+              </small>
             </div>
           )}
         </div>

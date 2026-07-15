@@ -1,9 +1,9 @@
 - link "Skip to your exercise":
   - /url: "#main-content"
 - banner:
-  - link "GeoTutor home":
+  - link "Compass home":
     - /url: "#top"
-    - text: GeoTutor
+    - text: Compass
   - navigation "Main navigation":
     - link "Start":
       - /url: "#exercise-photo-title"
@@ -12,11 +12,12 @@
     - link "Your coach":
       - /url: "#realtime-spike-title"
   - paragraph: Made for curious minds
+  - button "Passer en français": FR
 - main:
   - region "Geometry clicks when you can play with it.":
     - paragraph: Your geometry study buddy
     - heading "Geometry clicks when you can play with it." [level=1]
-    - paragraph: Bring one exercise. GeoTutor helps you build, test and understand it — without giving away the answer.
+    - paragraph: Bring one exercise. Compass helps you build, test and understand it — without giving away the answer.
     - link "Add my exercise":
       - /url: "#exercise-photo-title"
     - text: One photo. No account.
@@ -48,7 +49,7 @@
     - paragraph: Use a bright, straight photo of the question.
     - button "Take or choose a photo"
     - paragraph: JPEG, PNG or WebP · 10 MB maximum
-    - paragraph: Your photo is used only to read this exercise and is not saved by GeoTutor.
+    - paragraph: Your photo is used only to read this exercise and is not saved by Compass.
     - status: Waiting for your photo
     - button "Read my exercise" [disabled]
     - button "Remove photo" [disabled]
@@ -85,17 +86,17 @@
         - paragraph: Complete the perpendicular bisector to unlock this final challenge.
         - button "Run experiment" [disabled]
         - status
-      - group: How GeoTutor checks the construction
+      - group: How Compass checks the construction
   - region "Stuck? Let's talk it through.":
     - paragraph: Your coach · Optional
     - heading "Stuck? Let's talk it through." [level=2]
-    - paragraph: Choose voice or text when you want a nudge. GeoTutor asks questions that help you find the next move yourself.
+    - paragraph: Choose voice or text when you want a nudge. Compass asks questions that help you find the next move yourself.
     - status:
       - text: Your coach
       - strong: Ready when you are
       - paragraph: Your canvas and local hints work even before you connect a coach.
       - text: "scripted local. Scripted local: construction, validation and fallbacks stay local; no OpenAI or model request is sent. Reason: local ready"
-      - time: Since 10:31:54 AM
+      - time: Since 11:05:53 AM
     - status: idle
     - paragraph: Local deterministic guidance is ready. Choose a live mode only when needed.
     - button "Start voice"
@@ -108,10 +109,10 @@
     - group: Connection details
   - group: Behind the scenes Performance and privacy details +
 - contentinfo "Keep wondering. Keep drawing.":
-  - link "GeoTutor":
+  - link "Compass":
     - /url: "#top"
   - heading "Keep wondering. Keep drawing." [level=2]
-  - paragraph: GeoTutor embeds GeoGebra Geometry for this non-commercial prototype. Commercial use requires a separate GeoGebra agreement.
+  - paragraph: Compass embeds GeoGebra Geometry for this non-commercial prototype. Commercial use requires a separate GeoGebra agreement.
   - paragraph:
     - link "GeoGebra":
       - /url: https://www.geogebra.org/

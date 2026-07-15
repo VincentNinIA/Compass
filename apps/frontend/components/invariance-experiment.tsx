@@ -16,6 +16,7 @@ import type {
   InvarianceSampleEvidence,
 } from "@/lib/invariance/contracts";
 import type { InvarianceSummaryRender } from "@/lib/realtime/invariance-summary";
+import { useLanguage } from "@/components/language-provider";
 
 const EXPECTED_SAMPLE_COUNT = 5;
 
@@ -73,6 +74,7 @@ export function InvarianceExperiment({
   onResult,
   onTerminalRendered,
 }: InvarianceExperimentProps) {
+  const { language, text } = useLanguage();
   const [state, setState] = useState<ExperimentState>(IDLE_STATE);
   const [announcement, setAnnouncement] = useState("");
   const activeHandleRef = useRef<InvarianceRunHandle | undefined>(undefined);
@@ -118,7 +120,10 @@ export function InvarianceExperiment({
           if (sampleIdsRef.current.size === 3) {
             announceOnce(
               `${sample.revision}:midpoint`,
-              "Three of five measurements complete.",
+              text(
+                "Three of five measurements complete.",
+                "Trois mesures sur cinq sont terminées.",
+              ),
             );
           }
         },
@@ -137,7 +142,10 @@ export function InvarianceExperiment({
       );
       announceOnce(
         `unavailable:${generation}`,
-        "The experiment could not start because the local evidence changed.",
+        text(
+          "The experiment could not start because the local evidence changed.",
+          "L'expérience n'a pas pu démarrer car les preuves locales ont changé.",
+        ),
       );
       return;
     }
@@ -153,7 +161,10 @@ export function InvarianceExperiment({
     );
     announceOnce(
       `${handle.runId}:started`,
-      "Equidistance experiment started. Five measurements will run.",
+      text(
+        "Equidistance experiment started. Five measurements will run.",
+        "L'expérience d'équidistance commence. Cinq mesures vont être réalisées.",
+      ),
     );
 
     void handle.result
@@ -171,7 +182,10 @@ export function InvarianceExperiment({
           );
           announceOnce(
             `${result.runId}:completed`,
-            "Equidistance experiment complete. Five of five measurements collected.",
+            text(
+              "Equidistance experiment complete. Five of five measurements collected.",
+              "L'expérience d'équidistance est terminée. Cinq mesures sur cinq ont été recueillies.",
+            ),
           );
         } else if (result.status === "cancelled") {
           setState(
@@ -183,7 +197,10 @@ export function InvarianceExperiment({
           );
           announceOnce(
             `${result.runId}:cancelled`,
-            "Equidistance experiment cancelled. The construction was preserved.",
+            text(
+              "Equidistance experiment cancelled. The construction was preserved.",
+              "L'expérience d'équidistance est annulée. La construction est conservée.",
+            ),
           );
         } else {
           setState(
@@ -195,7 +212,10 @@ export function InvarianceExperiment({
           );
           announceOnce(
             `${result.runId}:failed`,
-            "Equidistance experiment could not be completed. The construction was preserved.",
+            text(
+              "Equidistance experiment could not be completed. The construction was preserved.",
+              "L'expérience d'équidistance n'a pas pu aboutir. La construction est conservée.",
+            ),
           );
         }
         try {
@@ -217,10 +237,13 @@ export function InvarianceExperiment({
         );
         announceOnce(
           `${handle.runId}:rejected`,
-          "Equidistance experiment could not be completed. The construction was preserved.",
+          text(
+            "Equidistance experiment could not be completed. The construction was preserved.",
+            "L'expérience d'équidistance n'a pas pu aboutir. La construction est conservée.",
+          ),
         );
       });
-  }, [announceOnce, onResult, runtime, state.status]);
+  }, [announceOnce, onResult, runtime, state.status, text]);
 
   const cancel = useCallback(() => {
     const handle = activeHandleRef.current;
@@ -277,32 +300,45 @@ export function InvarianceExperiment({
   return (
     <section
       className="invariance-experiment"
-      aria-label="Five-position experiment"
+      aria-label={text("Five-position experiment", "Expérience en cinq positions")}
       data-status={state.status}
     >
       <div className="invariance-experiment-heading">
         <div>
-          <p className="section-index">Step 3 · Discover</p>
-          <h3 id="invariance-experiment-title">The 5-point challenge</h3>
+          <p className="section-index">
+            {text("Step 3 · Discover", "Étape 3 · Découvrir")}
+          </p>
+          <h3 id="invariance-experiment-title">
+            {text("The 5-point challenge", "Le défi des 5 points")}
+          </h3>
         </div>
-        <p className="invariance-state-label">{statusLabel(state.status)}</p>
+        <p className="invariance-state-label">
+          {statusLabel(state.status, language)}
+        </p>
       </div>
 
       {state.status === "idle" && (
         <p>
           {runtime
-            ? "Your construction is ready. Let’s see if the same idea works everywhere."
-            : "Complete the perpendicular bisector to unlock this final challenge."}
+            ? text(
+                "Your construction is ready. Let’s see if the same idea works everywhere.",
+                "Ta construction est prête. Vérifions si la même idée fonctionne partout.",
+              )
+            : text(
+                "Complete the perpendicular bisector to unlock this final challenge.",
+                "Termine la médiatrice pour débloquer ce dernier défi.",
+              )}
         </p>
       )}
 
       {state.status === "running" && (
         <div className="invariance-progress" data-testid="invariance-progress">
           <p>
-            Measuring position <strong>{progress}/5</strong>
+            {text("Measuring position", "Mesure de la position")} {" "}
+            <strong>{progress}/5</strong>
           </p>
           <progress value={progress} max={EXPECTED_SAMPLE_COUNT}>
-            {progress} of {EXPECTED_SAMPLE_COUNT}
+            {progress} {text("of", "sur")} {EXPECTED_SAMPLE_COUNT}
           </progress>
         </div>
       )}
@@ -314,7 +350,7 @@ export function InvarianceExperiment({
           tabIndex={-1}
           data-testid="invariance-terminal"
         >
-          <p>{terminalMessage(state)}</p>
+          <p>{terminalMessage(state, language)}</p>
         </div>
       )}
 
@@ -322,28 +358,34 @@ export function InvarianceExperiment({
         <div
           className="invariance-table-wrap"
           role="region"
-          aria-label="Scrollable measurement table"
+          aria-label={text("Scrollable measurement table", "Tableau de mesures défilant")}
           tabIndex={0}
         >
           <table>
-            <caption>Measured distances from P to A and B</caption>
+            <caption>
+              {text("Measured distances from P to A and B", "Distances mesurées de P à A et B")}
+            </caption>
             <thead>
               <tr>
-                <th scope="col">Position</th>
+                <th scope="col">{text("Position", "Position")}</th>
                 <th scope="col">PA</th>
                 <th scope="col">PB</th>
                 <th scope="col">Delta</th>
-                <th scope="col">Result</th>
+                <th scope="col">{text("Result", "Résultat")}</th>
               </tr>
             </thead>
             <tbody>
               {state.samples.map((sample) => (
                 <tr key={sample.id}>
                   <th scope="row">{sample.index + 1}/5</th>
-                  <td>{formatMeasurement(sample.pa)}</td>
-                  <td>{formatMeasurement(sample.pb)}</td>
-                  <td>{formatMeasurement(sample.delta)}</td>
-                  <td>{sample.pass ? "Pass" : "Does not pass"}</td>
+                  <td>{formatMeasurement(sample.pa, language)}</td>
+                  <td>{formatMeasurement(sample.pb, language)}</td>
+                  <td>{formatMeasurement(sample.delta, language)}</td>
+                  <td>
+                    {sample.pass
+                      ? text("Pass", "Validé")
+                      : text("Does not pass", "Non validé")}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -353,11 +395,14 @@ export function InvarianceExperiment({
 
       {summary && state.status === "completed" && summary.runId === state.runId && (
         <div className="invariance-summary">
-          <h4>What you discovered</h4>
+          <h4>{text("What you discovered", "Ce que tu as découvert")}</h4>
           <p>{summary.text}</p>
           {summary.source === "deterministic" && (
             <p className="invariance-summary-source">
-              Checked locally from your five measurements
+              {text(
+                "Checked locally from your five measurements",
+                "Vérifié localement à partir de tes cinq mesures",
+              )}
             </p>
           )}
         </div>
@@ -366,7 +411,9 @@ export function InvarianceExperiment({
       <div className="invariance-actions">
         {state.status !== "running" ? (
           <button type="button" onClick={start} disabled={!runtime}>
-            {state.status === "idle" ? "Run experiment" : "Run again"}
+            {state.status === "idle"
+              ? text("Run experiment", "Lancer l'expérience")
+              : text("Run again", "Recommencer")}
           </button>
         ) : (
           <button
@@ -375,7 +422,9 @@ export function InvarianceExperiment({
             onClick={cancel}
             disabled={state.cancelling}
           >
-            {state.cancelling ? "Cancelling…" : "Cancel experiment"}
+            {state.cancelling
+              ? text("Cancelling…", "Annulation…")
+              : text("Cancel experiment", "Annuler l'expérience")}
           </button>
         )}
       </div>
@@ -403,31 +452,48 @@ function terminalStateHasRunId(
   );
 }
 
-function statusLabel(status: ExperimentState["status"]): string {
-  if (status === "running") return "Running";
-  if (status === "completed") return "Completed";
-  if (status === "failed") return "Failed";
-  if (status === "cancelled") return "Cancelled";
-  return "Idle";
+function statusLabel(
+  status: ExperimentState["status"],
+  language: "en" | "fr",
+): string {
+  if (status === "running") return language === "fr" ? "En cours" : "Running";
+  if (status === "completed") return language === "fr" ? "Terminé" : "Completed";
+  if (status === "failed") return language === "fr" ? "Échec" : "Failed";
+  if (status === "cancelled") return language === "fr" ? "Annulé" : "Cancelled";
+  return language === "fr" ? "Prêt" : "Idle";
 }
 
 function terminalMessage(
   state: ExperimentState,
+  language: "en" | "fr",
 ): string {
   if (state.status === "completed") {
     return state.pass
-      ? "All five measured positions satisfy PA = PB within the local tolerance."
-      : "Five positions were measured; at least one did not satisfy PA = PB within tolerance.";
+      ? language === "fr"
+        ? "Les cinq positions mesurées vérifient PA = PB avec la tolérance locale."
+        : "All five measured positions satisfy PA = PB within the local tolerance."
+      : language === "fr"
+        ? "Cinq positions ont été mesurées ; au moins une ne vérifie pas PA = PB avec la tolérance attendue."
+        : "Five positions were measured; at least one did not satisfy PA = PB within tolerance.";
   }
   if (state.status === "cancelled") {
-    return "The experiment was cancelled and no partial result was kept.";
+    return language === "fr"
+      ? "L'expérience a été annulée et aucun résultat partiel n'a été conservé."
+      : "The experiment was cancelled and no partial result was kept.";
   }
-  return "The experiment stopped safely and no partial result was kept.";
+  return language === "fr"
+    ? "L'expérience s'est arrêtée en sécurité et aucun résultat partiel n'a été conservé."
+    : "The experiment stopped safely and no partial result was kept.";
 }
 
-function formatMeasurement(value: number): string {
-  if (!Number.isFinite(value)) return "Unavailable";
-  return new Intl.NumberFormat("en", {
+function formatMeasurement(
+  value: number,
+  language: "en" | "fr",
+): string {
+  if (!Number.isFinite(value)) {
+    return language === "fr" ? "Indisponible" : "Unavailable";
+  }
+  return new Intl.NumberFormat(language, {
     maximumFractionDigits: 6,
     minimumFractionDigits: 0,
   }).format(value);

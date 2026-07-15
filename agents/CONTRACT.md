@@ -1,40 +1,34 @@
-# Contrat Builder — T7 Expérience étudiant — close
+# Contrat Builder — T8 Identité Compass et interface bilingue — close
 
 ## État actif
 
-- Le besoin produit prioritaire devient une application destinée à l'élève,
-  extrêmement simple et intuitive, avec une direction visuelle jeune, moderne
-  et engageante. La surface actuelle de démonstration technique doit être
-  transformée sans modifier les autorités pédagogiques T1 à T6.
-- Ordre exécuté : T7-C01 architecture d'information et langage élève → T7-C02
-  système visuel et composition responsive → T7-C03 finition des états,
-  diagnostics repliables et qualification navigateur.
-- T7-C01, T7-C02 et T7-C03 sont closes avec verdict `pass` le 15 juillet 2026.
-- La remédiation QA T3 a été close séparément sur le candidat
-  `45333e47d8c846816083d00b06d2fd0c47bfd1bb`. T7 ne revendique ni ne modifie
-  cette clôture.
+- T8 est close le 15 juillet 2026 avec verdict `pass` et le nom public est
+  `Compass`; les identifiants techniques historiques restent inchangés.
+- L'ordre T8-C01 identité publique et état de langue → T8-C02 traduction de la
+  surface élève → T8-C03 responsive, accessibilité et qualification navigateur
+  a été respecté.
+- Carte active : aucune. Le prochain travail reste la préparation physique de
+  la machine jury et n'ouvre pas une nouvelle tranche produit.
 
 ## Périmètre contractualisé
 
-- Remplacer la page de démonstration technique par un shell produit destiné à
-  l'élève : marque, promesse claire, progression en trois étapes et action de
-  départ immédiatement identifiable.
-- Réécrire les titres, aides et états visibles en langage simple sans supprimer
-  les noms accessibles et contrats dont dépendent les parcours automatisés.
-- Recomposer photo, confirmation, GeoGebra, progrès, aide, expérience
-  d'équidistance et coach vocal dans une hiérarchie cohérente.
-- Déplacer fiabilité, transport, preuves et détails de qualification dans des
-  zones secondaires repliables, toujours inspectables pour le jury.
-- Définir un système visuel responsive dans la stack CSS existante : typographie
-  expressive, palette chaude à accent unique, profondeur légère, interactions,
-  focus, reduced motion et états vides soignés.
+- Remplacer `GeoTutor` par `Compass` dans la marque, les métadonnées et toute
+  copie publique, sans renommer packages, globals de preuve ou contrats runtime.
+- Ajouter un provider client EN/FR sans dépendance ni persistance, mettre à jour
+  `document.lang` et exposer un bouton compact à drapeau en haut à droite.
+- Traduire le shell, photo/confirmation, canvas/progrès, expérience, coach,
+  états dégradés et détails secondaires. Les données d'exercice extraites et
+  les diagnostics techniques bruts restent fidèles à leur source.
+- Conserver le parcours anglais par défaut afin de préserver les gates
+  historiques; le basculement français doit être couvert explicitement.
 
 ## Hors périmètre actif
 
-- Nouveau template d'exercice, changement de modèle, nouvelle capacité
-  T1/T2/T3/T4/T5/T6, persistance, commande GeoGebra arbitraire et résolution de
-  la réserve live T2-C01.
-- `QA_REPORT.md` côté Builder et `HANDOFF.md` sans reprise réelle.
+- Traduction de la sortie libre du modèle, changement de langue de la voix,
+  localisation serveur, routes préfixées, persistance de préférence ou ajout de
+  bibliothèque i18n.
+- Nouveau template d'exercice, changement de modèle ou d'autorité T1 à T7,
+  `QA_REPORT.md` côté Builder et `HANDOFF.md` sans reprise réelle.
 
 ## Gates de clôture
 
@@ -47,25 +41,34 @@ pnpm --dir apps/frontend exec playwright test --grep-invert @live
 ```
 
 La clôture exige aussi une inspection réelle à 390 × 844, 768 × 1024 et
-1440 × 900, un parcours clavier, l'absence de débordement horizontal et des
-captures montrant l'arrivée et le workspace. Les détails techniques restent
-présents mais ne doivent plus dominer l'expérience élève.
+1440 × 900 dans les deux langues, un parcours clavier, l'absence de débordement
+horizontal, `lang` correct et le maintien des 30 scénarios historiques. Une
+capture française doit montrer la marque Compass et le contrôle de retour EN.
 
-## Preuves de clôture T7
+## Clôture de T8
 
-- Le shell produit, le parcours en trois étapes et tous les états visibles sont
-  formulés pour l'élève. Photo, confirmation, canvas GeoGebra, expérience 5/5 et
-  coach forment une progression continue; fiabilité et diagnostics sont
-  repliables sans être supprimés.
-- Le système visuel chaud et responsive conserve focus visible, reduced motion,
-  contraste WCAG AA et reflow sans débordement à 390 × 844, 768 × 1024,
-  1440 × 900 et au zoom 200 %.
-- `lint`, `typecheck` et le build production passent. Vitest rend 608/608 tests
-  sur 51 fichiers; Playwright hors `@live` rend 30/30 avec le vrai applet,
-  Axe sans violation, upload, clavier, reset, modes dégradés et fiabilité.
-- Les captures et le snapshot ARIA sont sous `output/playwright/`. Les autorités
-  T1 à T6, la réserve live T2-C01 et la clôture T3 indépendante ne sont pas
-  modifiées par cette clôture.
+- T8-C01 est close `pass` : les métadonnées, la marque et toute copie publique
+  portent `Compass`; `LanguageProvider` garde un état EN/FR éphémère, met à
+  jour `document.documentElement.lang` et affiche le drapeau de la langue cible
+  en haut à droite. Les packages, globals et contrats internes GeoTutor restent
+  stables.
+- T8-C02 est close `pass` : shell, parcours, photo/confirmation, canvas,
+  progrès, invariance, coach, fallbacks, diagnostics et mentions légales ont
+  leurs variantes EN/FR. L'anglais reste le défaut déterministe; sortie libre
+  du modèle et langue vocale restent hors périmètre.
+- T8-C03 est close `pass` : lint, typecheck, build et 609/609 tests Vitest sur
+  51 fichiers passent. Playwright collecte 37 scénarios, en ignore 7 `@live` et
+  maintient les 30/30 scénarios historiques. Le test unitaire du switch couvre
+  le retour EN et les valeurs `lang="fr"` puis `lang="en"`.
+- Le CLI Playwright sur le build production valide le français à 390 × 844,
+  768 × 1024 et 1440 × 900 sans débordement horizontal, avec zéro erreur et
+  zéro avertissement console. Le parcours clavier atteint le switch, l'active,
+  puis avance vers `Ajouter mon exercice`; les contrôles anglais de reflow,
+  Axe et clavier restent couverts par le gate historique.
+- Les captures `output/playwright/T8-Compass-fr-390x844.png`,
+  `T8-Compass-fr-768x1024.png` et `T8-Compass-fr-1440x900.png` montrent la
+  marque Compass et le bouton `🇬🇧 EN`. Aucun `QA_REPORT.md` ni `HANDOFF.md`
+  Builder n'est créé.
 
 ## Archive — état T6 avant réouverture T3
 

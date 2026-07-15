@@ -1,8 +1,8 @@
-# GeoTutor - Spécification produit
+# Compass - Spécification produit
 
 ## Besoin
 
-GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une session OpenAI Realtime à une applet GeoGebra embarquée. Il lit un exercice photographié, prépare uniquement les données initiales, observe la construction réelle de l'élève, vérifie les propriétés de manière déterministe et intervient avec le plus petit niveau d'aide utile.
+Compass est un tuteur de géométrie multimodal et voice-first qui associe une session OpenAI Realtime à une applet GeoGebra embarquée. Il lit un exercice photographié, prépare uniquement les données initiales, observe la construction réelle de l'élève, vérifie les propriétés de manière déterministe et intervient avec le plus petit niveau d'aide utile.
 
 ## Utilisateurs
 
@@ -17,7 +17,10 @@ GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une 
   elle n'expose pas les noms de tranches, les frontières techniques ou les
   métriques de qualification dans le parcours principal.
 - Le parcours principal tient en trois étapes visibles : ajouter l'exercice,
-  construire avec GeoTutor, puis vérifier ce que l'on a compris.
+  construire avec Compass, puis vérifier ce que l'on a compris.
+- L'interface publique existe en français et en anglais. Un contrôle compact à
+  drapeau, placé en haut à droite, bascule immédiatement toute la copie visible
+  et annonce la langue cible au clavier comme au lecteur d'écran.
 - Une seule action principale domine chaque étape. Les actions secondaires et
   diagnostics restent disponibles sans concurrencer cette action.
 - Les états vides expliquent quoi faire avec des mots simples. Les détails
@@ -69,6 +72,8 @@ GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une 
 - Les hints sont temporaires ou restaurables; les actions destructives exigent une intention explicite.
 - Les images, checkpoints et journaux restent en mémoire pour le prototype.
 - Le prototype est non commercial et affiche l'attribution GeoGebra.
+- Le changement de langue reste un état de session en mémoire et n'ajoute aucun
+  stockage navigateur.
 
 ## Non-objectifs
 
@@ -93,10 +98,14 @@ GeoTutor est un tuteur de géométrie multimodal et voice-first qui associe une 
   parcours sans devoir parcourir une documentation technique.
 - Le parcours reste utilisable à 390 px, 768 px et 1440 px, au clavier et avec
   `prefers-reduced-motion`.
+- Le changement EN/FR conserve le même parcours, les mêmes actions et les mêmes
+  garanties d'accessibilité sans débordement dans les deux langues.
 
 ## Hypothèses validées
 
-- Interface et voix principales en anglais; français en extension.
-- Nom de travail : GeoTutor.
+- Interface publique bilingue anglais/français; la langue des services vocaux
+  reste gouvernée séparément par les contrats Realtime existants.
+- Nom public : Compass. Les identifiants techniques historiques `GeoTutor` et
+  `__GEOTUTOR_*` restent stables tant qu'ils ne sont pas visibles par l'élève.
 - Application web Next.js avec petites routes serveur et sans base de données.
 - Modèles : `gpt-realtime-2.1` pour la voix et `gpt-5.6-terra` pour l'extraction d'image.

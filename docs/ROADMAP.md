@@ -27,8 +27,13 @@ T7 est close `pass` : ses trois cartes transforment la surface jury en parcours
 diagnostics sans modifier les autorités T1 à T6. Le gate rend 608/608 Vitest et
 30/30 Playwright hors live, Axe sans violation et aucun débordement aux quatre
 viewports de qualification.
+T8 est close `pass` : Compass devient la marque publique et un contexte client
+éphémère fournit l'interface EN/FR avec un drapeau de langue cible. Le gate rend
+609/609 Vitest, 30/30 Playwright historiques et trois viewports français sans
+débordement ni erreur console; les contrats et identifiants GeoTutor internes
+restent inchangés.
 
-Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7`.
+Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8`.
 
 ## Vue d'ensemble
 
@@ -42,6 +47,7 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T5 | Prouver l'invariance et produire la synthèse | 7 | Test 5/5 réversible et résumé hors conversation |
 | T6 | Fiabiliser la démonstration | 7 | Trois parcours live consécutifs sur le même commit |
 | T7 | Transformer le prototype en expérience élève | 3 | Parcours simple, responsive, accessible et diagnostics secondaires |
+| T8 | Adopter Compass et une interface bilingue | 3 | Marque publique cohérente, switch EN/FR accessible et reflow préservé |
 
 ## Registre des cartes
 
@@ -99,6 +105,9 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T7-C01 | done | T6-C07 | Architecture d'information et langage élève en trois étapes |
 | T7-C02 | done | T7-C01 | Système visuel jeune, responsive et accessible |
 | T7-C03 | done | T7-C02 | États finis, diagnostics repliables et qualification navigateur |
+| T8-C01 | done | T7-C03 | Marque Compass et état de langue client éphémère |
+| T8-C02 | done | T8-C01 | Surface élève et états publics disponibles en EN/FR |
+| T8-C03 | done | T8-C02 | Switch clavier, reflow et qualification navigateur des deux langues |
 
 ## Matrice de traçabilité PRD
 

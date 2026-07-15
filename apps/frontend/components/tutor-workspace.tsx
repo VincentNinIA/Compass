@@ -26,8 +26,10 @@ import { EvidenceLog, type CancellationReason } from "@/lib/pedagogy/evidence-lo
 import { OperationArbiter } from "@/lib/operations/arbiter";
 import { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 import { ReliabilityPanel } from "./reliability-panel";
+import { useLanguage } from "./language-provider";
 
 export function TutorWorkspace() {
+  const { text } = useLanguage();
   const [toolRuntime, setToolRuntime] = useState<ToolRuntime>();
   const [pedagogyRuntime, setPedagogyRuntime] =
     useState<RealtimePedagogyRuntime>();
@@ -423,8 +425,13 @@ export function TutorWorkspace() {
       />
       <details className="technical-details">
         <summary>
-          <span>Behind the scenes</span>
-          <small>Performance and privacy details</small>
+          <span>{text("Behind the scenes", "Dans les coulisses")}</span>
+          <small>
+            {text(
+              "Performance and privacy details",
+              "Détails de performance et de confidentialité",
+            )}
+          </small>
         </summary>
         <ReliabilityPanel monitor={latencyMonitor} />
       </details>

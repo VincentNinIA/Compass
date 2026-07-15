@@ -2,10 +2,9 @@
 
 ## Prochaine action
 
-Préparer la machine jury physique à partir du candidat figé : certificat de
-confiance, microphone réel, services externes et parcours présenté. T3 et T7
-sont closes; le parcours élève, le système visuel responsive et la qualification
-navigateur passent sans modifier les autorités runtime T1 à T6.
+Préparer la machine jury : certificat de confiance, microphone physique,
+connectivité aux services externes et répétition du runbook. T8 est close; ne
+rouvrir une tranche produit que sur nouvelle contractualisation explicite.
 
 ## Dépendances
 
@@ -22,6 +21,11 @@ navigateur passent sans modifier les autorités runtime T1 à T6.
 - T7-C01 à T7-C03 sont closes : 608/608 Vitest, lint, typecheck, build et 30/30
   Playwright hors live passent; Axe est sans violation et les quatre viewports
   de qualification ne débordent pas.
+- T8-C01 à T8-C03 sont closes `pass` : Compass est la seule marque publique, le
+  switch éphémère 🇫🇷/🇬🇧 synchronise `document.lang` et toute la surface élève
+  possède ses variantes EN/FR. Le gate rend 609/609 Vitest sur 51 fichiers,
+  lint, typecheck, build et 30/30 Playwright historiques; les trois viewports
+  français ne débordent pas et le CLI ne rapporte aucune erreur console.
 - T5-C01 à T5-C07 sont closes dans l'ordre. Le gate final du 15 juillet 2026
   passe avec lint, typecheck, build, 480/480 tests frontend et 18/18 Playwright
   hors live.
@@ -79,9 +83,8 @@ navigateur passent sans modifier les autorités runtime T1 à T6.
 
 ## Blocages actuels
 
-Aucun blocage déterministe connu avant la préparation jury. Le candidat T3 est
-figé dans Git; l'arbre courant contient la couche T7 et ses preuves qu'il faut
-préserver avant un nouveau gel. Le gate automatisé C07 a utilisé une clé valide,
+Aucun blocage déterministe produit connu. Le candidat T3 est figé dans Git;
+T7, T8 et leurs preuves doivent être préservées. Le gate automatisé C07 a utilisé une clé valide,
 une piste micro synthétique et un certificat local auto-signé. Le micro physique,
 le certificat de confiance et les services externes restent à contrôler sur la
 machine jury. La réserve live T2-C01 reste ouverte et ne doit pas être confondue
@@ -91,5 +94,5 @@ avec le gate C07 réussi.
 
 Ne pas modifier le périmètre fonctionnel T1 à T6. SLA production, analytics
 persistants, IndexedDB, historique distant, commande GeoGebra générique et
-second exercice restent hors périmètre. La clôture T3 reste une preuve
-indépendante et ne doit pas être attribuée à la refonte T7.
+second exercice restent hors périmètre. La langue de la voix et la traduction
+de texte modèle libre restent hors T8.

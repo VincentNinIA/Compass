@@ -249,6 +249,16 @@ accessibles stables conservent les gates automatisés. Cette couche n'est donc
 propriétaire d'aucun plan, checkpoint, lease, décision pédagogique, transport
 ou stockage.
 
+T8 place `LanguageProvider` au-dessus de cette composition. Ce contexte client
+typé conserve uniquement `en | fr` en mémoire, expose une fonction de copie
+bilingue et synchronise l'attribut `lang` du document; aucun cookie, storage,
+route localisée ou package i18n n'est ajouté. `page.tsx` porte la marque publique
+Compass et le bouton à drapeau de langue cible, puis les composants consomment
+le même contexte pour traduire leurs libellés, états et noms accessibles sans
+dupliquer les runtimes. Les sorties libres du modèle, contrats réseau, packages
+`@geotutor/*` et globals `__GEOTUTOR_*` restent hors de cette couche afin de
+préserver les autorités et preuves T1 à T7.
+
 ## Frontières cibles
 
 ```mermaid
@@ -313,10 +323,12 @@ Les frontières Realtime et GeoGebra, le gateway vocal T2, le flux photo T3, la
 boucle pédagogique T4, le pipeline T5-C01 à T5-C07, le reset/recovery global
 T6-C01, les trois modes T6-C02, l'arbitre T6-C03, le journal corrélé T6-C04,
 le hardening erreurs/secrets/latence T6-C05, la qualification HTTPS/a11y C06 et
-le gate live 3/3 C07 existent. Une autorité unique avance
+le gate live 3/3 C07 existent. La présentation élève T7 et la marque/interface
+bilingue Compass T8 existent également sans déplacer ces autorités. Une autorité unique avance
 l'epoch, attend les annulations, suspend le bridge, restaure et revalide
 hash/inventaire/registre/listeners; elle
 reconstruit seulement A/B/AB depuis le plan confirmé si le checkpoint mémoire
-est absent ou corrompu, sinon elle publie un fatal réessayable. T6 ne conserve
-plus de carte d'implémentation ouverte; les deux contre-audits QA sont `pass`.
+est absent ou corrompu, sinon elle publie un fatal réessayable. T6 à T8 ne
+conservent plus de carte d'implémentation ouverte; les deux contre-audits QA
+sont `pass`.
 La prochaine action est uniquement la préparation physique de la machine jury.

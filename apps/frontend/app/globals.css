@@ -176,12 +176,48 @@ button.button-secondary:not(:disabled):hover {
   transform: translateY(-1px);
 }
 
-.site-header > p {
+.header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-tagline {
   justify-self: end;
   margin: 0;
   color: var(--ink-soft);
   font-size: 0.72rem;
   font-weight: 600;
+}
+
+.language-switch {
+  min-width: 64px;
+  min-height: 42px;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgb(25 34 29 / 12%);
+  border-radius: 12px;
+  color: var(--ink);
+  background: rgb(255 255 255 / 72%);
+  box-shadow: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+.language-switch span:first-child {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.language-switch:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: #fff;
+  box-shadow: none;
 }
 
 .brand {
@@ -1351,10 +1387,14 @@ main {
 
 @media (max-width: 1040px) {
   .site-header {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr auto;
   }
 
-  .site-header > p {
+  .site-header nav {
+    justify-self: center;
+  }
+
+  .header-tagline {
     display: none;
   }
 
@@ -1414,6 +1454,7 @@ main {
     min-height: 58px;
     margin-top: 8px;
     padding: 8px 9px 8px 13px;
+    gap: 6px;
     border-radius: 16px;
   }
 
@@ -1438,6 +1479,19 @@ main {
   .brand-mark {
     width: 29px;
     height: 29px;
+  }
+
+  .header-actions {
+    gap: 0;
+  }
+
+  .language-switch {
+    min-width: 48px;
+    min-height: 38px;
+    padding: 6px 7px;
+    gap: 4px;
+    border-radius: 10px;
+    font-size: 0.64rem;
   }
 
   main {

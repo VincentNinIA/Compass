@@ -39,15 +39,23 @@ import {
   LATENCY_BUDGETS,
   type LatencyBudgetMonitor,
 } from "@/lib/reliability/latency-budget";
+import {
+  useLanguage,
+  type AppLanguage,
+} from "./language-provider";
 
-function friendlyError(error: unknown): string {
+function friendlyError(error: unknown, language: AppLanguage): string {
   if (error instanceof DOMException && error.name === "NotAllowedError") {
-    return "Microphone permission was denied. Allow access and try again.";
+    return language === "fr"
+      ? "L’accès au microphone a été refusé. Autorise-le puis réessaie."
+      : "Microphone permission was denied. Allow access and try again.";
   }
   if (error instanceof RealtimeSessionError) {
     return error.message;
   }
-  return "The Realtime connection could not be established. You can try again.";
+  return language === "fr"
+    ? "La connexion Realtime n’a pas pu être établie. Tu peux réessayer."
+    : "The Realtime connection could not be established. You can try again.";
 }
 
 const INITIAL_SUPPORT: CapabilitySupport = {
@@ -80,26 +88,55 @@ function localFailureReason(
   return wasLive ? "typed_connection_lost" : "typed_connection_failed";
 }
 
-function modeExplanation(kind: "live_voice" | "typed_live" | "scripted_local") {
+function modeExplanation(
+  kind: "live_voice" | "typed_live" | "scripted_local",
+  language: AppLanguage,
+) {
   if (kind === "live_voice") {
-    return "Live voice: peer, oai-events, microphone and remote audio are verified.";
+    return language === "fr"
+      ? "Voix en direct : la connexion, oai-events, le microphone et l’audio distant sont vérifiés."
+      : "Live voice: peer, oai-events, microphone and remote audio are verified.";
   }
   if (kind === "typed_live") {
-    return "Live text: a text-only OpenAI Realtime session is connected; microphone and audio are off.";
+    return language === "fr"
+      ? "Texte en direct : une session OpenAI Realtime sans audio est connectée ; le microphone et le son sont désactivés."
+      : "Live text: a text-only OpenAI Realtime session is connected; microphone and audio are off.";
   }
-  return "Scripted local: construction, validation and fallbacks stay local; no OpenAI or model request is sent.";
+  return language === "fr"
+    ? "Mode local : la construction, la validation et les solutions de repli restent locales ; aucune requête n’est envoyée à OpenAI ou à un modèle."
+    : "Scripted local: construction, validation and fallbacks stay local; no OpenAI or model request is sent.";
 }
 
-function modeTitle(kind: "live_voice" | "typed_live" | "scripted_local") {
-  if (kind === "live_voice") return "Listening and ready";
-  if (kind === "typed_live") return "Chat is ready";
-  return "Ready when you are";
+function modeTitle(
+  kind: "live_voice" | "typed_live" | "scripted_local",
+  language: AppLanguage,
+) {
+  if (kind === "live_voice") {
+    return language === "fr" ? "À l’écoute" : "Listening and ready";
+  }
+  if (kind === "typed_live") {
+    return language === "fr" ? "Le chat est prêt" : "Chat is ready";
+  }
+  return language === "fr" ? "Prêt quand tu l’es" : "Ready when you are";
 }
 
-function modeStudentCopy(kind: "live_voice" | "typed_live" | "scripted_local") {
-  if (kind === "live_voice") return "Ask your question out loud — you can interrupt anytime.";
-  if (kind === "typed_live") return "Type a question and keep your microphone off.";
-  return "Your canvas and local hints work even before you connect a coach.";
+function modeStudentCopy(
+  kind: "live_voice" | "typed_live" | "scripted_local",
+  language: AppLanguage,
+) {
+  if (kind === "live_voice") {
+    return language === "fr"
+      ? "Pose ta question à voix haute — tu peux interrompre à tout moment."
+      : "Ask your question out loud — you can interrupt anytime.";
+  }
+  if (kind === "typed_live") {
+    return language === "fr"
+      ? "Écris une question en gardant ton microphone désactivé."
+      : "Type a question and keep your microphone off.";
+  }
+  return language === "fr"
+    ? "Ton espace de construction et les indices locaux fonctionnent avant même de contacter un coach."
+    : "Your canvas and local hints work even before you connect a coach.";
 }
 
 export function RealtimeSpike({
@@ -123,6 +160,7 @@ export function RealtimeSpike({
   operationArbiter?: OperationArbiter;
   latencyMonitor?: LatencyBudgetMonitor;
 }) {
+  const { language, text } = useLanguage();
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionRef = useRef<RealtimeWebRtcSession | undefined>(undefined);
   const connectionStateRef = useRef<RealtimeConnectionState>("idle");
@@ -353,9 +391,11 @@ export function RealtimeSpike({
             promoteConnectedMode(mode);
           }
         },
-        onTextOutput: (text) => {
-          setTextOutput(text);
-          setTestPromptStatus("Live text response received.");
+        onTextOutput: (output) => {
+          setTextOutput(output);
+          setTestPromptStatus(
+            text("Live text response received.", "Réponse texte reçue."),
+          );
         },
         onFailure: (failure) => {
           setError(failure.message);
@@ -393,6 +433,7 @@ export function RealtimeSpike({
     toolRuntime,
     operationArbiter,
     latencyMonitor,
+    text,
   ]);
 
   const requestInvarianceSummary = useCallback<
@@ -457,17 +498,29 @@ export function RealtimeSpike({
       );
       setError(
         reason === "offline"
-          ? "This device is offline. Local construction and validation remain available."
+          ? text(
+              "This device is offline. Local construction and validation remain available.",
+              "Cet appareil est hors ligne. La construction et la validation locales restent disponibles.",
+            )
           : mode === "live_voice" && support.typedLive
-            ? "Voice is unavailable here. Live text remains available."
-            : "This browser cannot open the requested Realtime transport.",
+            ? text(
+                "Voice is unavailable here. Live text remains available.",
+                "La voix n’est pas disponible ici. Le texte en direct reste accessible.",
+              )
+            : text(
+                "This browser cannot open the requested Realtime transport.",
+                "Ce navigateur ne peut pas ouvrir la connexion Realtime demandée.",
+              ),
       );
       return;
     }
     if (!retryAllowed(backoff)) return;
     if (!connectionIsSafe()) {
       setError(
-        "Finish the current student/tutor activity before starting a live connection.",
+        text(
+          "Finish the current student/tutor activity before starting a live connection.",
+          "Termine l’activité en cours avant de lancer une connexion en direct.",
+        ),
       );
       return;
     }
@@ -535,7 +588,7 @@ export function RealtimeSpike({
           Math.max(0, Date.now() - sessionStartedAtRef.current),
         );
       }
-      setError(friendlyError(reason));
+      setError(friendlyError(reason, language));
       markFailure(mode, reason);
     }
   };
@@ -601,7 +654,11 @@ export function RealtimeSpike({
 
   const sendTestPrompt = () => {
     const accepted = sessionRef.current?.requestTextTurn(testPrompt) ?? false;
-    setTestPromptStatus(accepted ? "Test prompt queued." : "Test prompt rejected.");
+    setTestPromptStatus(
+      accepted
+        ? text("Test prompt queued.", "Question mise en attente.")
+        : text("Test prompt rejected.", "Question refusée."),
+    );
     if (accepted) setTestPrompt("");
   };
 
@@ -630,12 +687,21 @@ export function RealtimeSpike({
     >
       <div className="spike-heading">
         <div>
-          <p className="section-index">Your coach · Optional</p>
-          <h2 id="realtime-spike-title">Stuck? Let&apos;s talk it through.</h2>
+          <p className="section-index">
+            {text("Your coach · Optional", "Ton coach · Facultatif")}
+          </p>
+          <h2 id="realtime-spike-title">
+            {text(
+              "Stuck? Let's talk it through.",
+              "Bloqué ? Réfléchissons ensemble.",
+            )}
+          </h2>
         </div>
         <p>
-          Choose voice or text when you want a nudge. GeoTutor asks questions
-          that help you find the next move yourself.
+          {text(
+            "Choose voice or text when you want a nudge. Compass asks questions that help you find the next move yourself.",
+            "Choisis la voix ou le texte quand tu as besoin d’un coup de pouce. Compass te pose des questions pour t’aider à trouver toi-même la prochaine étape.",
+          )}
         </p>
       </div>
 
@@ -645,45 +711,77 @@ export function RealtimeSpike({
         role="status"
         aria-live="polite"
       >
-        <span className="coach-avatar" aria-hidden="true">G</span>
-        <span>Your coach</span>
-        <strong>{modeTitle(capabilityMode.kind)}</strong>
-        <p>{modeStudentCopy(capabilityMode.kind)}</p>
+        <span className="coach-avatar" aria-hidden="true">C</span>
+        <span>{text("Your coach", "Ton coach")}</span>
+        <strong>{modeTitle(capabilityMode.kind, language)}</strong>
+        <p>{modeStudentCopy(capabilityMode.kind, language)}</p>
         <span className="visually-hidden">
-          {capabilityMode.kind.replaceAll("_", " ")}. {modeExplanation(capabilityMode.kind)}
+          {capabilityMode.kind.replaceAll("_", " ")}.{" "}
+          {modeExplanation(capabilityMode.kind, language)}
         </span>
         <span className="capability-mode-reason visually-hidden">
-          Reason: {capabilityMode.reason.replaceAll("_", " ")}
+          {text("Reason", "Motif")}: {capabilityMode.reason.replaceAll("_", " ")}
         </span>
         <time
           dateTime={new Date(capabilityMode.since).toISOString()}
           suppressHydrationWarning
         >
-          Since {new Date(capabilityMode.since).toLocaleTimeString()}
+          {text("Since", "Depuis")} {new Date(capabilityMode.since).toLocaleTimeString(
+            language === "fr" ? "fr-FR" : "en-US",
+          )}
         </time>
       </div>
 
       <div className="realtime-console">
         <div className="connection-control">
           <p className={`connection-state connection-state-${state}`} role="status">
-            {state}
+            {language === "fr"
+              ? {
+                  idle: "en attente",
+                  connecting: "connexion",
+                  live: "en direct",
+                  failed: "échec",
+                  closed: "fermée",
+                }[state]
+              : state}
           </p>
           <p className="connection-copy" aria-live="polite" aria-atomic="true">
             {state === "idle" &&
-              "Local deterministic guidance is ready. Choose a live mode only when needed."}
+              text(
+                "Local deterministic guidance is ready. Choose a live mode only when needed.",
+                "L’accompagnement local est prêt. Choisis un mode en direct seulement si tu en as besoin.",
+              )}
             {state === "connecting" &&
               (transportIntent === "typed_live"
-                ? "Opening a text-only Realtime data channel…"
-                : "Negotiating microphone, audio and the secure WebRTC session…")}
+                ? text(
+                    "Opening a text-only Realtime data channel…",
+                    "Ouverture d’un canal Realtime en mode texte…",
+                  )
+                : text(
+                    "Negotiating microphone, audio and the secure WebRTC session…",
+                    "Connexion du microphone, de l’audio et de la session WebRTC sécurisée…",
+                  ))}
             {state === "live" &&
               (capabilityMode.kind === "live_voice"
-                ? "Speak naturally. Microphone and remote audio are enabled."
+                ? text(
+                    "Speak naturally. Microphone and remote audio are enabled.",
+                    "Parle naturellement. Le microphone et l’audio distant sont activés.",
+                  )
                 : capabilityMode.kind === "typed_live"
-                  ? "Type below. Replies come from a live text-only Realtime session."
-                  : "The voice transport is connected; remote audio is still being verified.")}
+                  ? text(
+                      "Type below. Replies come from a live text-only Realtime session.",
+                      "Écris ci-dessous. Les réponses viennent d’une session Realtime en mode texte.",
+                    )
+                  : text(
+                      "The voice transport is connected; remote audio is still being verified.",
+                      "La connexion vocale est établie ; l’audio distant est encore en cours de vérification.",
+                    ))}
             {state === "failed" && error}
             {state === "closed" &&
-              "All live resources are closed. Local construction and validation continue."}
+              text(
+                "All live resources are closed. Local construction and validation continue.",
+                "Toutes les ressources en direct sont fermées. La construction et la validation locales continuent.",
+              )}
           </p>
           <div className="connection-actions">
             <button
@@ -696,7 +794,7 @@ export function RealtimeSpike({
                 !retryReady
               }
             >
-              Start voice
+              {text("Start voice", "Démarrer la voix")}
             </button>
             <button
               type="button"
@@ -709,7 +807,7 @@ export function RealtimeSpike({
                 !retryReady
               }
             >
-              Use live text
+              {text("Use live text", "Utiliser le texte en direct")}
             </button>
             <button
               type="button"
@@ -717,7 +815,7 @@ export function RealtimeSpike({
               onClick={stop}
               disabled={state !== "connecting" && state !== "live"}
             >
-              Stop
+              {text("Stop", "Arrêter")}
             </button>
           </div>
           <form
@@ -727,7 +825,9 @@ export function RealtimeSpike({
               sendTestPrompt();
             }}
           >
-            <label htmlFor="realtime-test-prompt">Ask your question</label>
+            <label htmlFor="realtime-test-prompt">
+              {text("Ask your question", "Pose ta question")}
+            </label>
             <div>
               <input
                 id="realtime-test-prompt"
@@ -741,74 +841,95 @@ export function RealtimeSpike({
                 className="button-secondary"
                 disabled={!livePromptAvailable || testPrompt.trim().length === 0}
               >
-                Send question
+                {text("Send question", "Envoyer la question")}
               </button>
             </div>
             <p role="status">{testPromptStatus}</p>
             {textOutput ? (
-              <output className="typed-live-output" aria-label="Live text response">
+              <output
+                className="typed-live-output"
+                aria-label={text("Live text response", "Réponse texte en direct")}
+              >
                 {textOutput}
               </output>
             ) : null}
           </form>
-          <audio ref={audioRef} autoPlay aria-label="GeoTutor remote audio" />
+          <audio
+            ref={audioRef}
+            autoPlay
+            aria-label={text("Compass remote audio", "Audio distant de Compass")}
+          />
         </div>
 
         <details
           className="coach-diagnostics"
           open={state === "live" || state === "failed"}
         >
-          <summary>Connection details</summary>
+          <summary>{text("Connection details", "Détails de connexion")}</summary>
           <div className="connection-evidence" aria-live="polite">
             <div>
-            <span>Capability mode</span>
+            <span>{text("Capability mode", "Mode disponible")}</span>
             <strong>{capabilityMode.kind}</strong>
             </div>
             <div>
-            <span>Browser support</span>
+            <span>{text("Browser support", "Compatibilité du navigateur")}</span>
             <strong>
               {support.liveVoice
-                ? "voice + text"
+                ? text("voice + text", "voix + texte")
                 : support.typedLive
-                  ? "text only"
-                  : "local only"}
+                  ? text("text only", "texte seulement")
+                  : text("local only", "local seulement")}
             </strong>
             </div>
             <div>
-            <span>Data channel</span>
-            <strong>{state === "live" ? "oai-events open" : "not open"}</strong>
+            <span>{text("Data channel", "Canal de données")}</span>
+            <strong>
+              {state === "live"
+                ? text("oai-events open", "oai-events ouvert")
+                : text("not open", "non ouvert")}
+            </strong>
             </div>
             <div>
-            <span>Verified session</span>
-            <strong>{sessionProfile ?? "not verified"}</strong>
+            <span>{text("Verified session", "Session vérifiée")}</span>
+            <strong>{sessionProfile ?? text("not verified", "non vérifiée")}</strong>
             </div>
             <div>
-            <span>Voice turn</span>
-            <strong>{voiceTurn ?? "none"}</strong>
+            <span>{text("Voice turn", "Tour de parole")}</span>
+            <strong>{voiceTurn ?? text("none", "aucun")}</strong>
             </div>
             <div>
-            <span>Tool loop</span>
-            <strong>{toolLoop ?? "none"}</strong>
+            <span>{text("Tool loop", "Boucle d’outils")}</span>
+            <strong>{toolLoop ?? text("none", "aucune")}</strong>
             </div>
             <div>
-            <span>Last server event</span>
-            <strong>{lastEvent ?? "none"}</strong>
+            <span>{text("Last server event", "Dernier événement serveur")}</span>
+            <strong>{lastEvent ?? text("none", "aucun")}</strong>
             </div>
             <div>
-            <span>Remote audio</span>
-            <strong>{remoteAudio ? "track attached" : "not attached"}</strong>
+            <span>{text("Remote audio", "Audio distant")}</span>
+            <strong>
+              {remoteAudio
+                ? text("track attached", "piste connectée")
+                : text("not attached", "non connecté")}
+            </strong>
             </div>
             <div>
-            <span>Manual retry backoff</span>
+            <span>{text("Manual retry backoff", "Délai avant nouvel essai")}</span>
             <strong>
               {backoff.failures === 0
-                ? "clear"
+                ? text("clear", "aucun")
                 : retryReady
-                  ? `ready after ${backoff.failures} failure(s)`
-                  : `${Math.ceil(backoff.delayMs / 1_000)}s · failure ${backoff.failures}`}
+                  ? text(
+                      `ready after ${backoff.failures} failure(s)`,
+                      `prêt après ${backoff.failures} échec(s)`,
+                    )
+                  : text(
+                      `${Math.ceil(backoff.delayMs / 1_000)}s · failure ${backoff.failures}`,
+                      `${Math.ceil(backoff.delayMs / 1_000)} s · échec ${backoff.failures}`,
+                    )}
             </strong>
             </div>
-            <ol aria-label="WebRTC timeline">
+            <ol aria-label={text("WebRTC timeline", "Chronologie WebRTC")}>
               {timeline.map((entry, index) => (
                 <li key={`${index}-${entry}`}>{entry}</li>
               ))}

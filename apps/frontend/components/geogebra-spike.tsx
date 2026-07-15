@@ -114,6 +114,7 @@ import {
   type InvarianceExperimentRuntime,
 } from "./invariance-experiment";
 import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
+import { useLanguage } from "@/components/language-provider";
 
 type SpikeState =
   | { phase: "loading" }
@@ -156,6 +157,7 @@ export function GeoGebraSpike({
   operationArbiter?: OperationArbiter;
   latencyMonitor?: LatencyBudgetMonitor;
 }) {
+  const { text } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<SpikeState>({ phase: "loading" });
   const [progress, setProgress] = useState(initialProgress());
@@ -1367,12 +1369,18 @@ export function GeoGebraSpike({
     >
       <div className="spike-heading">
         <div>
-          <p className="section-index">Step 2 · Build</p>
-          <h2 id="geogebra-spike-title">Your canvas, your move</h2>
+          <p className="section-index">
+            {text("Step 2 · Build", "Étape 2 · Construire")}
+          </p>
+          <h2 id="geogebra-spike-title">
+            {text("Your canvas, your move", "Ton espace, à toi de jouer")}
+          </h2>
         </div>
         <p>
-          Use the tools on the canvas to construct the perpendicular bisector.
-          I&apos;ll quietly check each useful move.
+          {text(
+            "Use the tools on the canvas to construct the perpendicular bisector. I'll quietly check each useful move.",
+            "Utilise les outils pour construire la médiatrice. Je vérifie discrètement chaque geste utile.",
+          )}
         </p>
       </div>
 
@@ -1381,7 +1389,10 @@ export function GeoGebraSpike({
           ref={containerRef}
           className="geogebra-canvas"
           role="region"
-          aria-label="Interactive GeoGebra geometry workspace"
+          aria-label={text(
+            "Interactive GeoGebra geometry workspace",
+            "Espace de géométrie interactif GeoGebra",
+          )}
         />
 
         <aside className="proof-panel">
@@ -1390,24 +1401,34 @@ export function GeoGebraSpike({
             role="status"
             aria-live="polite"
           >
-            {state.phase === "loading" && "Loading applet"}
+            {state.phase === "loading" && text("Loading applet", "Chargement de l'espace")}
             {state.phase === "ready" && (
               <>
-                <span>Workspace ready</span>
-                <small>API verified</small>
+                <span>{text("Workspace ready", "Espace prêt")}</span>
+                <small>{text("API verified", "API vérifiée")}</small>
               </>
             )}
-            {state.phase === "unavailable" && "Applet unavailable"}
+            {state.phase === "unavailable" && text("Applet unavailable", "Espace indisponible")}
           </p>
 
           {state.phase === "loading" && (
-            <p>Setting up your drawing tools…</p>
+            <p>{text("Setting up your drawing tools…", "Préparation de tes outils de dessin…")}</p>
           )}
 
           {state.phase === "unavailable" && (
             <div className="fallback" role="alert">
-              <p>{state.message}</p>
-              <p>Your exercise is safe. Reload the page to try opening the canvas again.</p>
+              <p>
+                {text(
+                  state.message,
+                  "L'espace GeoGebra n'a pas pu s'ouvrir.",
+                )}
+              </p>
+              <p>
+                {text(
+                  "Your exercise is safe. Reload the page to try opening the canvas again.",
+                  "Ton exercice est intact. Recharge la page pour essayer de rouvrir l'espace.",
+                )}
+              </p>
             </div>
           )}
 
@@ -1415,13 +1436,22 @@ export function GeoGebraSpike({
             <>
               <div className="construction-progress">
                 <ProgressFeedback model={progressView} />
-                {progress.verifying && <p>Checking the latest stable construction…</p>}
+                {progress.verifying && (
+                  <p>
+                    {text(
+                      "Checking the latest stable construction…",
+                      "Vérification de la dernière construction stable…",
+                    )}
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => void resetConstruction()}
                   disabled={resetStatus === "resetting"}
                 >
-                  {resetStatus === "resetting" ? "Resetting…" : "Reset construction"}
+                  {resetStatus === "resetting"
+                    ? text("Resetting…", "Réinitialisation…")
+                    : text("Reset construction", "Réinitialiser la construction")}
                 </button>
                 {hintStatus !== "confirmation_required" ? (
                   <button
@@ -1430,38 +1460,74 @@ export function GeoGebraSpike({
                     onClick={() => void requestExplicitHint()}
                     disabled={hintStatus === "delivering"}
                   >
-                    {hintStatus === "delivering" ? "Preparing help…" : "Ask for help"}
+                    {hintStatus === "delivering"
+                      ? text("Preparing help…", "Préparation de l'aide…")
+                      : text("Ask for help", "Demander de l'aide")}
                   </button>
                 ) : (
-                  <div role="group" aria-label="Guided demonstration confirmation">
-                    <p>A guided demonstration is temporary. Continue?</p>
+                  <div
+                    role="group"
+                    aria-label={text(
+                      "Guided demonstration confirmation",
+                      "Confirmation de la démonstration guidée",
+                    )}
+                  >
+                    <p>
+                      {text(
+                        "A guided demonstration is temporary. Continue?",
+                        "La démonstration guidée est temporaire. Continuer ?",
+                      )}
+                    </p>
                     <button type="button" onClick={() => void confirmGuidedHint()}>
-                      Confirm guided demo
+                      {text("Confirm guided demo", "Confirmer la démonstration")}
                     </button>
                     <button
                       type="button"
                       className="button-secondary"
                       onClick={invalidateGuidedHint}
                     >
-                      Keep working myself
+                      {text("Keep working myself", "Continuer par moi-même")}
                     </button>
                   </div>
                 )}
                 {hintStatus === "delivered" && (
-                  <p role="status">Help delivered. The construction is back under your control.</p>
+                  <p role="status">
+                    {text(
+                      "Help delivered. The construction is back under your control.",
+                      "Aide terminée. Tu as de nouveau la main sur la construction.",
+                    )}
+                  </p>
                 )}
                 {hintStatus === "failed" && (
-                  <p role="alert">Help is unavailable. Your construction was preserved.</p>
+                  <p role="alert">
+                    {text(
+                      "Help is unavailable. Your construction was preserved.",
+                      "L'aide est indisponible. Ta construction a été conservée.",
+                    )}
+                  </p>
                 )}
                 {resetStatus === "recovered" && (
-                  <p role="status">Construction recovered from the canonical fixture.</p>
+                  <p role="status">
+                    {text(
+                      "Construction recovered from the canonical fixture.",
+                      "Construction restaurée depuis la figure de référence.",
+                    )}
+                  </p>
                 )}
                 {resetStatus === "failed" && (
-                  <p role="alert">Reset failed. Reload the workspace before continuing.</p>
+                  <p role="alert">
+                    {text(
+                      "Reset failed. Reload the workspace before continuing.",
+                      "La réinitialisation a échoué. Recharge l'espace avant de continuer.",
+                    )}
+                  </p>
                 )}
                 {resetStatus === "fatal" && (
                   <p role="alert">
-                    Reset could not restore a verified construction. Retry reset; no success was recorded.
+                    {text(
+                      "Reset could not restore a verified construction. Retry reset; no success was recorded.",
+                      "La réinitialisation n'a pas restauré une construction vérifiée. Réessaie ; aucun succès n'a été enregistré.",
+                    )}
                   </p>
                 )}
               </div>
@@ -1472,18 +1538,27 @@ export function GeoGebraSpike({
                 onTerminalRendered={acknowledgeInvarianceRender}
               />
               <details className="proof-details">
-                <summary>How GeoTutor checks the construction</summary>
+                <summary>
+                  {text(
+                    "How Compass checks the construction",
+                    "Comment Compass vérifie la construction",
+                  )}
+                </summary>
                 <p className="proof-intro">
-                  The canvas is observed only after a stable action and every geometry
-                  result is checked locally.
+                  {text(
+                    "The canvas is observed only after a stable action and every geometry result is checked locally.",
+                    "L'espace est observé uniquement après une action stable et chaque résultat géométrique est vérifié localement.",
+                  )}
                 </p>
                 <dl>
                   {state.evidence.objects.map((object) => (
                     <div key={object.label}>
                       <dt>{object.label}</dt>
-                      <dd>{object.command || "independent point"}</dd>
                       <dd>
-                        exists: {String(object.exists)} · defined: {String(object.defined)}
+                        {object.command || text("independent point", "point indépendant")}
+                      </dd>
+                      <dd>
+                        {text("exists", "existe")}: {String(object.exists)} · {text("defined", "défini")}: {String(object.defined)}
                       </dd>
                     </div>
                   ))}

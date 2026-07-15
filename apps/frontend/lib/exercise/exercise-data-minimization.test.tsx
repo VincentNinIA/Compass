@@ -370,7 +370,7 @@ describe("exercise data minimization", () => {
     expect(indexedOpen).not.toHaveBeenCalled();
     expect(cacheOpen).not.toHaveBeenCalled();
     expect(
-      screen.getByText(/not saved by GeoTutor/i),
+      screen.getByText(/not saved by Compass/i),
     ).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/zero data retention|zero retention/i);
   });

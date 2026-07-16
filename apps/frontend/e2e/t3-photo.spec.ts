@@ -85,11 +85,19 @@ test("T3 photo gallery and mobile camera accept supported files and reject befor
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
+    page.getByRole("button", { name: "Professor" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
     page.getByRole("button", { name: "Passer en français" }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "Add my exercise" }),
+    page.getByRole("button", { name: /Add my exercise/ }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: /Teacher exercises/ }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(input).toBeFocused();

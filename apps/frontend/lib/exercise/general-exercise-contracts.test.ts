@@ -98,6 +98,25 @@ describe("general_exercise.v1", () => {
     expect(context).not.toHaveProperty("ambiguityCode");
   });
 
+  it("copies bounded teacher guidance into the untrusted coach context", () => {
+    const ready = parseGeneralExerciseReadyV1(USER_GEOMETRY_EXERCISE);
+    const teacherGuidance = {
+      learningObjective: "Distinguish a line, ray and segment.",
+      teacherInstructions: "Ask for a verbal justification.",
+      targetDifficulties: ["Notation"],
+      likelyMisconceptions: ["Confusing a ray with a segment"],
+      hintSequence: ["Name the endpoints first."],
+    };
+
+    const context = createGeneralExerciseContextV1(ready, teacherGuidance);
+
+    expect(context.teacherGuidance).toEqual(teacherGuidance);
+    expect(context.teacherGuidance).not.toBe(teacherGuidance);
+    expect(context.teacherGuidance?.hintSequence).not.toBe(
+      teacherGuidance.hintSequence,
+    );
+  });
+
   it("exports a strict Structured Outputs schema", () => {
     expect(GENERAL_EXERCISE_WIRE_V1_JSON_SCHEMA).toMatchObject({
       type: "object",

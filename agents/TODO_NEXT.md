@@ -2,10 +2,13 @@
 
 ## Prochaine action
 
-T14-C02 est close `pass` et aucune carte Builder n'est active. La prochaine
-tranche doit être priorisée avec l'utilisateur; l'audition de `cedar` sur un
-appareil réel avec permission microphone peut compléter la qualification
-humaine sans rouvrir les contrats déterministes.
+T19-C01 est active sur autorisation explicite du porteur : publier le candidat
+T18 dans une branche GitHub et une pull request brouillon, puis synchroniser la
+fiche Devpost Education existante sans la soumettre.
+
+Le redéploiement de `compass-geotutor-demo`, le smoke public du candidat T18, la
+vidéo, l'identifiant `/feedback`, les retours humains, la licence et la
+soumission finale restent hors de cette carte.
 
 ## Dépendances
 
@@ -107,10 +110,36 @@ T14-C02 est close avec 650/650 Vitest sur 57 fichiers, lint, typecheck et build.
 Le vrai applet en session texte a créé E, F et G, avancé la mission 1 à ✓ et le
 score à 20 XP; le renommage E → A a retiré la preuve puis A → E l'a restaurée.
 Un chargement navigateur propre ne rapporte aucune erreur console.
+T15-C01 est close avec un ledger 10/20 XP idempotent, 657/657 tests au gate
+d'ouverture T16 et un parcours Chromium 0 → 10 → 20 XP sans erreur console.
+T16-C01 est close avec 671/671 Vitest sur 62 fichiers, lint, typecheck et build.
+Le parcours Chromium professeur → publication → nouvel onglet élève →
+bibliothèque → atelier passe sans erreur; aucun débordement n'apparaît à 390 ou
+1440 px. Le catalogue reste volontairement éphémère et partagé par processus.
+T16-C02 est close avec 672/672 Vitest sur 63 fichiers, lint, typecheck et build.
+Le navigateur confirme le guide enseignant, le brouillon manuel et trois
+critères de relecture sans jargon technique, sans débordement à 390/1440 px et
+sans erreur console.
+
+T18-C01 ne dépendait pas des retours humains et est close avec 677/677 Vitest,
+36/36 Playwright hors live, build et 69 cartes documentaires valides. La vidéo
+finale, l'identifiant `/feedback`, la licence éventuelle, le redéploiement et la
+soumission Devpost restent des actions du porteur du projet ou nécessitent son
+autorisation explicite.
 
 ## Hors périmètre immédiat
 
 Ne pas modifier les contrats spécialisés T1 à T6. SLA production, analytics
 persistants, IndexedDB, historique distant, commande GeoGebra générique,
 création arbitraire de points et vérification automatique de toutes les matières
-restent hors périmètre.
+restent hors périmètre. Authentification, gestion de classes et affectations
+nominatives restent également hors de T16-C01; le catalogue est partagé mais
+éphémère sur un seul processus serveur.
+
+Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
+démo et une limitation de débit sur les routes OpenAI. Pour les seules démos
+live actuelles, garder l'URL peu diffusée, surveiller l'usage du projet OpenAI et
+retirer ou faire tourner la clé lorsque la période de démonstration se termine.
+
+La dette du compteur documentaire T17 est résolue : le validateur ne porte plus
+de nombre magique et vérifie désormais les 69 cartes contre le registre roadmap.

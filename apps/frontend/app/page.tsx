@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
   TutorWorkspace,
@@ -8,6 +8,12 @@ import {
 } from "@/components/tutor-workspace";
 import { useLanguage } from "@/components/language-provider";
 import { CompassMascot, MascotProvider } from "@/components/compass-mascot";
+import { TeacherExerciseLibrary } from "@/components/teacher-exercise-library";
+import { TeacherWorkspace } from "@/components/teacher-workspace";
+import type { TeacherExercisePublicationV1 } from "@/lib/teacher/exercise";
+import type { LearningSessionReportV1 } from "@/lib/learning/session-report";
+
+type AppScreen = "landing" | "teacher" | "library" | TutorWorkspaceScreen;
 
 function LearningPlayground({ french }: { french: boolean }) {
   return (
@@ -48,26 +54,62 @@ export default function Home() {
       "geometry",
     () => false,
   );
-  const panoramaDemoMode = useSyncExternalStore(
+  const workspaceDemoMode = useSyncExternalStore(
     () => () => undefined,
-    () => new URLSearchParams(window.location.search).get("demo") === "geogebra",
+    () => ["geogebra", "gamification"].includes(
+      new URLSearchParams(window.location.search).get("demo") ?? "",
+    ),
     () => false,
   );
-  const [screen, setScreen] = useState<"landing" | TutorWorkspaceScreen>(
-    "landing",
-  );
-  const visibleScreen = panoramaDemoMode ? "work" : screen;
+  const [screen, setScreen] = useState<AppScreen>("landing");
+  const [assignedExercise, setAssignedExercise] =
+    useState<TeacherExercisePublicationV1>();
+  const [localPublications, setLocalPublications] = useState<
+    readonly TeacherExercisePublicationV1[]
+  >([]);
+  const [learningReports, setLearningReports] = useState<
+    readonly LearningSessionReportV1[]
+  >([]);
+  const visibleScreen = workspaceDemoMode ? "work" : screen;
   const mainRef = useRef<HTMLElement>(null);
+  const hasMountedScreenRef = useRef(false);
 
   useEffect(() => {
-    if (visibleScreen === "landing") return;
+    if (!hasMountedScreenRef.current) {
+      hasMountedScreenRef.current = true;
+      return;
+    }
     const frame = window.requestAnimationFrame(() => {
+      if (!window.navigator.userAgent.includes("jsdom")) {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }
       mainRef.current
         ?.querySelector<HTMLElement>("[data-screen-title]")
         ?.focus();
     });
     return () => window.cancelAnimationFrame(frame);
   }, [visibleScreen]);
+
+  const rememberPublication = useCallback(
+    (publication: TeacherExercisePublicationV1) => {
+      setLocalPublications((current) => [
+        publication,
+        ...current.filter((exercise) => exercise.id !== publication.id),
+      ]);
+    },
+    [],
+  );
+
+  const rememberLearningReport = useCallback(
+    (report: LearningSessionReportV1) => {
+      setLearningReports((current) =>
+        [report, ...current.filter((entry) => entry.exerciseId !== report.exerciseId)]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .slice(0, 8),
+      );
+    },
+    [],
+  );
 
   const journeySteps = [
     {
@@ -103,10 +145,15 @@ export default function Home() {
   ];
   const activeStep = specialistGeometryMode
     ? 3
-    : { landing: 0, upload: 1, confirm: 2, work: 3 }[visibleScreen];
+    : ({ landing: 0, upload: 1, confirm: 2, work: 3 } as Partial<
+        Record<AppScreen, number>
+      >)[visibleScreen] ?? -1;
   const showLanding = visibleScreen === "landing" || specialistGeometryMode;
 
-  const goHome = () => setScreen("landing");
+  const goHome = () => {
+    setAssignedExercise(undefined);
+    setScreen("landing");
+  };
 
   return (
     <>
@@ -152,6 +199,14 @@ export default function Home() {
           </p>
           <button
             type="button"
+            className="teacher-access"
+            data-active={visibleScreen === "teacher" ? "true" : "false"}
+            onClick={() => setScreen("teacher")}
+          >
+            {text("Professor", "Professeur")}
+          </button>
+          <button
+            type="button"
             className="language-switch"
             onClick={toggleLanguage}
             aria-label={text("Passer en français", "Switch to English")}
@@ -176,7 +231,7 @@ export default function Home() {
             <p className="eyebrow">
               {text("Your study buddy for every subject", "Ton partenaire dans toutes les matières")}
             </p>
-            <h1 id="page-title">
+            <h1 id="page-title" tabIndex={-1} data-screen-title>
               {text(
                 "Bring the exercise. Find your own way through it.",
                 "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
@@ -184,19 +239,32 @@ export default function Home() {
             </h1>
             <p className="lede">
               {text(
-                "Maths, languages, history or science: Compass reads the question, keeps every step and helps without giving away the answer.",
-                "Maths, langues, histoire ou sciences : Compass lit l'énoncé, garde chaque étape et t'aide sans te donner la réponse.",
+                "Maths, languages, history or science: Compass guides every step. Automatic checks appear only when a compatible specialist workspace is available.",
+                "Maths, langues, histoire ou sciences : Compass guide chaque étape. Les vérifications automatiques apparaissent seulement lorsqu'un atelier spécialisé compatible existe.",
               )}
             </p>
-            <div className="hero-actions">
-              <a
+            <div className="hero-student-paths" aria-label={text("Choose your starting point", "Choisis ton point de départ")}>
+              <button
+                type="button"
                 className="primary-link"
-                href="#exercise-photo-title"
-                onClick={() => setScreen("upload")}
+                onClick={() => {
+                  setAssignedExercise(undefined);
+                  setScreen("upload");
+                }}
               >
-                {text("Add my exercise", "Ajouter mon exercice")}
-              </a>
-              <span>{text("One photo. No account.", "Une photo. Aucun compte.")}</span>
+                <small>{text("I have homework", "Je viens faire un devoir")}</small>
+                <strong>{text("Add my exercise", "Ajouter mon exercice")}</strong>
+                <span>{text("Take or choose a photo", "Prendre ou choisir une photo")}</span>
+              </button>
+              <button
+                type="button"
+                className="student-library-link"
+                onClick={() => setScreen("library")}
+              >
+                <small>{text("I want to practise", "Je viens m'entraîner")}</small>
+                <strong>{text("Teacher exercises", "Exercices du professeur")}</strong>
+                <span>{text("Choose from the shared library", "Choisir dans la bibliothèque partagée")}</span>
+              </button>
             </div>
             <ul
               className="hero-reassurance"
@@ -231,11 +299,30 @@ export default function Home() {
         </section>
             {specialistGeometryMode ? <TutorWorkspace /> : null}
           </>
+        ) : visibleScreen === "teacher" ? (
+          <TeacherWorkspace
+            onBack={goHome}
+            onOpenLibrary={() => setScreen("library")}
+            onPublished={rememberPublication}
+            learningReports={learningReports}
+          />
+        ) : visibleScreen === "library" ? (
+          <TeacherExerciseLibrary
+            onBack={goHome}
+            initialExercises={localPublications}
+            onStart={(exercise) => {
+              setAssignedExercise(exercise);
+              setScreen("work");
+            }}
+          />
         ) : (
           <TutorWorkspace
+            key={assignedExercise?.id ?? "student-upload"}
+            assignedExercise={assignedExercise}
             screen={visibleScreen}
-            onScreenChange={setScreen}
+            onScreenChange={(nextScreen) => setScreen(nextScreen)}
             onHome={goHome}
+            onLearningReport={rememberLearningReport}
           />
         )}
       </main>

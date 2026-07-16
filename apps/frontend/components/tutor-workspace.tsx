@@ -24,8 +24,21 @@ import {
   type GeneralExerciseConfirmedV1,
 } from "@/lib/exercise/exercise-confirmation";
 import { createGeneralExerciseContextV1 } from "@/lib/exercise/general-exercise-contracts";
+import type { TeacherExercisePublicationV1 } from "@/lib/teacher/exercise";
+import {
+  LEARNING_SESSION_REPORT_SCHEMA_VERSION,
+  type LearningSessionReportV1,
+} from "@/lib/learning/session-report";
 import type { ToolRuntime, ToolWorkflowAuthority } from "@/lib/tools/runtime";
 import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
+import {
+  awardMission,
+  completedMissionIndexes,
+  exerciseXp,
+  sessionXp,
+  type GamificationLedger,
+  type MissionAwardTier,
+} from "@/lib/gamification/progress";
 import type { ToolPhase } from "@/lib/tools/gateway";
 import {
   isInitializationFailureRetryable,
@@ -77,18 +90,47 @@ const PANORAMA_DEMO_CONFIRMATION: GeneralExerciseConfirmedV1 = {
   },
 };
 
+const GAMIFICATION_DEMO_CONFIRMATION: GeneralExerciseConfirmedV1 = {
+  kind: "general",
+  confirmationId: "t15-gamification-demo",
+  confirmedAt: 0,
+  exercise: {
+    schemaVersion: "general_exercise.v1",
+    outcome: "ready",
+    language: "fr",
+    subject: "history",
+    title: "Comprendre les Lumières",
+    statement:
+      "Présenter deux idées des Lumières, les illustrer puis rédiger une courte conclusion.",
+    tasks: [
+      "Présenter deux idées importantes des Lumières.",
+      "Associer chaque idée à un exemple historique.",
+      "Rédiger une conclusion en deux phrases.",
+    ],
+    concepts: ["Lumières", "argumentation", "exemple"],
+    ambiguityCode: null,
+    clarificationQuestion: null,
+  },
+};
+
 function TutorWorkspaceContent({
   specialistGeometryMode,
   panoramaDemoMode,
+  gamificationDemoMode,
+  assignedExercise,
   screen,
   onScreenChange,
   onHome,
+  onLearningReport,
 }: {
   specialistGeometryMode: boolean;
   panoramaDemoMode: boolean;
+  gamificationDemoMode: boolean;
+  assignedExercise?: TeacherExercisePublicationV1;
   screen?: TutorWorkspaceScreen;
   onScreenChange?(screen: TutorWorkspaceScreen): void;
   onHome?(): void;
+  onLearningReport?(report: LearningSessionReportV1): void;
 }) {
   const { text } = useLanguage();
   const {
@@ -100,7 +142,13 @@ function TutorWorkspaceContent({
   const [toolRuntime, setToolRuntime] = useState<ToolRuntime>();
   const [geogebraWorldState, setGeoGebraWorldState] =
     useState<GeoGebraWorldStateV1>();
-  const verifiedMissionCountRef = useRef(0);
+  const [xpLedger, setXpLedger] = useState<GamificationLedger>([]);
+  const xpLedgerRef = useRef<GamificationLedger>([]);
+  const [reflectionState, setReflectionState] = useState<{
+    exerciseId?: string;
+    taskIndexes: ReadonlySet<number>;
+    transferCompleted: boolean;
+  }>({ taskIndexes: new Set(), transferCompleted: false });
   const [pedagogyRuntime, setPedagogyRuntime] =
     useState<RealtimePedagogyRuntime>();
   const proactiveRuntimeRef = useRef<RealtimeProactiveRuntime | undefined>(undefined);
@@ -127,7 +175,20 @@ function TutorWorkspaceContent({
   const [exerciseResetToken, setExerciseResetToken] = useState(0);
   const [generalConfirmation, setGeneralConfirmation] = useState<
     GeneralExerciseConfirmedV1 | undefined
-  >(panoramaDemoMode ? PANORAMA_DEMO_CONFIRMATION : undefined);
+  >(
+    panoramaDemoMode
+      ? PANORAMA_DEMO_CONFIRMATION
+      : gamificationDemoMode
+        ? GAMIFICATION_DEMO_CONFIRMATION
+        : assignedExercise
+          ? {
+              kind: "general",
+              confirmationId: assignedExercise.id,
+              confirmedAt: assignedExercise.publishedAt,
+              exercise: assignedExercise.exercise,
+            }
+          : undefined,
+  );
   const [legacyModuleActive, setLegacyModuleActive] = useState(false);
   const legacyModuleVisible = specialistGeometryMode || legacyModuleActive;
   const exerciseRuntimeRef = useRef<ExerciseInitializationRuntime | undefined>(undefined);
@@ -502,21 +563,127 @@ function TutorWorkspaceContent({
   }, [handleExerciseDraftChanged, onScreenChange]);
 
   const generalExercise = generalConfirmation?.exercise;
+  const currentExerciseId = generalConfirmation?.confirmationId;
+  const creditMission = useCallback(
+    (exerciseId: string, taskIndex: number, tier: MissionAwardTier) => {
+      const current = xpLedgerRef.current;
+      const next = awardMission(current, exerciseId, taskIndex, tier);
+      if (next === current) return false;
+      xpLedgerRef.current = next;
+      setXpLedger(next);
+      return true;
+    },
+    [],
+  );
   const verifiedTaskIndexes = useMemo(
     () => new Set(geogebraWorldState?.verifiedTaskIndexes ?? []),
     [geogebraWorldState],
   );
-  const handleGeoGebraWorldState = useCallback(
-    (worldState?: GeoGebraWorldStateV1) => setGeoGebraWorldState(worldState),
-    [],
+  const completedTaskIndexes = useMemo(
+    () => completedMissionIndexes(xpLedger, currentExerciseId),
+    [currentExerciseId, xpLedger],
   );
+  const currentExerciseXp = useMemo(
+    () => exerciseXp(xpLedger, currentExerciseId),
+    [currentExerciseId, xpLedger],
+  );
+  const totalSessionXp = useMemo(() => sessionXp(xpLedger), [xpLedger]);
+  const earnedTaskIndexes = useMemo(
+    () => new Set([...completedTaskIndexes, ...verifiedTaskIndexes]),
+    [completedTaskIndexes, verifiedTaskIndexes],
+  );
+  const reflectedTaskIndexes = useMemo(
+    () =>
+      reflectionState.exerciseId === currentExerciseId
+        ? reflectionState.taskIndexes
+        : new Set<number>(),
+    [currentExerciseId, reflectionState],
+  );
+  const transferCompleted =
+    reflectionState.exerciseId === currentExerciseId &&
+    reflectionState.transferCompleted;
+
   useEffect(() => {
-    const verifiedCount = geogebraWorldState?.verifiedTaskIndexes.length ?? 0;
-    if (verifiedCount > verifiedMissionCountRef.current) {
-      pulseMascot("mission-verified", "celebrating", 2_400);
+    if (
+      !assignedExercise ||
+      !currentExerciseId ||
+      currentExerciseId !== assignedExercise.id ||
+      earnedTaskIndexes.size === 0
+    ) {
+      return;
     }
-    verifiedMissionCountRef.current = verifiedCount;
-  }, [geogebraWorldState, pulseMascot]);
+    onLearningReport?.({
+      schemaVersion: LEARNING_SESSION_REPORT_SCHEMA_VERSION,
+      exerciseId: assignedExercise.id,
+      title:
+        assignedExercise.exercise.title ??
+        text("Untitled exercise", "Exercice sans titre"),
+      subject: assignedExercise.exercise.subject,
+      totalMissions: assignedExercise.exercise.tasks.length,
+      completedMissions: earnedTaskIndexes.size,
+      verifiedMissions: verifiedTaskIndexes.size,
+      reflectedMissions: reflectedTaskIndexes.size,
+      exerciseXp: currentExerciseXp,
+      transferCompleted,
+      updatedAt: Date.now(),
+    });
+  }, [
+    assignedExercise,
+    currentExerciseId,
+    currentExerciseXp,
+    earnedTaskIndexes,
+    onLearningReport,
+    reflectedTaskIndexes,
+    text,
+    transferCompleted,
+    verifiedTaskIndexes,
+  ]);
+  const handleGeoGebraWorldState = useCallback(
+    (worldState?: GeoGebraWorldStateV1) => {
+      setGeoGebraWorldState(worldState);
+      if (!worldState || !currentExerciseId) return;
+      let credited = false;
+      for (const taskIndex of worldState.verifiedTaskIndexes) {
+        credited =
+          creditMission(currentExerciseId, taskIndex, "verified") || credited;
+      }
+      if (credited) {
+        pulseMascot("mission-verified", "celebrating", 2_400);
+      }
+    },
+    [creditMission, currentExerciseId, pulseMascot],
+  );
+  const handleMissionCompleted = useCallback(
+    (taskIndex: number, learnerReflection: string) => {
+      if (!currentExerciseId || learnerReflection.trim().length < 3) return;
+      setReflectionState((current) => ({
+        exerciseId: currentExerciseId,
+        taskIndexes: new Set([
+          ...(current.exerciseId === currentExerciseId
+            ? current.taskIndexes
+            : []),
+          taskIndex,
+        ]),
+        transferCompleted:
+          current.exerciseId === currentExerciseId && current.transferCompleted,
+      }));
+      if (creditMission(currentExerciseId, taskIndex, "completed")) {
+        pulseMascot("mission-completed", "celebrating", 2_000);
+      }
+    },
+    [creditMission, currentExerciseId, pulseMascot],
+  );
+  const handleTransferComplete = useCallback(() => {
+    if (!currentExerciseId) return;
+    setReflectionState((current) => ({
+      exerciseId: currentExerciseId,
+      taskIndexes:
+        current.exerciseId === currentExerciseId
+          ? current.taskIndexes
+          : new Set<number>(),
+      transferCompleted: true,
+    }));
+  }, [currentExerciseId]);
   const searchableExercise = generalExercise
     ? `${generalExercise.subject} ${generalExercise.concepts.join(" ")}`
         .normalize("NFD")
@@ -543,7 +710,12 @@ function TutorWorkspaceContent({
       }
       exerciseContext={
         !specialistGeometryMode && generalConfirmation
-          ? createGeneralExerciseContextV1(generalConfirmation.exercise)
+          ? createGeneralExerciseContextV1(
+              generalConfirmation.exercise,
+              assignedExercise?.id === generalConfirmation.confirmationId
+                ? assignedExercise.guidance
+                : undefined,
+            )
           : undefined
       }
       toolRuntime={toolRuntime}
@@ -596,7 +768,14 @@ function TutorWorkspaceContent({
           resetToken={exerciseResetToken}
           latencyMonitor={latencyMonitor}
         />
-        <GeneralExerciseWorkspace exercise={generalExercise} />
+        <GeneralExerciseWorkspace
+          exercise={generalExercise}
+          completedTaskIndexes={completedTaskIndexes}
+          score={currentExerciseXp}
+          onCompleteTask={usesMathScratchpad ? undefined : handleMissionCompleted}
+          transferCompleted={transferCompleted}
+          onTransferComplete={handleTransferComplete}
+        />
         {legacyGeometry}
         {coach}
         <details className="technical-details">
@@ -688,9 +867,21 @@ function TutorWorkspaceContent({
               <span aria-hidden="true">＋</span>{" "}
               {text("New exercise", "Nouvel exercice")}
             </button>
-            <span className="screen-step-label">
-              {text("Step 4 of 4 · Workspace", "Étape 4 sur 4 · Atelier")}
-            </span>
+            <div className="workspace-status-cluster">
+              <span className="screen-step-label">
+                {text("Step 4 of 4 · Workspace", "Étape 4 sur 4 · Atelier")}
+              </span>
+              <output
+                className="workspace-xp"
+                aria-live="polite"
+                aria-atomic="true"
+                aria-label={text("Session XP", "XP de session")}
+              >
+                <span className="workspace-xp-mark" aria-hidden="true" />
+                <strong>{totalSessionXp}</strong>
+                <small>XP</small>
+              </output>
+            </div>
           </div>
           <div className="work-screen-heading">
             <div>
@@ -717,6 +908,27 @@ function TutorWorkspaceContent({
                   )}
             </p>
           </div>
+          <ol className="learning-routine" aria-label={text("How to use Compass", "Comment travailler avec Compass")}>
+            <li>
+              <span aria-hidden="true">1</span>
+              <strong>{text("Try one move", "Essaie une étape")}</strong>
+            </li>
+            <li>
+              <span aria-hidden="true">2</span>
+              <strong>{text("Name what you tried", "Dis ce que tu as essayé")}</strong>
+            </li>
+            <li>
+              <span aria-hidden="true">3</span>
+              <strong>
+                {usesMathScratchpad
+                  ? text(
+                      "Name the objects before asking Compass to draw",
+                      "Nomme les objets avant de demander un tracé",
+                    )
+                  : text("Ask for the smallest useful hint", "Demande le plus petit indice utile")}
+              </strong>
+            </li>
+          </ol>
 
           {legacyModuleActive ? (
             <>
@@ -741,6 +953,11 @@ function TutorWorkspaceContent({
                 exercise={generalExercise}
                 layout="rail"
                 verifiedTaskIndexes={verifiedTaskIndexes}
+                completedTaskIndexes={completedTaskIndexes}
+                score={currentExerciseXp}
+                onCompleteTask={handleMissionCompleted}
+                transferCompleted={transferCompleted}
+                onTransferComplete={handleTransferComplete}
               />
             </div>
           ) : (
@@ -750,7 +967,15 @@ function TutorWorkspaceContent({
                 {coach}
               </div>
               <div className="learning-workbench-grid learning-workbench-grid--general">
-                <GeneralExerciseWorkspace exercise={generalExercise} layout="card" />
+                <GeneralExerciseWorkspace
+                  exercise={generalExercise}
+                  layout="card"
+                  completedTaskIndexes={completedTaskIndexes}
+                  score={currentExerciseXp}
+                  onCompleteTask={handleMissionCompleted}
+                  transferCompleted={transferCompleted}
+                  onTransferComplete={handleTransferComplete}
+                />
               </div>
             </>
           )}
@@ -779,15 +1004,21 @@ const getBrowserSpecialistMode = () =>
   new URLSearchParams(window.location.search).get("specialist") === "geometry";
 const getBrowserPanoramaDemoMode = () =>
   new URLSearchParams(window.location.search).get("demo") === "geogebra";
+const getBrowserGamificationDemoMode = () =>
+  new URLSearchParams(window.location.search).get("demo") === "gamification";
 
 export function TutorWorkspace({
+  assignedExercise,
   screen,
   onScreenChange,
   onHome,
+  onLearningReport,
 }: {
+  assignedExercise?: TeacherExercisePublicationV1;
   screen?: TutorWorkspaceScreen;
   onScreenChange?(screen: TutorWorkspaceScreen): void;
   onHome?(): void;
+  onLearningReport?(report: LearningSessionReportV1): void;
 } = {}) {
   const specialistGeometryMode = useSyncExternalStore(
     subscribeToSpecialistMode,
@@ -799,15 +1030,23 @@ export function TutorWorkspace({
     getBrowserPanoramaDemoMode,
     getServerSpecialistMode,
   );
+  const gamificationDemoMode = useSyncExternalStore(
+    subscribeToSpecialistMode,
+    getBrowserGamificationDemoMode,
+    getServerSpecialistMode,
+  );
 
   return (
     <MascotProvider>
       <TutorWorkspaceContent
         specialistGeometryMode={specialistGeometryMode}
         panoramaDemoMode={panoramaDemoMode}
+        gamificationDemoMode={gamificationDemoMode}
+        assignedExercise={assignedExercise}
         screen={screen}
         onScreenChange={onScreenChange}
         onHome={onHome}
+        onLearningReport={onLearningReport}
       />
     </MascotProvider>
   );

@@ -13,6 +13,8 @@ Date de vérification initiale : 14 juillet 2026.
 | REF-OAI-CLIENT-EVENTS | https://developers.openai.com/api/reference/resources/realtime/client-events | `response.create`, `response.cancel`, `output_audio_buffer.clear`, `conversation.item.create`. |
 | REF-OAI-FUNCTIONS | https://developers.openai.com/api/docs/guides/function-calling | Définition, strict mode, tool choice et boucle d'exécution. |
 | REF-OAI-TERRA | https://developers.openai.com/api/docs/models/gpt-5.6-terra | Responses, image input et Structured Outputs. |
+| REF-OAI-LATEST-MODEL | https://developers.openai.com/api/docs/guides/latest-model | Positionnement de la famille GPT-5.6 et choix d'un modèle selon coût/volume. |
+| REF-OAI-LUNA | https://developers.openai.com/api/docs/models/gpt-5.6-luna | Modèle sensible au coût, entrées texte/image, Responses et Structured Outputs. |
 | REF-OAI-VISION | https://developers.openai.com/api/docs/guides/images-vision | Formats, data URL, detail et limites de vision. |
 | REF-OAI-STRUCTURED | https://developers.openai.com/api/docs/guides/structured-outputs | JSON Schema strict, refus et validation applicative. |
 | REF-OAI-RESPONSES | https://developers.openai.com/api/reference/resources/responses/methods/create | Création de réponse, image input, `store` et sortie structurée. |
@@ -44,4 +46,3 @@ Date de vérification initiale : 14 juillet 2026.
 | ID | Source | Rubriques utilisées |
 |---|---|---|
 | REF-PRD | `/Users/vincentloreaux/Downloads/PRD_GeoTutor_OpenAI_GeoGebra_v1_1.docx` | Sections 1 à 18, FR-01 à FR-17, architecture, contrats, risques et checklist. |
-

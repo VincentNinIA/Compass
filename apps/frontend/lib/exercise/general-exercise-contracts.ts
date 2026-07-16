@@ -125,13 +125,24 @@ export function createGeneralExerciseWireV1JsonSchema(): Record<string, unknown>
 export const GENERAL_EXERCISE_WIRE_V1_JSON_SCHEMA =
   createGeneralExerciseWireV1JsonSchema();
 
+export type TeacherGuidanceContextV1 = {
+  learningObjective: string;
+  teacherInstructions: string;
+  targetDifficulties: string[];
+  likelyMisconceptions: string[];
+  hintSequence: string[];
+};
+
 export type GeneralExerciseContextV1 = Pick<
   GeneralExerciseReadyV1,
   "language" | "subject" | "title" | "statement" | "tasks" | "concepts"
->;
+> & {
+  teacherGuidance?: TeacherGuidanceContextV1;
+};
 
 export function createGeneralExerciseContextV1(
   exercise: GeneralExerciseReadyV1,
+  teacherGuidance?: TeacherGuidanceContextV1,
 ): GeneralExerciseContextV1 {
   return {
     language: exercise.language,
@@ -140,5 +151,15 @@ export function createGeneralExerciseContextV1(
     statement: exercise.statement,
     tasks: [...exercise.tasks],
     concepts: [...exercise.concepts],
+    ...(teacherGuidance
+      ? {
+          teacherGuidance: {
+            ...teacherGuidance,
+            targetDifficulties: [...teacherGuidance.targetDifficulties],
+            likelyMisconceptions: [...teacherGuidance.likelyMisconceptions],
+            hintSequence: [...teacherGuidance.hintSequence],
+          },
+        }
+      : {}),
   };
 }

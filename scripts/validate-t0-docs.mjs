@@ -24,29 +24,58 @@ function frontmatterArray(markdown, field, file) {
   }
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 const cardsRoot = join(root, "docs", "tranches");
 const cardFiles = walk(cardsRoot)
   .filter((file) => file.includes(`${join("cards", "")}`) && file.endsWith(".md"))
   .sort();
 
-if (cardFiles.length !== 49) {
-  fail(`expected 49 card files, found ${cardFiles.length}`);
+const references = readFileSync(join(root, "docs", "REFERENCES.md"), "utf8");
+const roadmap = readFileSync(join(root, "docs", "ROADMAP.md"), "utf8");
+const registry = roadmap.match(
+  /## Registre des cartes([\s\S]*?)(?=\n## Matrice de traçabilité PRD)/,
+)?.[1];
+if (!registry) fail("docs/ROADMAP.md: missing card registry");
+
+const registryRows = [
+  ...registry.matchAll(/^\| (T\d+-C\d{2}) \| ([^|]+) \| ([^|]+) \|/gm),
+];
+const roadmapIds = new Set(registryRows.map((match) => match[1]));
+if (roadmapIds.size !== registryRows.length) {
+  fail("docs/ROADMAP.md: duplicate card ID in registry");
+}
+if (cardFiles.length !== roadmapIds.size) {
+  fail(
+    `card file/roadmap mismatch: ${cardFiles.length} files, ${roadmapIds.size} registry rows`,
+  );
 }
 
-const references = readFileSync(join(root, "docs", "REFERENCES.md"), "utf8");
 const ids = new Set();
 const cards = [];
 
 for (const absoluteFile of cardFiles) {
   const file = relative(root, absoluteFile);
   const markdown = readFileSync(absoluteFile, "utf8");
-  const id = markdown.match(/^id: (T\d-C\d{2})$/m)?.[1];
+  const structured = markdown.startsWith("---\n");
+  const id =
+    markdown.match(/^id: (T\d+-C\d{2})$/m)?.[1] ??
+    markdown.match(/^# (T\d+-C\d{2})\b/m)?.[1];
   if (!id) fail(`${file}: missing or malformed id`);
   if (basename(file, ".md") !== id) fail(`${file}: filename does not match id ${id}`);
   if (ids.has(id)) fail(`${file}: duplicate id ${id}`);
   ids.add(id);
 
-  const status = markdown.match(/^status: (\w+)$/m)?.[1];
+  const compactStatus = markdown.match(
+    /^## Statut\s*\n+([\s\S]*?)(?=\n## |$)/m,
+  )?.[1];
+  const status =
+    markdown.match(/^status: (\w+)$/m)?.[1] ??
+    compactStatus?.match(
+      /\b(backlog|ready|active|in_progress|blocked|done)\b/,
+    )?.[1];
   if (
     !status ||
     !["backlog", "ready", "active", "in_progress", "blocked", "done"].includes(
@@ -56,20 +85,42 @@ for (const absoluteFile of cardFiles) {
     fail(`${file}: invalid status ${status ?? "missing"}`);
   }
 
-  for (let section = 1; section <= 14; section += 1) {
-    if (!new RegExp(`^## ${section}\\. `, "m").test(markdown)) {
-      fail(`${file}: missing section ${section}`);
+  if (structured) {
+    for (let section = 1; section <= 14; section += 1) {
+      if (!new RegExp(`^## ${section}\\. `, "m").test(markdown)) {
+        fail(`${file}: missing section ${section}`);
+      }
     }
-  }
 
-  const dependencies = frontmatterArray(markdown, "depends_on", file);
-  const sourceRefs = frontmatterArray(markdown, "source_refs", file);
-  for (const sourceRef of sourceRefs) {
-    if (!new RegExp(`\\| ${sourceRef.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")} \\|`).test(references)) {
-      fail(`${file}: unknown source reference ${sourceRef}`);
+    const dependencies = frontmatterArray(markdown, "depends_on", file);
+    const sourceRefs = frontmatterArray(markdown, "source_refs", file);
+    for (const sourceRef of sourceRefs) {
+      if (!new RegExp(`\\| ${escapeRegExp(sourceRef)} \\|`).test(references)) {
+        fail(`${file}: unknown source reference ${sourceRef}`);
+      }
     }
+    cards.push({ file, id, dependencies });
+  } else {
+    for (const heading of ["Statut", "Vérification"]) {
+      if (!new RegExp(`^## ${heading}`, "m").test(markdown)) {
+        fail(`${file}: compact card missing ${heading} section`);
+      }
+    }
+    const row = registryRows.find((match) => match[1] === id);
+    const dependencyCell = row?.[3]?.trim() ?? "—";
+    const dependencies =
+      dependencyCell === "—"
+        ? []
+        : dependencyCell.match(/T\d+-C\d{2}/g) ?? [];
+    cards.push({ file, id, dependencies });
   }
-  cards.push({ file, id, dependencies });
+}
+
+for (const roadmapId of roadmapIds) {
+  if (!ids.has(roadmapId)) fail(`docs/ROADMAP.md: missing card file for ${roadmapId}`);
+}
+for (const id of ids) {
+  if (!roadmapIds.has(id)) fail(`card ${id} is missing from docs/ROADMAP.md registry`);
 }
 
 for (const card of cards) {
@@ -91,5 +142,5 @@ for (const pilot of [
 }
 
 console.log(
-  `T0 documentation validation passed: ${cardFiles.length} cards, unique IDs, valid dependencies, source references and 14 sections.`,
+  `Documentation validation passed: ${cardFiles.length} cards match the roadmap; IDs, dependencies, structured references and card formats are valid.`,
 );

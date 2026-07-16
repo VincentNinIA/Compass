@@ -1,3 +1,444 @@
+# Contrat Builder — T19-C01 Publication GitHub et fiche Devpost — active
+
+## État
+
+- T19-C01 est active au 16 juillet 2026 sur autorisation explicite du porteur.
+- T18-C01 reste close `pass`; son candidat, ses limites et ses preuves doivent
+  être publiés sans altération fonctionnelle.
+
+## Tranche contractualisée — T19-C01
+
+### Objectif
+
+Publier le candidat T18 dans GitHub sur une branche dédiée avec une pull request
+brouillon, puis synchroniser la fiche Devpost Education existante sans soumettre
+le projet et sans présenter le candidat T18 comme déjà déployé sur Vercel.
+
+### Inclus
+
+- Créer et pousser `codex/t18-education-candidate` avec le code, les tests, la
+  documentation et les quatre captures de preuve finales T18.
+- Exclure les anciens artefacts Playwright régénérés et les audits de travail qui
+  ne constituent pas le dossier final.
+- Ouvrir une pull request brouillon vers `main` et conserver un historique Git
+  lisible et vérifié.
+- Renseigner le brouillon Devpost `Compass` avec le positionnement Education, la
+  description anglaise, les technologies et les liens GitHub/démo documentés.
+- Consigner les URLs et l'état distant réel dans les pilotes et la roadmap.
+
+### Hors périmètre
+
+- Aucun merge, soumission Devpost, vidéo, retour humain, identifiant `/feedback`,
+  choix de licence, changement de visibilité ou publication définitive.
+- Aucun déploiement Vercel : l'alias public reste le candidat T17 tant qu'une
+  autorisation de redéploiement distincte n'est pas exécutée et qualifiée.
+- Aucun changement fonctionnel, aucun artefact d'audit généré et aucune ancienne
+  capture Playwright régénérée par les gates.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --cached --check
+git diff --check
+# contrôle du scope indexé et absence de secret avant commit/push
+# relecture du projet Devpost après mise à jour, état submission_draft conservé
+```
+
+### Définition de fini
+
+- La branche distante et sa pull request brouillon exposent le candidat T18
+  reproductible sans les sorties de test historiques hors périmètre.
+- La fiche Devpost contient une description Education cohérente, les technologies
+  et les liens utiles, tout en restant un brouillon non soumis.
+- Les pilotes nomment exactement ce qui a été publié et les actions humaines ou
+  de déploiement qui restent à réaliser.
+
+## Archive — T18-C01
+
+# Contrat Builder — T18-C01 Candidat Education démontrable — close `pass`
+
+## État
+
+- T18-C01 est close `pass` au 16 juillet 2026. Elle répond au contre-audit Devpost
+  Education sans dépendre des retours humains, que le porteur du projet collecte
+  séparément.
+- T17-C01 reste close `pass`; son URL HTTPS et ses limites éphémères sont
+  préservées. Les changements locaux T14 à T17 appartiennent au candidat et ne
+  doivent pas être écrasés.
+
+## Tranche contractualisée — T18-C01
+
+### Objectif
+
+Rendre le candidat Compass plus jugeable et pédagogiquement crédible : demander
+une trace de raisonnement avant une auto-déclaration, fermer l'exercice par une
+question de transfert, rendre au professeur un bilan anonyme strictement
+factuel de la session courante, corriger les principaux défauts responsive et
+restaurer un gate reproductible accompagné d'un dossier Devpost prêt à remplir.
+
+### Inclus
+
+- Réinitialiser scroll et focus à chaque changement d'écran; empêcher la
+  mascotte mobile et le rail GeoGebra de masquer une action ou une mission.
+- Exiger une note courte sur la démarche avant les 10 XP auto-déclarés et poser
+  une question de transfert après la dernière mission, sans noter le texte.
+- Produire uniquement pour les exercices professeur un bilan anonyme de session
+  contenant compteurs de missions terminées/vérifiées, XP et statuts de
+  réflexion, sans réponse libre, identité, note ni persistance.
+- Rendre ces bilans dans l'espace professeur et conserver en mémoire React les
+  publications créées dans l'onglet afin que le parcours de démo résiste aux
+  changements d'instance serverless.
+- Renommer et reformuler les trois contrôles de relecture selon leurs preuves
+  réelles; renforcer le contrat du coach GeoGebra avant une mutation demandée.
+- Corriger la densité de la relecture professeur, la bibliothèque, la scène
+  mobile et les assertions Playwright devenues obsolètes.
+- Réparer le validateur documentaire, actualiser README, `.env.example`, pilotes
+  et préparer la description, le script vidéo et la matrice de preuves Devpost.
+
+### Hors périmètre
+
+- Aucun compte, classe, élève nommé, affectation, note, analytics distant, base
+  de données, cookie, localStorage/sessionStorage ou synchronisation inter-appareil.
+- Aucune vérification automatique nouvelle hors des preuves déterministes déjà
+  disponibles et aucune transmission du texte de réflexion au professeur.
+- Aucun changement de modèle, nouvelle boucle agentique, outil GeoGebra libre,
+  déploiement, commit, push ou mutation du brouillon Devpost distant.
+- Les retours humains, la vidéo finale, l'identifiant `/feedback`, le choix de
+  licence et la soumission Devpost restent à la charge du porteur du projet.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+# navigateur réel : 390/768/1440, élève → bilan professeur, zéro overflow/console
+```
+
+### Définition de fini
+
+- Un élève ne peut plus obtenir 10 XP par un clic nu : il indique d'abord ce
+  qu'il a essayé, puis répond à une question de transfert en fin d'exercice.
+- Le professeur voit un bilan anonyme exact de la session courante et comprend
+  explicitement qu'il ne s'agit ni d'une note ni d'un suivi persistant.
+- Les contrôles publiés ne prétendent plus certifier une progression didactique,
+  une adaptation ou une sécurité globale qu'ils ne calculent pas.
+- Accueil, studio, bibliothèque et atelier démarrent en haut de leur écran; à
+  390 px, aucune mascotte, mission ou action primaire n'est masquée.
+- Les gates documentaires, unitaires, build et Playwright hors live passent sur
+  le même worktree; les réserves credentialed historiques restent nommées.
+- README et dossier Devpost décrivent le produit actuel, son architecture, ses
+  limites et les preuves à montrer sans inventer de traction humaine.
+
+### Preuves de clôture
+
+- `pnpm test:docs:t0` passe : les 69 cartes correspondent exactement au registre
+  de roadmap; IDs, dépendances, références structurées et deux formats de carte
+  sont validés. `git diff --check` passe.
+- Lint, typecheck et build Next.js passent; Vitest rend 677/677 sur 64 fichiers.
+  Le build expose la page statique et les quatre fonctions dynamiques attendues.
+- Playwright hors live rend 36/36 en 1 min 12 sur le même build. Le nouveau
+  scénario T18 publie en manuel, résiste à un GET catalogue vide, exige une
+  démarche avant XP, ferme le transfert, remet scroll/focus en tête et affiche
+  un bilan professeur sans texte libre, sans overflow ni erreur console à 390 px.
+- `learning_session_report.v1` est strict : un champ identité/réponse inconnu et
+  des compteurs impossibles sont rejetés; le professeur ne reçoit que titre,
+  matière, compteurs, XP, statuts et timestamp.
+- Les contrôles visibles s'appellent désormais `Step structure`, `Support
+  context` et `Risk wording scan`; leur copie décrit les règles locales réelles.
+  Le prompt GeoGebra refuse une mutation tant que labels et relation/action ne
+  sont pas explicités dans le tour courant.
+- Les captures `output/playwright/T18-final-landing-390x844.png`,
+  `T18-proof-geogebra-390x844.png`, `T18-proof-teacher-review-1440x900.png` et
+  `T18-proof-teacher-report-1440x900.png` ont été inspectées. Mascotte et CTA ne
+  se chevauchent plus; le plan reste visible; la checklist est compacte; le
+  bilan anonyme tient dans le viewport. Le CLI rapporte zéro erreur/warning.
+- README, `.env.example` et `docs/DEVPOST_SUBMISSION.md` décrivent modèles,
+  parcours jury, script vidéo, limites et actions humaines restantes. Le
+  candidat T18 local n'a volontairement pas été redéployé ni envoyé à Devpost;
+  l'URL publique reste le candidat T17 jusqu'à autorisation de publication.
+
+## Archive — T17-C01
+
+# Contrat Builder — T17-C01 Déploiement Vercel de démonstration — close `pass`
+
+## État
+
+- T17-C01 est close `pass` au 16 juillet 2026. Le premier déploiement CLI d'un projet
+  Vercel neuf a créé automatiquement sa première Production et son alias stable;
+  aucun projet Vercel préexistant n'a été modifié.
+- T16-C02 reste close `pass`; ses changements locaux non committés doivent être
+  inclus dans le candidat sans être écrasés, réordonnés ni publiés dans Git.
+
+## Tranche contractualisée — T17-C01
+
+### Objectif
+
+Déployer le prototype non commercial actuel dans un projet Vercel HTTPS isolé,
+avec la clé OpenAI exclusivement côté serveur, puis vérifier le parcours de
+démonstration sans créer de persistance ni modifier les autorités produit.
+
+### Inclus
+
+- Vérifier le build production du workspace courant et l'absence de secret dans
+  les sorties statiques.
+- Utiliser la CLI Vercel depuis le dépôt, lier ou créer un projet sous l'équipe
+  Hobby déjà authentifiée et conserver `.vercel/` hors de Git.
+- Configurer `OPENAI_API_KEY` comme secret Vercel Preview et Production sans
+  imprimer sa valeur.
+- Qualifier la première Production créée automatiquement pour ce nouveau projet,
+  puis vérifier la page, les headers de sécurité et les routes dynamiques
+  nécessaires au parcours live.
+- Consigner l'URL, le candidat réellement envoyé et les preuves factuelles.
+
+### Hors périmètre
+
+- Aucun domaine personnalisé, achat, migration de compte, changement de plan ou
+  mutation des Productions `rfi-meg-memory-client` et `novency-vocal`.
+- Aucune base de données, persistance, authentification, classe ou modification
+  du catalogue éphémère et du ledger XP mémoire.
+- Aucun commit, push Git ou réécriture des changements locaux existants.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm dlx vercel whoami
+# déploiement du projet isolé, contrôle HTTP/HTTPS, smoke navigateur et scan secret
+```
+
+### Définition de fini
+
+- L'URL HTTPS stable du projet isolé charge le build courant et le parcours reste
+  utilisable sans erreur console bloquante.
+- La route Realtime et la route d'analyse voient la configuration serveur sans
+  qu'aucune clé n'apparaisse dans le HTML, JavaScript ou les logs rapportés.
+- GeoGebra, caméra et microphone conservent leurs permissions same-origin et
+  les limites éphémères du prototype restent inchangées.
+- L'URL de démonstration et les gates réellement exécutés sont consignés; les
+  deux projets Vercel préexistants demeurent intacts.
+
+### Preuves de clôture
+
+- La CLI Vercel 56.2.1 est authentifiée comme `vincent-3604` sous l'équipe
+  `vincent-nin-ia-s-projects`. Le projet isolé `compass-geotutor-demo` a été
+  créé sans modifier `rfi-meg-memory-client` ni `novency-vocal`.
+- Lint, typecheck et build passent; Vitest rend 672/672 sur 63 fichiers. Le scan
+  des sorties `.next/static` et `.next/server` ne retrouve pas la clé locale.
+- Le premier build générique exécutait `next build` mais ne publiait aucune
+  route. Le preset projet a été corrigé explicitement en `nextjs`; le candidat
+  final `dpl_3AgnMLhpicQ6uwfVPNXupcerBTHe` est `READY` avec les routes statiques
+  et les quatre fonctions dynamiques.
+- `https://compass-geotutor-demo.vercel.app/` répond HTTP 200 avec HTTPS, HSTS,
+  `microphone=(self)`, `camera=(self)`, `nosniff` et `SAMEORIGIN`. Le catalogue
+  répond 200, JSON valide et `private, no-store`.
+- `OPENAI_API_KEY` est chiffrée pour Preview et Production. Un brouillon réel
+  déployé répond 200 avec `teacher_exercise.v1`, `publishable:true` et exactement
+  un appel modèle; aucune valeur de secret n'est imprimée.
+- Dans le navigateur réel, l'accueil se rend, la bascule française met
+  `document.lang` à `fr`, puis `?demo=geogebra` charge le coach, l'applet, les
+  six missions et les compteurs XP. Aucun log erreur/warning d'origine Compass
+  n'est relevé.
+- Les URLs immuables restent sous SSO d'équipe, mais l'alias stable `.vercel.app`
+  est public. Cette tranche reste une démo non commerciale; un accès applicatif
+  et un rate limit sont requis avant toute diffusion large.
+- Le contrôle supplémentaire `pnpm test:docs:t0` reste rouge pour une dette
+  antérieure à T17 : le script attend 49 cartes alors que le dépôt en contient
+  56. `git diff --check` passe; ce compteur documentaire ne touche ni le build,
+  ni les routes, ni le candidat Vercel qualifié ci-dessus.
+
+## Archive — T16-C02
+
+# Contrat Builder — T16-C02 Interface professeur orientée usage — close `pass`
+
+## État
+
+- T16-C02 est close `pass` au 16 juillet 2026. Aucune carte Builder n'est active.
+- T16-C01 reste close `pass`; ses contrats, routes et limites internes sont à
+  préserver.
+
+## Tranche contractualisée — T16-C02
+
+### Objectif
+
+Faire de l'espace professeur un outil immédiatement compréhensible par un
+enseignant : expliquer quoi fournir, comment adapter l'exercice et quand il sera
+partagé, sans exposer le modèle, les appels, le serveur ou les contrôles internes.
+
+### Inclus
+
+- Remplacer le préambule technique par une consigne courte et trois étapes
+  concrètes : choisir un point de départ, préciser les besoins, relire et partager.
+- Nommer les trois modes selon la tâche professeur : partir d'un thème, importer
+  une fiche ou saisir soi-même l'exercice.
+- Ajouter des exemples et aides de saisie directement dans les champs utiles.
+- Présenter le brouillon comme une relecture avant partage; traduire les contrôles
+  utiles en critères enseignants et masquer entièrement le contrôle de coût.
+- Supprimer de l'interface professeur et de la bibliothèque les mentions de
+  modèle, nombre d'appels, API, serveur, contrat fermé ou limite de prototype.
+- Conserver EN/FR, états vide/chargement/erreur/succès et reflow mobile.
+
+### Hors périmètre
+
+- Aucun changement de modèle, route, schéma, plafond d'appel, store, contexte
+  Realtime, authentification, classe ou persistance.
+- Aucun ajout de dépendance visuelle ni refonte du parcours élève existant.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# navigateur réel : espace professeur EN/FR, vide et brouillon à 390/1440 px
+```
+
+### Définition de fini
+
+- Un professeur comprend les trois étapes et les trois points de départ sans
+  connaître l'architecture de Compass.
+- Aucun nom de modèle ni nombre d'appels n'est visible dans l'espace professeur.
+- Les libellés expliquent quoi écrire et donnent des exemples utiles sans long
+  paragraphe introductif.
+- La relecture affiche seulement progression, adaptation et sécurité sous des
+  mots enseignants; le partage et son succès sont explicites.
+- Les tests, gates et contrôles responsive passent sans modifier le backend T16.
+
+### Preuves de clôture
+
+- `lint`, `typecheck` et le build Next.js passent; Vitest rend 672/672 sur
+  63 fichiers, avec un test dédié à la bibliothèque sans copie technique.
+- L'espace professeur expose trois verbes — choisir, préciser, partager — puis
+  trois entrées métier et des exemples directement dans les champs EN/FR.
+- La relecture affiche uniquement `Progression claire`, `Aide adaptée` et
+  `Prêt à partager`; le contrôle de coût reste exécuté mais n'est pas rendu.
+- Le navigateur réel confirme le formulaire puis un brouillon manuel en
+  français. Aucun nom de modèle ni compteur d'appel n'apparaît dans le snapshot.
+- Le document mesure 375 px dans un viewport de 390 px et 1425 px dans un
+  viewport de 1440 px; la console rend zéro erreur et zéro avertissement.
+- Les routes, schémas, store, modèle et contexte Realtime de T16-C01 ne sont
+  pas modifiés par cette tranche de présentation.
+
+## Archive — T16-C01
+
+# Contrat Builder — T16-C01 Espace professeur frugal — close `pass`
+
+## État
+
+- T16-C01 est close `pass` au 16 juillet 2026. Aucune carte Builder n'est active.
+- T15-C01 est close `pass`; T14 reste la base GeoGebra à préserver.
+
+## Tranche contractualisée — T16-C01
+
+### Objectif
+
+Ajouter un espace professeur qui transforme une image ou un brief pédagogique
+en exercice publiable, puis rendre ces exercices accessibles depuis un second
+parcours élève, avec une orchestration IA explicitement bornée en coût.
+
+### Inclus
+
+- Un bouton professeur en haut à droite et deux départs élève sur l'accueil :
+  devoir personnel ou exercices préparés.
+- Un contrat `teacher_exercise.v1` strict : exercice général, objectif,
+  consignes professeur, difficultés ciblées, obstacles probables et aides.
+- Un atelier professeur bilingue avec deux entrées : photo ou brief
+  matière/niveau/thème/difficultés; brouillon visible et éditable avant publish.
+- Un seul appel Responses `gpt-5.6-luna`, effort faible, `store:false`, outils
+  vides et Structured Outputs. Les contrôles didactique, difficulté, sécurité
+  et coût sont locaux et exposent leurs verdicts sans appel supplémentaire.
+- Un catalogue mémoire serveur borné à 64 publications, accessible par GET et
+  POST, sans base de données ni notion de classe.
+- Une bibliothèque élève avec vide/chargement/erreur, puis lancement direct dans
+  l'atelier existant. Les consignes professeur rejoignent le contexte coach
+  comme données non fiables et ne donnent aucune permission.
+- Un fallback manuel : sans clé ou en cas d'échec amont, le professeur peut
+  saisir et publier lui-même un exercice conforme.
+
+### Hors périmètre
+
+- Pas d'authentification, de classe, d'affectation nominative, de rôle sécurisé,
+  de base de données ou de garantie de persistance après redémarrage.
+- Pas de multi-agent Responses bêta, d'Agents SDK, de conversation entre
+  modèles, de web search ou de boucle autonome.
+- Pas de correction ou de notation par le modèle et pas d'élargissement des
+  permissions Realtime/GeoGebra.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# navigateur réel : professeur publie → élève voit → lance → coach reçoit les consignes
+```
+
+### Définition de fini
+
+- À 390, 768 et 1440 px, le header, les deux choix élève et l'espace professeur
+  restent utilisables en EN/FR, au clavier et sans débordement.
+- Une photo ou un brief produit au plus un appel modèle et un brouillon fermé;
+  les arguments hors contrat et les sorties invalides sont rejetés.
+- Le professeur peut modifier le brouillon puis publier; un autre onglet voit
+  la publication et ouvre l'atelier sans nouvelle analyse modèle.
+- Le contexte Realtime contient les consignes professeur délimitées, mais les
+  profils et outils existants restent identiques.
+- Sans API, la saisie manuelle et la publication fonctionnent; le catalogue
+  annonce sa nature éphémère. Les gates et le scénario réel passent.
+
+### Preuves de clôture
+
+- `lint`, `typecheck` et le build Next.js passent; Vitest rend 671/671 sur
+  62 fichiers, dont schéma fermé, revue locale, store borné, fallback manuel,
+  publication client et transmission minimale au coach.
+- Le build expose les deux routes dynamiques `/api/teacher/draft` et
+  `/api/teacher/exercises`; l'appel Responses est unique, sans retry SDK, à
+  effort faible, outils vides, `store:false` et sortie plafonnée.
+- Dans Chromium, le professeur crée sans modèle un exercice d'histoire,
+  conserve quatre contrôles locaux au vert et reçoit un succès HTTP 201. Un
+  second onglet élève le retrouve depuis le second choix de l'accueil puis
+  ouvre directement ses trois missions dans l'atelier.
+- Le parcours réel ne produit aucune erreur console. Accueil, bibliothèque et
+  atelier professeur rendent une largeur de document de 375 px dans un
+  viewport de 390 px; l'atelier professeur rend 1425 px dans 1440 px.
+- Les consignes professeur sont copiées dans le contexte borné et délimitées
+  comme données non fiables. Les profils, outils, permissions de mutation et
+  règles de preuve Realtime historiques restent inchangés.
+
+## Archive — T15-C01
+
+# Contrat Builder — T15-C01 Gamification transversale — close `pass`
+
+## Preuves de clôture
+
+- Ledger idempotent : 10 XP déclarés, upgrade à 20 XP vérifiés, cumul multi-
+  exercice et rejet des identités invalides.
+- `lint`, `typecheck` et build passent; Vitest rend 657/657 sur 58 fichiers lors
+  du gate d'ouverture T16, complété par 17/17 tests gamification ciblés.
+- Dans Chromium à 390 px, un exercice d'histoire à deux missions passe de 0 à
+  10 puis 20 XP; seule la mission active est actionnable, les libellés
+  `terminé` et `vérifié` restent distincts et la console rend 0 erreur.
+- L'intégration GeoGebra crédite 20 XP une fois, conserve le crédit lorsque la
+  preuve courante disparaît et refuse le bouton déclaratif dans le workbench.
+- Le catalogue XP reste mémoire uniquement et un rechargement du scénario
+  `?demo=gamification` remet les deux compteurs à zéro.
+
+## Archive — T14-C02
+
 # Contrat Builder — T14-C02 Monde GeoGebra vivant — close `pass`
 
 ## État

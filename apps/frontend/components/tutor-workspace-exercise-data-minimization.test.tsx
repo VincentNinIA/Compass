@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TutorWorkspace } from "./tutor-workspace";
@@ -12,6 +12,7 @@ import type {
 } from "@/lib/exercise/exercise-confirmation";
 import type { ExerciseInitializationRuntime } from "@/lib/geogebra/exercise-initialization";
 import type { ToolWorkflowAuthority } from "@/lib/tools/runtime";
+import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
 
 const captured = vi.hoisted(() => ({
   confirmationProps: undefined as unknown,
@@ -66,6 +67,10 @@ type GeogebraProps = {
   toolWorkflowAuthority: ToolWorkflowAuthority;
 };
 
+type ScratchpadProps = {
+  onWorldState(state?: GeoGebraWorldStateV1): void;
+};
+
 const EXTRACTION: ExerciseExtractionWireV1 = {
   schemaVersion: "exercise_extraction.v1",
   outcome: "ready",
@@ -104,15 +109,27 @@ function geogebraProps(): GeogebraProps {
   return captured.geogebraProps as GeogebraProps;
 }
 
+function scratchpadProps(): ScratchpadProps {
+  return captured.scratchpadProps as ScratchpadProps;
+}
+
 function realtimeProps(): {
   tutorProfile: string;
   layout?: string;
-  exerciseContext?: { tasks: string[]; statement: string };
+  exerciseContext?: {
+    tasks: string[];
+    statement: string;
+    teacherGuidance?: { learningObjective: string; hintSequence: string[] };
+  };
 } {
   return captured.realtimeProps as {
     tutorProfile: string;
     layout?: string;
-    exerciseContext?: { tasks: string[]; statement: string };
+    exerciseContext?: {
+      tasks: string[];
+      statement: string;
+      teacherGuidance?: { learningObjective: string; hintSequence: string[] };
+    };
   };
 }
 
@@ -207,6 +224,184 @@ describe("TutorWorkspace exercise data minimization", () => {
     });
     expect(screen.getByTestId("geogebra-scratchpad")).toBeInTheDocument();
     expect(document.querySelector(".geogebra-workbench")).toBeInTheDocument();
+  });
+
+  it("starts a published teacher exercise directly with its pedagogical context", () => {
+    render(
+      <TutorWorkspace
+        screen="work"
+        assignedExercise={{
+          id: "teacher_history-001",
+          publishedAt: 456,
+          schemaVersion: "teacher_exercise.v1",
+          source: "manual",
+          level: "middle_school",
+          theme: "The Enlightenment",
+          estimatedMinutes: 20,
+          exercise: {
+            schemaVersion: "general_exercise.v1",
+            outcome: "ready",
+            language: "en",
+            subject: "history",
+            title: "The Enlightenment",
+            statement: "Explain two Enlightenment ideas.",
+            tasks: ["Name two ideas.", "Give one historical example."],
+            concepts: ["Enlightenment"],
+            ambiguityCode: null,
+            clarificationQuestion: null,
+          },
+          guidance: {
+            learningObjective: "Connect an idea to historical evidence.",
+            teacherInstructions: "Ask the learner to justify each link.",
+            targetDifficulties: ["Choosing relevant evidence"],
+            likelyMisconceptions: ["Treating every event as an example"],
+            hintSequence: ["Start by naming the idea."],
+          },
+        }}
+      />,
+    );
+
+    expect(realtimeProps()).toMatchObject({
+      tutorProfile: "general_tutor",
+      exerciseContext: {
+        statement: "Explain two Enlightenment ideas.",
+        teacherGuidance: {
+          learningObjective: "Connect an idea to historical evidence.",
+          hintSequence: ["Start by naming the idea."],
+        },
+      },
+    });
+    expect(screen.getByText("The Enlightenment")).toBeInTheDocument();
+  });
+
+  it("keeps session XP across general exercises while advancing missions sequentially", () => {
+    render(<TutorWorkspace screen="work" />);
+
+    act(() =>
+      confirmationProps().onConfirmed({
+        kind: "general",
+        confirmationId: "history-1",
+        confirmedAt: 123,
+        exercise: {
+          schemaVersion: "general_exercise.v1",
+          outcome: "ready",
+          language: "fr",
+          subject: "history",
+          title: "Les Lumières",
+          statement: "Présente deux idées et un exemple.",
+          tasks: ["Présenter deux idées.", "Donner un exemple."],
+          concepts: ["Lumières"],
+          ambiguityCode: null,
+          clarificationQuestion: null,
+        },
+      }),
+    );
+
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("0XP");
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: "Before claiming progress, what did you try?",
+      }),
+      { target: { value: "I compared the two ideas." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Complete mission 1 for 10 XP" }),
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: "Before claiming progress, what did you try?",
+      }),
+      { target: { value: "I linked one idea to an example." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Complete mission 2 for 10 XP" }),
+    );
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("20XP");
+
+    act(() => confirmationProps().onDraftChanged());
+    act(() =>
+      confirmationProps().onConfirmed({
+        kind: "general",
+        confirmationId: "science-1",
+        confirmedAt: 456,
+        exercise: {
+          schemaVersion: "general_exercise.v1",
+          outcome: "ready",
+          language: "fr",
+          subject: "biology",
+          title: "Les états de l'eau",
+          statement: "Donne un exemple.",
+          tasks: ["Donner un exemple de changement d'état."],
+          concepts: ["matière"],
+          ambiguityCode: null,
+          clarificationQuestion: null,
+        },
+      }),
+    );
+
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("20XP");
+    expect(screen.getByLabelText("Exercise XP")).toHaveTextContent("0XP");
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: "Before claiming progress, what did you try?",
+      }),
+      { target: { value: "I chose a change of state." } },
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Complete mission 1 for 10 XP" }),
+    );
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("30XP");
+  });
+
+  it("banks deterministic GeoGebra XP once even if the current proof disappears", () => {
+    render(<TutorWorkspace screen="work" />);
+
+    act(() =>
+      confirmationProps().onConfirmed({
+        kind: "general",
+        confirmationId: "maths-xp-1",
+        confirmedAt: 123,
+        exercise: {
+          schemaVersion: "general_exercise.v1",
+          outcome: "ready",
+          language: "fr",
+          subject: "mathematics",
+          title: "Points",
+          statement: "Placer E, F et G.",
+          tasks: ["Placer E, F et G non alignés."],
+          concepts: ["géométrie"],
+          ambiguityCode: null,
+          clarificationQuestion: null,
+        },
+      }),
+    );
+
+    const baseState: GeoGebraWorldStateV1 = {
+      schemaVersion: "geogebra_world.v1",
+      revision: 1,
+      objectCount: 3,
+      truncated: false,
+      objects: [],
+      verifiedTaskIndexes: [0],
+      change: { type: "add", target: "G" },
+    };
+    act(() => scratchpadProps().onWorldState(baseState));
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("20XP");
+    expect(screen.getByLabelText("Exercise XP")).toHaveTextContent("20XP");
+
+    act(() =>
+      scratchpadProps().onWorldState({
+        ...baseState,
+        revision: 2,
+        verifiedTaskIndexes: [],
+        change: { type: "remove", target: "E" },
+      }),
+    );
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("20XP");
+    expect(screen.getByLabelText("Exercise XP")).toHaveTextContent("20XP");
+
+    act(() => scratchpadProps().onWorldState({ ...baseState, revision: 3 }));
+    expect(screen.getByLabelText("Session XP")).toHaveTextContent("20XP");
   });
 
   it("retains only a confirmed plan for failed Retry and cannot replay it after success, reset, or draft discard", async () => {

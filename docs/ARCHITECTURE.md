@@ -1,6 +1,6 @@
 # Architecture cible GeoTutor
 
-## État réel au 15 juillet 2026
+## État réel au 16 juillet 2026
 
 Le dépôt contient un runtime Next.js App Router TypeScript sous `apps/frontend`,
 un workspace pnpm, des tests et les quatre gates lint/typecheck/test/build.
@@ -348,6 +348,78 @@ attente. Le gateway compte désormais dix actions sémantiques strictes : lectur
 point, renommage, déplacement, style, droite, demi-droite, segment, cercle et
 polygone. Le modèle ne reçoit toujours aucune commande GeoGebra libre.
 
+## T15 — gamification transversale
+
+T15 ajoute un ledger React mémoire indexé par confirmation et tâche. Une
+déclaration élève vaut 10 XP; une preuve locale peut porter le même crédit à
+20 XP sans double comptage. Le score de session traverse les exercices mais pas
+le rechargement. GeoGebra n'affiche aucun bouton d'auto-déclaration.
+
+## T16 — espace professeur frugal
+
+État : close `pass` au 16 juillet 2026; le flux multi-onglet et les gates sont
+validés, sans authentification ni persistance de production.
+
+Le header route vers un atelier professeur distinct. Un formulaire accepte une
+image ou un brief et appelle `/api/teacher/draft`. Cette route normalise l'image
+si nécessaire puis effectue au plus un appel Responses `gpt-5.6-luna`, effort
+faible, `store:false`, outils vides et Structured Outputs. Le brouillon est
+ensuite contrôlé localement selon quatre vues sans modèle : cohérence
+didactique, difficulté, sécurité et budget.
+
+Après relecture, `/api/teacher/exercises` publie le contrat strict dans un store
+mémoire borné à 64 éléments. La bibliothèque élève lit ce même store et démarre
+le workspace général sans nouvelle extraction. Les consignes professeur sont
+ajoutées au contexte Realtime comme données non fiables : elles orientent la
+pédagogie mais ne peuvent modifier le prompt système, les outils ou les preuves.
+Ce store est une preuve de flux multi-session sur un processus, pas une gestion
+de classes ni une persistance de production.
+
+T16-C02 ne modifie aucune de ces frontières. La surface professeur traduit ce
+pipeline en trois tâches — choisir, préciser, partager — et ne rend ni modèle,
+budget d'appel, schéma, route ou détail de persistance. Le contrôle de coût
+reste dans `reviewTeacherExerciseDraft`; React rend seulement les trois
+résultats utiles à la relecture enseignante.
+
+## T17 — déploiement de démonstration Vercel
+
+Le runtime `apps/frontend` est aussi déployé dans le projet isolé
+`compass-geotutor-demo` avec le preset Vercel `nextjs`. La clé OpenAI est une
+variable sensible des environnements Preview et Production; elle n'est pas
+incluse dans les sorties statiques. Le domaine stable HTTPS sert la page et les
+quatre fonctions App Router, tandis que les URLs immuables de déploiement restent
+protégées par le SSO de l'équipe.
+
+Ce déploiement ne change aucune autorité produit et ne transforme pas les stores
+mémoire en persistance. L'alias stable est public pour permettre les démos live;
+il reste donc réservé à une diffusion restreinte tant qu'un code d'accès et un
+rate limit applicatifs ne protègent pas les routes qui consomment OpenAI.
+
+## T18 — boucle Education jugeable
+
+Le workspace élève garde localement le texte court fourni avant une
+auto-déclaration et la réponse de transfert finale. Ces textes ne rejoignent ni
+Realtime, ni une route serveur, ni l'espace professeur. Le ledger reçoit les
+10 XP seulement après la première trace; les 20 XP restent exclusivement issus
+des preuves déterministes déjà existantes.
+
+Pour un exercice issu de la bibliothèque professeur, `TutorWorkspace` dérive un
+`learning_session_report.v1` fermé des états locaux. `page.tsx` conserve le
+dernier bilan par publication dans la mémoire React de l'onglet et le transmet à
+`TeacherWorkspace`. Le rapport ne contient ni identifiant élève, ni réponse,
+ni transcript, ni note : seulement compteurs, XP, statuts et timestamp. Le même
+état React conserve aussi les publications créées dans l'onglet et les fusionne
+avec le GET du catalogue, afin que la démo reste continue lorsqu'une fonction
+serverless suivante ne partage pas le processus du POST.
+
+Cette boucle n'est pas un LMS. Un rechargement efface bilans et secours local;
+un autre appareil ou onglet n'est pas synchronisé. Le store serveur T16 reste
+une preuve éphémère multi-requête lorsque le processus est partagé.
+
+État : T18-C01 close `pass` au 16 juillet 2026 avec 677/677 Vitest, 36/36
+Playwright hors live, build et validation de 69 cartes. Le candidat reste local
+jusqu'au prochain déploiement explicitement autorisé.
+
 ## Frontières cibles
 
 ```mermaid
@@ -356,6 +428,9 @@ flowchart LR
     Parse --> General["general_exercise.v1 validé"]
     General --> Confirm["Confirmation élève"]
     Confirm --> UI["Workspace général"]
+    Teacher["Espace professeur"] --> Draft["Brouillon IA ou manuel"]
+    Draft --> Catalog["Catalogue mémoire borné"]
+    Catalog --> UI
     Confirm --> RTC["Realtime général ou geogebra_tutor"]
     Confirm -. "module compatible" .-> Plan["Plan spécialisé validé"]
     Plan --> GGB["GeoGebra adapter"]

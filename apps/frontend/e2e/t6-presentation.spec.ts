@@ -60,12 +60,11 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 
-  const demoLink = page.getByRole("link", {
-    name: "Add my exercise",
+  const demoLink = page.getByRole("button", {
+    name: /Add my exercise/,
   });
   await demoLink.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/#exercise-photo-title$/);
   await expect(
     page.getByRole("heading", { name: "Show me your exercise" }),
   ).toBeInViewport();

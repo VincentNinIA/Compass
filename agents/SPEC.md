@@ -12,7 +12,8 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 
 - Élève : comprendre un exercice sans recevoir immédiatement la solution,
   dans une interface rassurante qui lui indique toujours la prochaine action utile.
-- Enseignant : disposer d'actions et de propriétés vérifiées, sans notation à enjeu élevé.
+- Enseignant : préparer ou générer des exercices adaptés, transmettre des
+  consignes pédagogiques au coach et les publier dans une bibliothèque simple.
 - Jury : observer une boucle multimodale fiable, visible et démontrable de bout en bout.
 
 ## Expérience élève
@@ -40,33 +41,57 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   Dans l'atelier GeoGebra, elle reste au repos entre deux événements, oriente
   son regard vers le dernier objet manipulé et joue des réactions finies plutôt
   qu'une boucle permanente.
+- Chaque exercice confirmé devient une suite de missions jouables, quelle que
+  soit la matière. Un compteur compact garde visibles les XP gagnés pendant la
+  session et la prochaine mission à accomplir.
+
+## Expérience enseignant
+
+- Un bouton `Espace professeur` reste disponible en haut à droite sans
+  concurrencer le parcours élève.
+- L'interface s'adresse à l'enseignant avec des verbes d'action et un mode
+  d'emploi en trois étapes. Elle n'affiche ni modèle, API, budget d'appel,
+  schéma, serveur ou jargon de contrôle interne.
+- Le professeur peut partir d'une photo d'exercice ou d'un bref décrivant la
+  matière, le niveau, la thématique et les difficultés de l'élève.
+- Compass produit un brouillon structuré : énoncé, missions ordonnées, objectif,
+  obstacles probables et stratégie d'accompagnement. Le professeur relit et
+  peut modifier le brouillon avant toute publication.
+- L'assistance agentique est frugale : un seul appel de génération borné, puis
+  des contrôles locaux spécialisés jouent les rôles de didacticien, adaptateur
+  de difficulté, contrôleur de sécurité et contrôleur de coût. Cette mécanique
+  reste interne; la surface montre seulement les résultats utiles à la relecture.
+- Une publication rejoint un catalogue partagé éphémère. La gestion des
+  classes, comptes et affectations nominatives reste hors du prototype.
 
 ## Parcours principal
 
-1. Depuis l'accueil, l'élève choisit d'ajouter un exercice et atteint un écran
-   dédié à la galerie ou à la caméra.
-2. L'application extrait la matière, le titre, l'énoncé et les tâches dans leur
+1. Depuis l'accueil, l'élève choisit entre apporter un devoir ou travailler sur
+   un exercice préparé par un professeur.
+2. Le devoir personnel ouvre un écran dédié à la galerie ou à la caméra; la
+   bibliothèque professeur ouvre la liste des exercices publiés.
+3. L'application extrait la matière, le titre, l'énoncé et les tâches dans leur
    ordre, puis affiche un écran de vérification dédié.
-3. Après confirmation seulement, Compass ouvre l'atelier et transmet cet
-   exercice comme contexte non fiable au coach généraliste.
-4. Le coach reste immédiatement accessible dans l'atelier, avec une action voix
+4. Après confirmation ou sélection d'un exercice publié, Compass ouvre
+   l'atelier et transmet cet exercice comme contexte non fiable au coach.
+5. Le coach reste immédiatement accessible dans l'atelier, avec une action voix
    visible; il demande où l'élève en est, découpe le travail et fournit le plus
    petit indice utile sans donner immédiatement toute la solution.
-5. Pour un exercice mathématique ou géométrique, GeoGebra occupe la surface
+6. Pour un exercice mathématique ou géométrique, GeoGebra occupe la surface
    principale de l'atelier. Le coach sait explicitement que l'élève travaille
    dans l'applet et n'évoque jamais de règle, compas ou rapporteur physiques.
-6. À la demande explicite de l'élève, le coach peut inspecter l'inventaire borné
+7. À la demande explicite de l'élève, le coach peut inspecter l'inventaire borné
    du tableau ou créer une droite, une demi-droite ou un segment entre des points
    déjà présents via des outils sémantiques fermés. Il ne corrige ni ne note la
    construction et ne dispose d'aucune commande GeoGebra arbitraire.
-7. L'atelier GeoGebra prend toute la largeur utile. Le coach forme une barre
+8. L'atelier GeoGebra prend toute la largeur utile. Le coach forme une barre
    horizontale au-dessus du plan et les missions une barre horizontale sous le
    plan; aucune colonne latérale permanente ne réduit la zone de construction.
-8. Après un premier geste explicite ouvrant la voix, Compass peut prononcer une
+9. Après un premier geste explicite ouvrant la voix, Compass peut prononcer une
    courte introduction. L'application n'ouvre jamais le microphone seule.
-9. Si aucun support ne correspond, l'interface reste honnête : elle
+10. Si aucun support ne correspond, l'interface reste honnête : elle
    accompagne par la conversation sans prétendre observer ou corriger un outil.
-10. Le parcours historique médiatrice reste un module spécialisé interne et ne
+11. Le parcours historique médiatrice reste un module spécialisé interne et ne
    constitue plus le défaut de la surface publique.
 
 ## Exigences fonctionnelles
@@ -102,6 +127,18 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 | FR-27 | Publier vers le coach un état initial borné puis des deltas stabilisés sur ajout, suppression, renommage, style, clic et fin de déplacement, sans appel modèle par pixel. |
 | FR-28 | Exposer des actions GeoGebra supplémentaires uniquement par fonctions sémantiques fermées, explicites, budgétées, annulables et sans commande libre. |
 | FR-29 | Afficher une progression de missions et des récompenses uniquement à partir de relations déterministes disponibles pour l'exercice courant. |
+| FR-30 | Transformer toutes les tâches confirmées, quelle que soit la matière, en missions séquentielles pouvant être déclarées terminées par l'élève sans être présentées comme vérifiées. |
+| FR-31 | Conserver en mémoire un ledger XP cumulatif et idempotent pour la session : 10 XP par mission déclarée terminée, portés à 20 XP lorsqu'une preuve déterministe compatible existe, sans retrait des points déjà acquis. |
+| FR-32 | Afficher le total XP de session dans l'atelier et le score de l'exercice courant, avec des libellés distincts pour `terminé` et `vérifié`. |
+| FR-33 | Afficher en haut à droite un accès professeur et proposer à l'élève, sur l'accueil, les deux départs `faire un devoir` et `faire des exercices`. |
+| FR-34 | Permettre au professeur de fournir soit une image d'exercice, soit un brief matière/niveau/thématique/difficultés avec des consignes pédagogiques optionnelles. |
+| FR-35 | Produire en un appel modèle maximum un brouillon structuré, éditable et non publié par défaut, avec missions, objectif, obstacles et aides graduées. |
+| FR-36 | Publier un exercice validé par le professeur dans un catalogue serveur borné et éphémère, lisible par le parcours élève sans notion de classe. |
+| FR-37 | Transmettre au coach les consignes professeur comme contexte pédagogique non fiable, sans élargir les outils, permissions ou affirmations de vérification. |
+| FR-38 | Garantir une orchestration frugale : modèle `gpt-5.6-luna`, effort faible, `store:false`, outils vides, sortie structurée et aucune conversation inter-agent. |
+| FR-39 | Demander une trace courte de démarche avant tout crédit XP auto-déclaré, puis une réponse de transfert à la fin de l'exercice, sans noter ni publier les textes saisis. |
+| FR-40 | Pour un exercice professeur, rendre dans le même onglet un bilan anonyme et factuel de session limité aux comptes terminé/vérifié, aux XP et aux statuts de réflexion. |
+| FR-41 | Réinitialiser scroll et focus à chaque écran et garantir qu'à 390 px mascotte, rail de missions et éléments décoratifs ne masquent aucune action principale. |
 
 ## Contraintes
 
@@ -112,6 +149,18 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Aucun outil de commande GeoGebra arbitraire.
 - Les hints sont temporaires ou restaurables; les actions destructives exigent une intention explicite.
 - Les images, checkpoints et journaux restent en mémoire pour le prototype.
+- Les XP restent également en mémoire seulement; un rechargement remet le
+  compteur à zéro et aucun profil élève n'est créé.
+- Le catalogue professeur est borné et conservé uniquement dans la mémoire du
+  processus serveur; un redémarrage l'efface. Cette limite technique ne domine
+  pas le parcours enseignant ou élève.
+- Un brouillon enseignant ne déclenche jamais plus d'un appel modèle. Les rôles
+  de contrôle supplémentaires sont des validateurs locaux sans coût modèle.
+- Les textes de démarche et de transfert restent dans le composant élève : le
+  bilan professeur n'en expose que le statut complété ou en attente.
+- Les bilans d'apprentissage et les publications de secours restent dans la
+  mémoire React de l'onglet courant; ils ne constituent ni un dossier élève, ni
+  une synchronisation de classe, ni une persistance de production.
 - Le prototype est non commercial et affiche l'attribution GeoGebra.
 - Le changement de langue reste un état de session en mémoire et n'ajoute aucun
   stockage navigateur.
@@ -123,10 +172,13 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Garantir une vérification déterministe automatique pour toutes les matières.
 - Générer ou exécuter automatiquement un outil spécialisé pour un exercice non
   reconnu par un contrat applicatif fermé.
-- Construire un LMS, une authentification ou un dashboard enseignant complet.
+- Construire un LMS, une authentification, une gestion de classes ou des
+  affectations nominatives.
 - Fournir une notation à enjeu élevé.
 - Garantir une licence GeoGebra commerciale ou une préparation production.
 - Persister des données d'élèves ou des médias.
+- Transmettre au professeur le texte libre saisi par l'élève, inférer sa maîtrise
+  ou convertir les XP en note.
 
 ## Critères globaux
 
@@ -163,6 +215,24 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Le profil GeoGebra connaît l'énoncé confirmé et l'outil intégré, ne recommande
   aucun instrument physique, peut créer une seule droite/demi-droite/segment par
   tour à la demande explicite et échoue sans mutation si un point manque.
+- Pour un exercice de toute matière avec plusieurs tâches, l'élève peut avancer
+  mission par mission et gagner 10 XP de progression par tâche. Une preuve
+  déterministe porte la récompense de cette même tâche à 20 XP, sans double
+  crédit; le total de session reste visible lorsqu'un nouvel exercice commence.
+- Un professeur peut générer ou extraire un brouillon, le corriger puis le
+  publier; un nouvel élève voit cet exercice dans la bibliothèque et le lance
+  avec les consignes pédagogiques transmises au coach.
+- Le coût d'un brouillon reste borné à un appel `gpt-5.6-luna` sans outil ni
+  boucle agentique, avec un fallback manuel lorsque l'API n'est pas disponible.
+- Pour une mission auto-déclarée, le bouton de crédit reste inactif tant que
+  l'élève n'a pas décrit brièvement sa démarche; après la dernière mission, une
+  question de transfert est proposée et son texte ne quitte pas le workspace.
+- Après un exercice publié par un professeur, le même onglet peut afficher dans
+  l'espace professeur un bilan anonyme exact des missions terminées/vérifiées,
+  des XP et des statuts de réflexion, sans nom, réponse libre, note ou stockage.
+- Chaque transition `landing/upload/confirm/work/teacher/library` replace le
+  viewport en haut et le focus sur le titre; à 390 px la mascotte flottante et
+  le rail de missions laissent les appels à l'action lisibles et activables.
 
 ## Hypothèses validées
 
@@ -171,4 +241,5 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Nom public : Compass. Les identifiants techniques historiques `GeoTutor` et
   `__GEOTUTOR_*` restent stables tant qu'ils ne sont pas visibles par l'élève.
 - Application web Next.js avec petites routes serveur et sans base de données.
-- Modèles : `gpt-realtime-2.1` pour la voix et `gpt-5.6-terra` pour l'extraction d'image.
+- Modèles : `gpt-realtime-2.1` pour la voix, `gpt-5.6-terra` pour l'extraction
+  d'exercice élève et `gpt-5.6-luna` pour le brouillon professeur frugal.

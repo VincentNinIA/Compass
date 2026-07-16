@@ -749,3 +749,94 @@
   reste non vérifiée tant qu'aucune preuve structurée n'existe. La voix Realtime
   devient `cedar`, recommandée par le fournisseur, avec une consigne de tuteur
   adulte chaleureuse; aucun genre n'est présenté comme une garantie du modèle.
+
+## D-055 - XP transversal comme ledger monotone de session
+
+- Décision : indexer chaque crédit par confirmation et tâche, accorder 10 XP à
+  une mission déclarée terminée et remplacer ce palier par 20 XP lorsqu'une
+  preuve déterministe existe. Un crédit acquis n'est jamais retiré en session.
+- Raison : rendre la progression motivante dans toutes les matières sans
+  confondre effort déclaré, correction et notation.
+- Impact : aucun modèle n'attribue de points; le ledger reste mémoire,
+  idempotent, cumulatif entre exercices et vide après rechargement.
+
+## D-056 - Équipe pédagogique virtuelle sans multiplication des appels
+
+- Décision : utiliser un unique appel Responses `gpt-5.6-luna` à effort faible,
+  `store:false`, sans outil et avec sortie structurée. Les rôles didacticien,
+  adaptateur de difficulté, contrôleur de sécurité et contrôleur de coût sont
+  des validateurs locaux appliqués au même brouillon.
+- Raison : une conversation multi-agent ou plusieurs passes modèle augmentent
+  coût et latence sans être nécessaires pour un exercice borné et relu par le
+  professeur. Luna vise les charges sensibles au coût et supporte texte, image
+  et Structured Outputs.
+- Impact : une action professeur déclenche au plus un appel. Toute validation
+  locale échouée garde le brouillon non publié et affiche les corrections à
+  effectuer; aucune boucle autonome ne relance le modèle.
+
+## D-057 - Catalogue professeur partagé mais éphémère
+
+- Décision : stocker au plus 64 exercices publiés dans la mémoire du processus
+  Next.js et les exposer par un contrat GET/POST fermé, sans authentification.
+- Raison : démontrer le passage professeur → élève sans anticiper le modèle de
+  classes, d'identité ou la base de données exclu de cette tranche.
+- Impact : tous les visiteurs du même processus voient le même catalogue; un
+  redémarrage l'efface. L'UI annonce cette limite et aucune donnée personnelle
+  d'élève n'est demandée.
+
+## D-058 - Les mécanismes IA restent invisibles dans la surface professeur
+
+- Décision : conserver modèle, budget d'appels, schémas et validateurs dans le
+  backend et la documentation, mais présenter au professeur uniquement trois
+  actions métier, des aides de saisie et trois critères de relecture utiles.
+- Raison : un enseignant doit savoir quoi fournir et ce qui sera partagé, pas
+  comprendre l'orchestration ou le coût unitaire de l'infrastructure.
+- Impact : la sécurité et la frugalité de T16-C01 ne changent pas. Le contrôle
+  de coût reste exécuté mais n'est pas rendu; les mentions de serveur,
+  prototype, modèle et appels disparaissent des surfaces professeur et élève.
+  Cette décision remplace uniquement l'obligation d'annonce UI de D-057.
+
+## D-059 - Démo Vercel isolée et éphémère
+
+- Décision : héberger les démonstrations non commerciales dans le projet Vercel
+  isolé `compass-geotutor-demo`, avec le preset `nextjs` explicite et la clé
+  OpenAI chiffrée uniquement dans les environnements serveur Preview et
+  Production. `.vercel/`, `.env.local` et les jetons de liaison restent ignorés.
+- Raison : obtenir une URL HTTPS gratuite compatible caméra, microphone,
+  fonctions Next.js et WebRTC, sans modifier les deux projets Vercel existants
+  ni ajouter une base de données au prototype.
+- Impact : l'alias stable `.vercel.app` est public alors que les URLs immuables
+  restent sous le SSO de l'équipe. Catalogue professeur, XP et contexte restent
+  éphémères; l'URL ne doit pas être diffusée largement avant ajout d'un code
+  d'accès et d'un rate limit applicatifs sur les routes payantes.
+
+## D-060 - Boucle d'apprentissage anonyme de session
+
+- Décision : conditionner les 10 XP auto-déclarés à une note locale de démarche,
+  conclure l'exercice par une question de transfert et n'exporter vers l'espace
+  professeur qu'un `learning_session_report.v1` fermé. Ce bilan contient
+  uniquement exercice professeur, compteurs terminé/vérifié, XP, nombre de
+  démarches et statut du transfert; les textes libres ne quittent pas le
+  workspace élève.
+- Raison : un clic nu mesure mal l'effort, tandis qu'un historique nominatif ou
+  le contenu des réponses dépasserait le prototype et augmenterait le risque
+  données. Le jury doit néanmoins pouvoir observer une boucle pédagogique
+  complète et honnête dans une démonstration locale.
+- Impact : aucun modèle ne note, ne résume ou n'attribue les XP. Les rapports et
+  publications de secours vivent seulement dans l'état React de l'onglet; le
+  catalogue serveur reste disponible mais n'est plus l'unique chemin de la démo
+  sur une plateforme serverless. L'UI annonce explicitement session courante,
+  anonymat, absence de note et absence de persistance.
+
+## D-061 - Les contrôles professeur nomment leurs preuves réelles
+
+- Décision : présenter les validateurs locaux comme structure des étapes,
+  contexte d'accompagnement et scan de formulations à risque, avec une copie
+  décrivant exactement la règle calculée. Le coach GeoGebra demande en outre au
+  learner d'identifier les objets et la relation visée avant une mutation.
+- Raison : `progression claire`, `aide adaptée` et `prêt à partager` suggéraient
+  une évaluation pédagogique ou de sécurité plus large que les tests réellement
+  exécutés.
+- Impact : le schéma, le plafond d'un appel et les permissions ne changent pas.
+  Une validation locale autorise toujours la publication, mais ne devient ni une
+  certification didactique, ni une garantie de niveau, ni une modération globale.

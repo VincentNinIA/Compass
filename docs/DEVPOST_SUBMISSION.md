@@ -1,8 +1,11 @@
 # Compass — dossier Devpost Education
 
-Ce document prépare la candidature sans modifier le brouillon Devpost distant.
-Les retours humains, la vidéo finale, la session `/feedback`, le choix de
-visibilité/licence et la soumission restent à compléter par le porteur.
+La fiche Compass a été synchronisée le 16 juillet 2026 sur
+`https://devpost.com/software/compass-tedvqs`. L'enregistrement d'une fiche
+complète a publié automatiquement la page projet, mais la participation OpenAI
+Build Week reste non soumise (`submitted_at: null`). Les retours humains, la
+vidéo finale, la session `/feedback`, la licence, le choix Education et la
+soumission restent à compléter par le porteur.
 
 ## Positionnement recommandé
 
@@ -10,6 +13,8 @@ visibilité/licence et la soumission restent à compléter par le porteur.
 - **Nom :** Compass
 - **Tagline :** Turn any school exercise into guided practice—without taking the thinking away.
 - **URL de test :** `https://compass-geotutor-demo.vercel.app/`
+- **Dépôt :** `https://github.com/VincentNinIA/Compass`
+- **Candidat T18 :** `https://github.com/VincentNinIA/Compass/pull/2`
 - **Promesse précise :** conversation guidée pour toute matière lisible;
   observation, action et vérification automatiques uniquement dans les ateliers
   spécialisés dont Compass possède un contrat déterministe, aujourd'hui GeoGebra.
@@ -146,7 +151,7 @@ Image : tests verts puis logo Compass.
 ## Checklist avant soumission
 
 - [ ] Redéployer le worktree T18 et rejouer le parcours jury sur l'URL publique.
-- [ ] Ajouter l'URL de dépôt à Devpost.
+- [x] Ajouter l'URL de dépôt à Devpost.
 - [ ] Choisir **Education**.
 - [ ] Enregistrer une vidéo avec voix off, durée strictement inférieure à 3 min,
       mentionnant explicitement Codex et GPT-5.6.
@@ -158,4 +163,5 @@ Image : tests verts puis logo Compass.
       `build-week-event@openai.com`).
 - [ ] Vérifier que la description Devpost, la vidéo et l'URL décrivent le même
       candidat et les mêmes limites.
-- [ ] Soumettre le projet; le brouillon actuel n'est pas une soumission finale.
+- [ ] Soumettre le projet; la page projet publique n'est pas une soumission
+      OpenAI Build Week tant que `submitted_at` reste nul.

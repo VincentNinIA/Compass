@@ -2,13 +2,16 @@
 
 ## Prochaine action
 
-T19-C01 est active sur autorisation explicite du porteur : publier le candidat
-T18 dans une branche GitHub et une pull request brouillon, puis synchroniser la
-fiche Devpost Education existante sans la soumettre.
+T19-C01 est close `pass` : le candidat T18 est sur la branche GitHub
+`codex/t18-education-candidate` et la pull request brouillon #2; la fiche projet
+Devpost est publique et documentée, mais OpenAI Build Week reste non soumis
+(`submitted_at: null`).
 
-Le redéploiement de `compass-geotutor-demo`, le smoke public du candidat T18, la
-vidéo, l'identifiant `/feedback`, les retours humains, la licence et la
-soumission finale restent hors de cette carte.
+Prochaine action sous autorisation distincte : redéployer
+`compass-geotutor-demo`, rejouer le smoke public du candidat T18, puis actualiser
+la fiche. La vidéo, l'identifiant `/feedback`, les retours humains, la licence,
+le choix Education lors de la soumission et la soumission finale restent à
+compléter par le porteur.
 
 ## Dépendances
 
@@ -127,6 +130,12 @@ finale, l'identifiant `/feedback`, la licence éventuelle, le redéploiement et 
 soumission Devpost restent des actions du porteur du projet ou nécessitent son
 autorisation explicite.
 
+T19-C01 est close : commit candidat `8e25994`, branche distante
+`codex/t18-education-candidate`, pull request brouillon #2 et fiche Devpost
+Compass version 4. La page projet est `published`, conséquence automatique de
+l'enregistrement d'une fiche complète; la participation au hackathon reste non
+soumise et aucun appel de soumission n'a été exécuté.
+
 ## Hors périmètre immédiat
 
 Ne pas modifier les contrats spécialisés T1 à T6. SLA production, analytics
@@ -142,4 +151,4 @@ live actuelles, garder l'URL peu diffusée, surveiller l'usage du projet OpenAI 
 retirer ou faire tourner la clé lorsque la période de démonstration se termine.
 
 La dette du compteur documentaire T17 est résolue : le validateur ne porte plus
-de nombre magique et vérifie désormais les 69 cartes contre le registre roadmap.
+de nombre magique et vérifie désormais les 70 cartes contre le registre roadmap.

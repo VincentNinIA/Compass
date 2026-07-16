@@ -60,9 +60,9 @@ réel multi-onglet sans erreur console.
 T17-C01 est close `pass` : le candidat Next.js est disponible dans un projet
 Vercel isolé sur l'alias HTTPS stable. T18-C01 est close `pass` : elle ferme la boucle
 Education par réflexion élève, bilan professeur anonyme, reflow et candidat
-Devpost reproductible, hors retours humains. T19-C01 publie ce candidat sur une
-branche GitHub avec pull request brouillon et synchronise la fiche Devpost sans
-soumission ni redéploiement.
+Devpost reproductible, hors retours humains. T19-C01 est close `pass` : le
+candidat est sur une branche GitHub avec pull request brouillon et la page projet
+Devpost est documentée; la participation reste non soumise et T18 non redéployé.
 
 Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17 → T18 → T19`.
 
@@ -164,7 +164,7 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T16-C02 | done | T16-C01 | Guide enseignant, aides de saisie et relecture sans jargon technique |
 | T17-C01 | done | T16-C02 | Projet Vercel isolé et alias HTTPS stable qualifié |
 | T18-C01 | done | T17-C01 | Boucle anonyme élève-professeur et candidat Devpost démontrable |
-| T19-C01 | active | T18-C01 | Candidat publié sur GitHub et fiche Devpost Education synchronisée |
+| T19-C01 | done | T18-C01 | Candidat publié sur GitHub et fiche Devpost Education synchronisée |
 
 ## Matrice de traçabilité PRD
 

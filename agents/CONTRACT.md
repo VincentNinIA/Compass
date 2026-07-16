@@ -1,8 +1,9 @@
-# Contrat Builder — T19-C01 Publication GitHub et fiche Devpost — active
+# Contrat Builder — T19-C01 Publication GitHub et fiche Devpost — close `pass`
 
 ## État
 
-- T19-C01 est active au 16 juillet 2026 sur autorisation explicite du porteur.
+- T19-C01 est close `pass` au 16 juillet 2026 sur autorisation explicite du
+  porteur.
 - T18-C01 reste close `pass`; son candidat, ses limites et ses preuves doivent
   être publiés sans altération fonctionnelle.
 
@@ -12,7 +13,7 @@
 
 Publier le candidat T18 dans GitHub sur une branche dédiée avec une pull request
 brouillon, puis synchroniser la fiche Devpost Education existante sans soumettre
-le projet et sans présenter le candidat T18 comme déjà déployé sur Vercel.
+la participation au hackathon et sans présenter T18 comme déjà déployé sur Vercel.
 
 ### Inclus
 
@@ -51,9 +52,27 @@ git diff --check
 - La branche distante et sa pull request brouillon exposent le candidat T18
   reproductible sans les sorties de test historiques hors périmètre.
 - La fiche Devpost contient une description Education cohérente, les technologies
-  et les liens utiles, tout en restant un brouillon non soumis.
+  et les liens utiles; la participation OpenAI Build Week reste non soumise.
 - Les pilotes nomment exactement ce qui a été publié et les actions humaines ou
   de déploiement qui restent à réaliser.
+
+### Preuves de clôture
+
+- Le commit `8e25994` publie 61 fichiers du candidat sur la branche distante
+  `codex/t18-education-candidate`; la pull request brouillon est
+  `https://github.com/VincentNinIA/Compass/pull/2` vers `main`.
+- Le scope indexé contient sources, tests, pilotes, dossier Devpost et quatre
+  captures T18 finales. `next-env.d.ts`, `output/audit/`, anciennes captures
+  régénérées et doublons T18 restent hors commit. Le scan de motifs secrets et
+  les deux contrôles `git diff --check` ne rapportent rien.
+- `pnpm test:docs:t0` passe avec 70 cartes alignées sur la roadmap.
+- Devpost Compass 1327494, version 4, expose la tagline, la description
+  Education, neuf technologies et trois liens. L'enregistrement complet a fait
+  passer automatiquement la page projet à `published`; aucune opération de
+  soumission n'a été appelée et OpenAI Build Week reste `submitted_at: null`.
+- L'URL Devpost est `https://devpost.com/software/compass-tedvqs`. La description
+  indique explicitement que la démo Vercel est encore T17 et que le candidat T18
+  complet se trouve dans la pull request. Aucun déploiement n'a été exécuté.
 
 ## Archive — T18-C01
 

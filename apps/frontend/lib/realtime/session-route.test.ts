@@ -5,6 +5,10 @@ import {
   createRealtimeSessionHandler,
 } from "./session-route";
 import { REALTIME_TOOL_DEFINITIONS } from "@/lib/tools/contracts";
+import {
+  GEOGEBRA_ASSIST_TOOL_DEFINITIONS,
+  GEOGEBRA_ASSIST_TOOL_NAMES,
+} from "@/lib/geogebra/assist-tools";
 
 const OFFER = [
   "v=0",
@@ -50,12 +54,18 @@ function request(
   body: string,
   contentType = "application/sdp",
   mode?: "live_voice" | "typed_live" | "invalid",
+  profile?:
+    | "specialized_geometry"
+    | "general_tutor"
+    | "geogebra_tutor"
+    | "invalid",
 ) {
   return new Request("http://localhost/api/realtime/session", {
     method: "POST",
     headers: {
       "Content-Type": contentType,
       ...(mode ? { "X-GeoTutor-Capability-Mode": mode } : {}),
+      ...(profile ? { "X-GeoTutor-Tutor-Profile": profile } : {}),
     },
     body,
   });
@@ -77,7 +87,7 @@ describe("POST /api/realtime/session", () => {
           type: "realtime",
           model: "gpt-realtime-2.1",
           instructions:
-            "You are GeoTutor. Use only the provided tools. Never invent construction state or geometric facts. When a user explicitly asks you to read the current construction and provides its revision, call read_construction before answering.",
+            "You are GeoTutor. Speak as a warm, calm adult male tutor, natural and never theatrical. Use only the provided tools. Never invent construction state or geometric facts. When a user explicitly asks you to read the current construction and provides its revision, call read_construction before answering.",
           reasoning: { effort: "low" },
           audio: {
             input: {
@@ -90,7 +100,7 @@ describe("POST /api/realtime/session", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           tools: REALTIME_TOOL_DEFINITIONS,
           tool_choice: "auto",
@@ -140,6 +150,79 @@ describe("POST /api/realtime/session", () => {
 
     expect(response.status).toBe(201);
     expect(await response.text()).toBe(DATA_ANSWER);
+  });
+
+  it.each([
+    ["live_voice", OFFER, ANSWER],
+    ["typed_live", DATA_OFFER, DATA_ANSWER],
+  ] as const)("creates a %s general tutor session with no tools", async (mode, offer, answer) => {
+    const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      const form = init?.body as FormData;
+      const session = JSON.parse(form.get("session") as string) as {
+        instructions: string;
+        tools: unknown[];
+        tool_choice: string;
+      };
+      expect(session.instructions).toContain("any subject");
+      expect(session.instructions).toContain("untrusted user data");
+      expect(session.tools).toEqual([]);
+      expect(session.tool_choice).toBe("none");
+      return new Response(answer, { status: 201 });
+    });
+    const response = await createRealtimeSessionHandler({
+      apiKey: "server-secret",
+      fetchImpl: fetchImpl as typeof fetch,
+    })(request(offer, "application/sdp", mode, "general_tutor"));
+    expect(response.status).toBe(201);
+  });
+
+  it.each([
+    ["live_voice", OFFER, ANSWER],
+    ["typed_live", DATA_OFFER, DATA_ANSWER],
+  ] as const)(
+    "creates a %s GeoGebra-aware tutor with the exact closed tools",
+    async (mode, offer, answer) => {
+      const fetchImpl = vi.fn(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const form = init?.body as FormData;
+          const session = JSON.parse(form.get("session") as string) as {
+            instructions: string;
+            tools: Array<{ name: string }>;
+            tool_choice: string;
+            output_modalities?: string[];
+          };
+          expect(session.instructions).toContain("embedded GeoGebra Geometry");
+          expect(session.instructions).toContain(
+            "Never tell the learner to use a physical ruler",
+          );
+          expect(session.instructions).toContain("exact click order");
+          expect(session.instructions).toContain("explicitly asks");
+          expect(session.tools).toEqual(GEOGEBRA_ASSIST_TOOL_DEFINITIONS);
+          expect(session.tools.map((tool) => tool.name)).toEqual(
+            GEOGEBRA_ASSIST_TOOL_NAMES,
+          );
+          expect(session.tool_choice).toBe("auto");
+          if (mode === "typed_live") {
+            expect(session.output_modalities).toEqual(["text"]);
+          }
+          return new Response(answer, { status: 201 });
+        },
+      );
+      const response = await createRealtimeSessionHandler({
+        apiKey: "server-secret",
+        fetchImpl: fetchImpl as typeof fetch,
+      })(request(offer, "application/sdp", mode, "geogebra_tutor"));
+
+      expect(response.status).toBe(201);
+    },
+  );
+
+  it("rejects an unknown tutor profile", async () => {
+    const response = await createRealtimeSessionHandler({})(
+      request(OFFER, "application/sdp", "live_voice", "invalid"),
+    );
+    expect(response.status).toBe(400);
+    expect(await errorCode(response)).toBe("invalid_tutor_profile");
   });
 
   it("rejects an unknown capability mode before reaching credentials", async () => {

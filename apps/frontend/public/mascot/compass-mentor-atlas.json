@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "image": "/mascot/compass-mentor-atlas.webp",
+  "columns": 8,
+  "rows": 9,
+  "cellWidth": 192,
+  "cellHeight": 208,
+  "states": {
+    "idle": {
+      "row": 0,
+      "frames": 8,
+      "frameDurationMs": 220
+    },
+    "receiving": {
+      "row": 1,
+      "frames": 8,
+      "frameDurationMs": 150
+    },
+    "thinking": {
+      "row": 2,
+      "frames": 8,
+      "frameDurationMs": 170
+    },
+    "listening": {
+      "row": 3,
+      "frames": 8,
+      "frameDurationMs": 160
+    },
+    "speaking": {
+      "row": 4,
+      "frames": 8,
+      "frameDurationMs": 110
+    },
+    "modifying": {
+      "row": 5,
+      "frames": 8,
+      "frameDurationMs": 140
+    },
+    "hinting": {
+      "row": 6,
+      "frames": 8,
+      "frameDurationMs": 140
+    },
+    "celebrating": {
+      "row": 7,
+      "frames": 8,
+      "frameDurationMs": 130
+    },
+    "error": {
+      "row": 8,
+      "frames": 8,
+      "frameDurationMs": 180
+    }
+  }
+}

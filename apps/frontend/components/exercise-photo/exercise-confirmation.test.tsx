@@ -28,7 +28,10 @@ import {
   deriveExercisePlanV1,
   type ExerciseExtractionWireV1,
 } from "@/lib/exercise/exercise-contracts";
-import type { ParseExerciseResultV1 } from "@/lib/exercise/exercise-parse-route";
+import type {
+  ParseExerciseResultV1,
+  ParseGeneralExerciseResultV1,
+} from "@/lib/exercise/exercise-parse-route";
 
 const READY_EXTRACTION: ExerciseExtractionWireV1 = {
   schemaVersion: "exercise_extraction.v1",
@@ -56,6 +59,29 @@ const NEEDS_CLARIFICATION: ParseExerciseResultV1 = {
   code: "missing_labels",
 };
 
+const GENERAL_READY_RESULT: ParseGeneralExerciseResultV1 = {
+  status: "ready_general",
+  exercise: {
+    schemaVersion: "general_exercise.v1",
+    outcome: "ready",
+    language: "fr",
+    subject: "mathematics",
+    title: "Exercice 1",
+    statement: "Un exercice de géométrie en six étapes.",
+    tasks: [
+      "Placer E, F et G.",
+      "Tracer la droite FG.",
+      "Tracer la demi-droite EF.",
+      "Tracer le segment EG.",
+      "Placer K.",
+      "Compléter avec les notations du cours.",
+    ],
+    concepts: ["droite", "demi-droite", "segment"],
+    ambiguityCode: null,
+    clarificationQuestion: null,
+  },
+};
+
 function makeFile(name = "exercise.jpg", type = "image/jpeg") {
   return new File(["exercise image"], name, { type });
 }
@@ -71,7 +97,7 @@ function deferred<T>() {
 }
 
 function selectImage(file = makeFile()) {
-  fireEvent.change(screen.getByLabelText("Take or choose a photo"), {
+  fireEvent.change(screen.getByLabelText("Choose a photo"), {
     target: { files: [file] },
   });
   return file;
@@ -139,6 +165,39 @@ describe("ExerciseConfirmation", () => {
     vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);
   });
 
+  it("keeps the uploader mounted while moving to the dedicated confirmation view", async () => {
+    const onAnalysisStarted = vi.fn();
+    const { rerender } = render(
+      <ExerciseConfirmation
+        onConfirmed={vi.fn()}
+        onAnalysisStarted={onAnalysisStarted}
+        parseExercise={vi.fn<ExerciseParser>().mockResolvedValue(GENERAL_READY_RESULT)}
+        view="upload"
+      />,
+    );
+
+    selectImage();
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
+    expect(onAnalysisStarted).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <ExerciseConfirmation
+        onConfirmed={vi.fn()}
+        onAnalysisStarted={onAnalysisStarted}
+        parseExercise={vi.fn<ExerciseParser>().mockResolvedValue(GENERAL_READY_RESULT)}
+        view="confirmation"
+      />,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Here's what I found" }),
+    ).toBeVisible();
+    expect(document.querySelector(".exercise-upload-stage")).toHaveAttribute(
+      "hidden",
+    );
+    expect(document.getElementById("exercise-photo-input")).toBeInTheDocument();
+  });
+
   it("renders an accessible ready summary and emits nothing before explicit Confirm", async () => {
     const onConfirmed = vi.fn();
     const parseExercise = vi.fn<ExerciseParser>().mockResolvedValue(READY_RESULT);
@@ -160,6 +219,42 @@ describe("ExerciseConfirmation", () => {
       screen.getByText(/I'll place A, B and segment AB/),
     ).toBeInTheDocument();
     expect(onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("confirms a six-step general exercise without mediator-specific copy", async () => {
+    const onConfirmed = vi.fn();
+    render(
+      <ExerciseConfirmation
+        onConfirmed={onConfirmed}
+        parseExercise={
+          vi.fn<ExerciseParser>().mockResolvedValue(GENERAL_READY_RESULT)
+        }
+        createConfirmationId={() => "general-confirmation-1"}
+        now={() => 123456}
+      />,
+    );
+
+    selectImage();
+    fireEvent.click(screen.getByRole("button", { name: "Read my exercise" }));
+
+    await screen.findByRole("heading", { name: "Here's what I found" });
+    expect(screen.getByText("Un exercice de géométrie en six étapes.")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(6);
+    expect(screen.queryByText(/perpendicular bisector/i)).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Looks right — start" }),
+    );
+    expect(onConfirmed).toHaveBeenCalledTimes(1);
+    expect(onConfirmed).toHaveBeenCalledWith({
+      kind: "general",
+      exercise: GENERAL_READY_RESULT.exercise,
+      confirmationId: "general-confirmation-1",
+      confirmedAt: 123456,
+    });
+    expect(
+      screen.getByText(/available to the general coach/i),
+    ).toBeInTheDocument();
   });
 
   it("does not retransmit the image when Read my exercise is clicked after a ready result", async () => {

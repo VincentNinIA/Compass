@@ -32,8 +32,27 @@ T8 est close `pass` : Compass devient la marque publique et un contexte client
 609/609 Vitest, 30/30 Playwright historiques et trois viewports français sans
 débordement ni erreur console; les contrats et identifiants GeoTutor internes
 restent inchangés.
+T9 est close `pass` : C01 livre l'identité et l'atlas 9 × 8, C02 relie les
+états aux événements photo/Realtime/outils/indices, et C03 qualifie la présence
+responsive, accessible, EN/FR et compatible mouvement réduit. Le gate final
+rend 615/615 Vitest et 33/33 Playwright hors live.
+T10-C01 est close `pass` : galerie et caméra arrière sont séparées, le lanceur
+charge le `.env` racine et la lecture réelle répond `ready`. Le gate rend
+615/615 Vitest et 33/33 Playwright hors live; l'eval credentialed rend 7/7.
+T11-C01 est close `pass` : elle généralise la lecture et le tutorat sans retirer
+les modules déterministes historiques. La capture utilisateur réelle atteint
+`ready_general` avec ses six tâches; le gate rend 629/629 Vitest et 34/34
+Playwright hors live.
+T12-C01 est close `pass` : elle remplace la page empilée par quatre écrans et
+compose le coach vocal au-dessus d'un support contextualisé. Le tableau
+GeoGebra des mathématiques reste vierge et sans autorité de validation; le gate
+rend 630/630 Vitest et 34/34 Playwright hors live.
+T13-C01 est close `pass` : elle rend GeoGebra dominant, ajoute un profil Realtime
+conscient de l'applet et une aide sémantique fermée pour droite, demi-droite et
+segment, sans validation automatique. Le gate rend 639/639 Vitest, 34/34
+Playwright hors live et le replay réel crée `Line[F, G]` en vert.
 
-Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8`.
+Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13`.
 
 ## Vue d'ensemble
 
@@ -48,6 +67,11 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T6 | Fiabiliser la démonstration | 7 | Trois parcours live consécutifs sur le même commit |
 | T7 | Transformer le prototype en expérience élève | 3 | Parcours simple, responsive, accessible et diagnostics secondaires |
 | T8 | Adopter Compass et une interface bilingue | 3 | Marque publique cohérente, switch EN/FR accessible et reflow préservé |
+| T9 | Incarner Compass par une mascotte réactive | 3 | Atlas 9 × 8 stable, événements réels et présence accessible qualifiée |
+| T10 | Fiabiliser l'acquisition photo locale | 1 | Galerie, caméra arrière et analyse configurée depuis `pnpm dev` |
+| T11 | Généraliser l'exercice et le coach | 1 | Tout exercice lisible confirmé, coach sans outil spécialisé par défaut |
+| T12 | Clarifier le parcours et l'atelier | 1 | Quatre écrans, coach en tête et support honnête sans long scroll métier |
+| T13 | Assister l'atelier GeoGebra | 1 | Grand canevas, coach contextuel et constructions sémantiques fermées |
 
 ## Registre des cartes
 
@@ -108,6 +132,13 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T8-C01 | done | T7-C03 | Marque Compass et état de langue client éphémère |
 | T8-C02 | done | T8-C01 | Surface élève et états publics disponibles en EN/FR |
 | T8-C03 | done | T8-C02 | Switch clavier, reflow et qualification navigateur des deux langues |
+| T9-C01 | done | T8-C03 | Identité verrouillée et atlas de 72 frames validé |
+| T9-C02 | done | T9-C01 | Contrôleur de présentation relié aux événements applicatifs fermés |
+| T9-C03 | done | T9-C02 | Reflow, mouvement réduit, EN/FR et non-régression navigateur |
+| T10-C01 | done | T9-C03 | Choix galerie/caméra explicite et configuration serveur chargée |
+| T11-C01 | done | T10-C01 | Enveloppe générique, espace neutre et coach contextualisé sans outil |
+| T12-C01 | done | T11-C01 | Écrans exclusifs et tableau mathématique libre sous le coach |
+| T13-C01 | done | T12-C01 | GeoGebra dominant et aide droite/demi-droite/segment bornée |
 
 ## Matrice de traçabilité PRD
 
@@ -130,6 +161,14 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | FR-15 — Turn-taking policy | T4-C01, T4-C02, T4-C03, T4-C05, T4-C06 | Machine locale SILENT/QUEUE/SPEAK avant toute réponse proactive |
 | FR-16 — Immediate visual feedback | T1-C06, T4-C04 | Progrès local rendu avant tout aller-retour modèle |
 | FR-17 — Intervention cancellation | T2-C02, T2-C06, T4-C05, T4-C06, T4-C08, T6-C01, T6-C03 | Pending annulé au drag et audio interrompu à la reprise de parole |
+| FR-18 — Reactive mascot | T9-C01 à T9-C03 | Neuf états réels, huit frames chacun, identité stable et pose fixe sous mouvement réduit |
+| FR-19 — Any readable exercise | T11-C01 | Aucune branche matière `unsupported`; clarification limitée aux ambiguïtés |
+| FR-20 — Generic confirmation | T11-C01 | Énoncé et tâches bornés confirmés avant tutorat |
+| FR-21 — General tutor | T11-C01 | Contexte confirmé, outils vides et aucune fausse validation spécialisée |
+| FR-22 — Four-screen journey | T12-C01 | Accueil, photo, vérification et atelier sont des écrans exclusifs avec focus cohérent |
+| FR-23 — Contextual math workspace | T12-C01 | Coach visible en tête et GeoGebra vierge sans observation ou validation automatique |
+| FR-24 — GeoGebra-dominant workspace | T13-C01 | Canevas ≥ 65 % sur desktop, coach puis canevas puis tâches sur mobile |
+| FR-25 — GeoGebra-aware tutor | T13-C01 | Prompt conscient de l'applet et quatre outils fermés avec budget/idempotence |
 
 ## Matrice des critères d'acceptation du PRD
 

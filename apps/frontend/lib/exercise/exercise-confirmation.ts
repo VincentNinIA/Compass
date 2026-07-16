@@ -1,8 +1,13 @@
 import type {
+  ExerciseAmbiguityCodeV1,
   ExercisePlanV1,
   ExerciseReadyClientExtractionV1,
 } from "./exercise-contracts";
-import type { ParseExerciseResultV1 } from "./exercise-parse-route";
+import type {
+  GeneralExerciseAmbiguityCodeV1,
+  GeneralExerciseReadyV1,
+} from "./general-exercise-contracts";
+import type { ParseExerciseResult } from "./exercise-parse-route";
 
 export const MAX_EXERCISE_CLARIFICATION_CHARACTERS = 500;
 export const MAX_EXERCISE_CLARIFICATIONS = 2;
@@ -12,6 +17,21 @@ export type ExerciseConfirmedV1 = {
   confirmationId: string;
   confirmedAt: number;
 };
+
+export type GeneralExerciseConfirmedV1 = {
+  kind: "general";
+  exercise: GeneralExerciseReadyV1;
+  confirmationId: string;
+  confirmedAt: number;
+};
+
+export type ConfirmedExercise = ExerciseConfirmedV1 | GeneralExerciseConfirmedV1;
+
+export function isGeneralExerciseConfirmedV1(
+  confirmation: ConfirmedExercise,
+): confirmation is GeneralExerciseConfirmedV1 {
+  return "kind" in confirmation && confirmation.kind === "general";
+}
 
 type ExerciseWithFile = {
   file: File;
@@ -26,18 +46,20 @@ export type ExerciseConfirmationState =
   | ({
       status: "needs_clarification";
       question: string;
-      code: Extract<
-        ParseExerciseResultV1,
-        { status: "needs_clarification" }
-      >["code"];
+      code: ExerciseAmbiguityCodeV1 | GeneralExerciseAmbiguityCodeV1;
     } & ExerciseWithFile)
   | ({
       status: "awaiting_confirmation";
       extraction: ExerciseReadyClientExtractionV1;
       plan: ExercisePlanV1;
     } & ExerciseWithFile)
+  | ({
+      status: "awaiting_general_confirmation";
+      exercise: GeneralExerciseReadyV1;
+    } & ExerciseWithFile)
   | {
       status: "confirmed";
+      kind: "legacy_mediator" | "general";
       confirmationId: string;
       confirmedAt: number;
     }
@@ -54,11 +76,11 @@ export type ExerciseConfirmationAction =
   | {
       type: "parse_resolved";
       requestId: string;
-      result: ParseExerciseResultV1;
+      result: ParseExerciseResult;
     }
   | { type: "parse_failed"; requestId: string; message: string }
   | { type: "confirmation_rejected"; message: string }
-  | { type: "confirmed"; confirmation: ExerciseConfirmedV1 };
+  | { type: "confirmed"; confirmation: ConfirmedExercise };
 
 export const INITIAL_EXERCISE_CONFIRMATION_STATE: ExerciseConfirmationState = {
   status: "idle",
@@ -70,7 +92,7 @@ export function countClarificationCharacters(value: string): number {
 
 function withResult(
   state: Extract<ExerciseConfirmationState, { status: "parsing" }>,
-  result: ParseExerciseResultV1,
+  result: ParseExerciseResult,
 ): ExerciseConfirmationState {
   const context: ExerciseWithFile = {
     file: state.file,
@@ -86,7 +108,20 @@ function withResult(
         extraction: result.extraction,
         plan: result.plan,
       };
+    case "ready_general":
+      return {
+        status: "awaiting_general_confirmation",
+        ...context,
+        exercise: result.exercise,
+      };
     case "needs_clarification":
+      return {
+        status: "needs_clarification",
+        ...context,
+        question: result.question,
+        code: result.code,
+      };
+    case "needs_clarification_general":
       return {
         status: "needs_clarification",
         ...context,
@@ -96,6 +131,8 @@ function withResult(
     case "unsupported":
       return { status: "unsupported", ...context, reason: result.reason };
     case "refused":
+      return { status: "refused", ...context, message: result.message };
+    case "refused_general":
       return { status: "refused", ...context, message: result.message };
   }
 }
@@ -160,7 +197,10 @@ export function exerciseConfirmationReducer(
         message: action.message,
       };
     case "confirmation_rejected":
-      if (state.status !== "awaiting_confirmation") return state;
+      if (
+        state.status !== "awaiting_confirmation" &&
+        state.status !== "awaiting_general_confirmation"
+      ) return state;
       return {
         status: "failed",
         file: state.file,
@@ -169,9 +209,15 @@ export function exerciseConfirmationReducer(
         message: action.message,
       };
     case "confirmed":
-      if (state.status !== "awaiting_confirmation") return state;
+      if (
+        state.status !== "awaiting_confirmation" &&
+        state.status !== "awaiting_general_confirmation"
+      ) return state;
       return {
         status: "confirmed",
+        kind: isGeneralExerciseConfirmedV1(action.confirmation)
+          ? "general"
+          : "legacy_mediator",
         confirmationId: action.confirmation.confirmationId,
         confirmedAt: action.confirmation.confirmedAt,
       };

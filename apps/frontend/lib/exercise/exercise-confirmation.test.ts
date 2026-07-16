@@ -207,6 +207,7 @@ describe("exerciseConfirmationReducer", () => {
     });
     expect(confirmed).toEqual({
       status: "confirmed",
+      kind: "legacy_mediator",
       confirmationId: "confirmation-1",
       confirmedAt: 123,
     });

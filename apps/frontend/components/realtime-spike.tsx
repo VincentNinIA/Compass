@@ -31,8 +31,13 @@ import {
   type CapabilitySupport,
   type RetryBackoff,
 } from "@/lib/realtime/capability-mode";
-import type { RealtimeSessionMode } from "@/lib/realtime/session-route";
+import type {
+  RealtimeSessionMode,
+  RealtimeTutorProfile,
+} from "@/lib/realtime/session-route";
+import type { GeneralExerciseContextV1 } from "@/lib/exercise/general-exercise-contracts";
 import type { ToolRuntime } from "@/lib/tools/runtime";
+import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
 import type { EvidenceLog } from "@/lib/pedagogy/evidence-log";
 import type { OperationArbiter } from "@/lib/operations/arbiter";
 import {
@@ -43,6 +48,11 @@ import {
   useLanguage,
   type AppLanguage,
 } from "./language-provider";
+import {
+  mascotActivityForRealtimeEvent,
+  mascotActivityForVoiceTurn,
+  useMascotController,
+} from "./compass-mascot";
 
 function friendlyError(error: unknown, language: AppLanguage): string {
   if (error instanceof DOMException && error.name === "NotAllowedError") {
@@ -91,6 +101,7 @@ function localFailureReason(
 function modeExplanation(
   kind: "live_voice" | "typed_live" | "scripted_local",
   language: AppLanguage,
+  tutorProfile: RealtimeTutorProfile = "specialized_geometry",
 ) {
   if (kind === "live_voice") {
     return language === "fr"
@@ -101,6 +112,16 @@ function modeExplanation(
     return language === "fr"
       ? "Texte en direct : une session OpenAI Realtime sans audio est connectée ; le microphone et le son sont désactivés."
       : "Live text: a text-only OpenAI Realtime session is connected; microphone and audio are off.";
+  }
+  if (tutorProfile === "general_tutor") {
+    return language === "fr"
+      ? "Mode local : l'exercice confirmé reste dans cette page ; aucune requête n'est envoyée avant ta connexion au coach."
+      : "Local mode: the confirmed exercise stays on this page; no request is sent until you connect the coach.";
+  }
+  if (tutorProfile === "geogebra_tutor") {
+    return language === "fr"
+      ? "Mode local : GeoGebra reste utilisable. Connecte la voix ou le texte pour que Compass te guide dans l'applet ou trace à ta demande."
+      : "Local mode: GeoGebra remains usable. Connect voice or text so Compass can guide you in the applet or draw when asked.";
   }
   return language === "fr"
     ? "Mode local : la construction, la validation et les solutions de repli restent locales ; aucune requête n’est envoyée à OpenAI ou à un modèle."
@@ -123,6 +144,7 @@ function modeTitle(
 function modeStudentCopy(
   kind: "live_voice" | "typed_live" | "scripted_local",
   language: AppLanguage,
+  tutorProfile: RealtimeTutorProfile = "specialized_geometry",
 ) {
   if (kind === "live_voice") {
     return language === "fr"
@@ -133,6 +155,16 @@ function modeStudentCopy(
     return language === "fr"
       ? "Écris une question en gardant ton microphone désactivé."
       : "Type a question and keep your microphone off.";
+  }
+  if (tutorProfile === "general_tutor") {
+    return language === "fr"
+      ? "Confirme ton exercice, puis choisis la voix ou le texte pour raisonner avec Compass."
+      : "Confirm your exercise, then choose voice or text to reason with Compass.";
+  }
+  if (tutorProfile === "geogebra_tutor") {
+    return language === "fr"
+      ? "Tu es dans GeoGebra : Compass peut expliquer les clics et, sur demande, tracer entre deux points existants."
+      : "You are in GeoGebra: Compass can explain the clicks and, when asked, draw between two existing points.";
   }
   return language === "fr"
     ? "Ton espace de construction et les indices locaux fonctionnent avant même de contacter un coach."
@@ -149,6 +181,10 @@ export function RealtimeSpike({
   evidenceLog,
   operationArbiter,
   latencyMonitor,
+  tutorProfile = "specialized_geometry",
+  exerciseContext,
+  geogebraWorldState,
+  layout = "card",
 }: {
   toolRuntime?: ToolRuntime;
   pedagogyRuntime?: RealtimePedagogyRuntime;
@@ -159,8 +195,17 @@ export function RealtimeSpike({
   evidenceLog?: EvidenceLog;
   operationArbiter?: OperationArbiter;
   latencyMonitor?: LatencyBudgetMonitor;
+  tutorProfile?: RealtimeTutorProfile;
+  exerciseContext?: GeneralExerciseContextV1;
+  geogebraWorldState?: GeoGebraWorldStateV1;
+  layout?: "card" | "workspace" | "dock" | "panorama";
 }) {
   const { language, text } = useLanguage();
+  const {
+    start: startMascot,
+    stop: stopMascot,
+    pulse: pulseMascot,
+  } = useMascotController();
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionRef = useRef<RealtimeWebRtcSession | undefined>(undefined);
   const connectionStateRef = useRef<RealtimeConnectionState>("idle");
@@ -172,9 +217,16 @@ export function RealtimeSpike({
   const firstAudioLatencyRecordedRef = useRef(false);
   const firstAudioTimerRef = useRef<number | undefined>(undefined);
   const invarianceSummaryRuntimeRef = useRef(invarianceSummaryRuntime);
+  const geogebraWorldStateRef = useRef(geogebraWorldState);
   useLayoutEffect(() => {
     invarianceSummaryRuntimeRef.current = invarianceSummaryRuntime;
   }, [invarianceSummaryRuntime]);
+  useLayoutEffect(() => {
+    geogebraWorldStateRef.current = geogebraWorldState;
+    if (geogebraWorldState) {
+      sessionRef.current?.publishGeoGebraWorldState(geogebraWorldState);
+    }
+  }, [geogebraWorldState]);
   const [state, setState] = useState<RealtimeConnectionState>("idle");
   const [transportIntent, setTransportIntent] = useState<RealtimeSessionMode>();
   const [capabilityMode, setCapabilityMode] = useState(() =>
@@ -197,6 +249,41 @@ export function RealtimeSpike({
   const appendTimeline = useCallback((entry: string) => {
     setTimeline((current) => [...current.slice(-6), entry]);
   }, []);
+
+  const clearRealtimeMascot = useCallback(() => {
+    stopMascot("realtime-input");
+    stopMascot("realtime-response");
+    stopMascot("realtime-turn");
+    stopMascot("realtime-error");
+  }, [stopMascot]);
+
+  const handleRealtimeMascotEvent = useCallback(
+    (eventType: string) => {
+      const activity = mascotActivityForRealtimeEvent(eventType);
+      if (activity === undefined) return;
+      if (activity === null) {
+        stopMascot("realtime-input");
+        stopMascot("realtime-response");
+      } else if (activity === "error") {
+        clearRealtimeMascot();
+        pulseMascot("realtime-error", "error", 2_400);
+      } else if (activity === "speaking") {
+        stopMascot("realtime-input");
+        stopMascot("realtime-error");
+        startMascot("realtime-response", activity);
+      } else {
+        stopMascot("realtime-response");
+        stopMascot("realtime-error");
+        startMascot("realtime-input", activity);
+      }
+    },
+    [
+      clearRealtimeMascot,
+      pulseMascot,
+      startMascot,
+      stopMascot,
+    ],
+  );
 
   const publishMode = useCallback(
     (
@@ -255,6 +342,7 @@ export function RealtimeSpike({
             remoteAudioRef.current = false;
             setRemoteAudio(false);
             onProactiveRuntime?.(undefined);
+            clearRealtimeMascot();
             publishMode(
               "scripted_local",
               "construction_reset",
@@ -266,7 +354,12 @@ export function RealtimeSpike({
         },
       });
     },
-    [onCancellationRuntime, onProactiveRuntime, publishMode],
+    [
+      clearRealtimeMascot,
+      onCancellationRuntime,
+      onProactiveRuntime,
+      publishMode,
+    ],
   );
 
   const markFailure = useCallback(
@@ -281,8 +374,16 @@ export function RealtimeSpike({
       });
       onProactiveRuntime?.(undefined);
       onCancellationRuntime?.(undefined);
+      clearRealtimeMascot();
+      pulseMascot("realtime-error", "error", 2_400);
     },
-    [onCancellationRuntime, onProactiveRuntime, publishMode],
+    [
+      clearRealtimeMascot,
+      onCancellationRuntime,
+      onProactiveRuntime,
+      publishMode,
+      pulseMascot,
+    ],
   );
 
   const promoteConnectedMode = useCallback(
@@ -319,6 +420,7 @@ export function RealtimeSpike({
         onState: (next) => {
           connectionStateRef.current = next;
           setState(next);
+          if (next === "closed") clearRealtimeMascot();
           if (next === "live") {
             const startedAt = sessionStartedAtRef.current;
             const sample =
@@ -346,14 +448,29 @@ export function RealtimeSpike({
           }
         },
         onTimeline: appendTimeline,
-        onEvent: (event) => setLastEvent(event.type),
+        onEvent: (event) => {
+          setLastEvent(event.type);
+          handleRealtimeMascotEvent(event.type);
+        },
         onSessionSummary: (summary) =>
           setSessionProfile(
             "voice" in summary
               ? `${summary.model} · ${summary.voice} · ${summary.reasoningEffort}`
               : `${summary.model} · text only · ${summary.reasoningEffort}`,
           ),
-        onVoiceTurn: (turn) => setVoiceTurn(`${turn.turnId} · ${turn.state}`),
+        onVoiceTurn: (turn) => {
+          setVoiceTurn(`${turn.turnId} · ${turn.state}`);
+          const activity = mascotActivityForVoiceTurn(turn.state);
+          if (activity === "error") {
+            stopMascot("realtime-turn");
+            pulseMascot("realtime-error", "error", 2_400);
+          } else if (activity) {
+            stopMascot("realtime-error");
+            startMascot("realtime-turn", activity);
+          } else {
+            stopMascot("realtime-turn");
+          }
+        },
         onToolLoop: (result) =>
           setToolLoop(
             `${result.responseId} · ${result.outputCount} output(s) · ${result.continued ? "continued" : "stopped"}`,
@@ -421,19 +538,29 @@ export function RealtimeSpike({
           },
         },
         transportMode: mode,
+        tutorProfile,
+        exerciseContext,
+        geogebraWorldState: geogebraWorldStateRef.current,
       },
     );
     return session;
   }, [
     appendTimeline,
+    clearRealtimeMascot,
     evidenceLog,
+    handleRealtimeMascotEvent,
     markFailure,
     pedagogyRuntime,
     promoteConnectedMode,
     toolRuntime,
     operationArbiter,
     latencyMonitor,
+    pulseMascot,
+    startMascot,
+    stopMascot,
     text,
+    tutorProfile,
+    exerciseContext,
   ]);
 
   const requestInvarianceSummary = useCallback<
@@ -469,9 +596,10 @@ export function RealtimeSpike({
     setTransportIntent(undefined);
     remoteAudioRef.current = false;
     setRemoteAudio(false);
+    clearRealtimeMascot();
     onProactiveRuntime?.(undefined);
     publishCancellationRuntime(undefined);
-  }, [onProactiveRuntime, publishCancellationRuntime]);
+  }, [clearRealtimeMascot, onProactiveRuntime, publishCancellationRuntime]);
 
   const stop = () => {
     stopSession();
@@ -483,6 +611,24 @@ export function RealtimeSpike({
   };
 
   const start = async (mode: RealtimeSessionMode) => {
+    if (tutorProfile !== "specialized_geometry" && !exerciseContext) {
+      setError(
+        text(
+          "Confirm your exercise before opening the coach.",
+          "Confirme ton exercice avant d'ouvrir le coach.",
+        ),
+      );
+      return;
+    }
+    if (tutorProfile === "geogebra_tutor" && !toolRuntime) {
+      setError(
+        text(
+          "Wait until the GeoGebra board is ready before opening the coach.",
+          "Attends que le tableau GeoGebra soit prêt avant d'ouvrir le coach.",
+        ),
+      );
+      return;
+    }
     if (!audioRef.current || state === "connecting" || state === "live") {
       return;
     }
@@ -499,8 +645,12 @@ export function RealtimeSpike({
       setError(
         reason === "offline"
           ? text(
-              "This device is offline. Local construction and validation remain available.",
-              "Cet appareil est hors ligne. La construction et la validation locales restent disponibles.",
+              tutorProfile === "general_tutor"
+                ? "This device is offline. Your confirmed exercise remains available on this page."
+                : "This device is offline. Local construction and validation remain available.",
+              tutorProfile === "general_tutor"
+                ? "Cet appareil est hors ligne. Ton exercice confirmé reste disponible sur cette page."
+                : "Cet appareil est hors ligne. La construction et la validation locales restent disponibles.",
             )
           : mode === "live_voice" && support.typedLive
             ? text(
@@ -659,7 +809,11 @@ export function RealtimeSpike({
         ? text("Test prompt queued.", "Question mise en attente.")
         : text("Test prompt rejected.", "Question refusée."),
     );
-    if (accepted) setTestPrompt("");
+    if (accepted) {
+      stopMascot("realtime-error");
+      startMascot("realtime-input", "thinking");
+      setTestPrompt("");
+    }
   };
 
   useEffect(
@@ -669,39 +823,57 @@ export function RealtimeSpike({
         firstAudioTimerRef.current = undefined;
       }
       sessionRef.current?.stop();
+      clearRealtimeMascot();
       onProactiveRuntime?.(undefined);
       onCancellationRuntime?.(undefined);
     },
-    [onCancellationRuntime, onProactiveRuntime],
+    [clearRealtimeMascot, onCancellationRuntime, onProactiveRuntime],
   );
 
   const retryReady = retryAllowed(backoff, backoffClock);
   const livePromptAvailable =
     state === "live" &&
     (capabilityMode.kind === "typed_live" || capabilityMode.kind === "live_voice");
+  const coachReady =
+    tutorProfile === "specialized_geometry" ||
+    (exerciseContext !== undefined &&
+      (tutorProfile !== "geogebra_tutor" || toolRuntime !== undefined));
 
   return (
     <section
-      className="spike realtime-spike workspace-card workspace-card-coach"
+      className={`spike realtime-spike workspace-card workspace-card-coach realtime-spike--${layout}`}
       aria-labelledby="realtime-spike-title"
     >
       <div className="spike-heading">
         <div>
           <p className="section-index">
-            {text("Your coach · Optional", "Ton coach · Facultatif")}
+            {tutorProfile === "geogebra_tutor"
+              ? layout === "panorama"
+                ? text("Compass is watching your board", "Compass observe ton plan")
+                : text("GeoGebra coach", "Coach GeoGebra")
+              : text("Your coach · Optional", "Ton coach · Facultatif")}
           </p>
           <h2 id="realtime-spike-title">
-            {text(
-              "Stuck? Let's talk it through.",
-              "Bloqué ? Réfléchissons ensemble.",
-            )}
+            {tutorProfile === "geogebra_tutor"
+              ? layout === "panorama"
+                ? text("Explore. I’m right here.", "Explore. Je suis juste là.")
+                : text("Tell me where you're stuck.", "Dis-moi où tu bloques.")
+              : text(
+                  "Stuck? Let's talk it through.",
+                  "Bloqué ? Réfléchissons ensemble.",
+                )}
           </h2>
         </div>
         <p>
-          {text(
-            "Choose voice or text when you want a nudge. Compass asks questions that help you find the next move yourself.",
-            "Choisis la voix ou le texte quand tu as besoin d’un coup de pouce. Compass te pose des questions pour t’aider à trouver toi-même la prochaine étape.",
-          )}
+          {tutorProfile === "geogebra_tutor"
+            ? text(
+                "I follow what changes on this GeoGebra board. I can explain the clicks or, when you explicitly ask, create, rename, move and construct with the objects on it.",
+                "Je suis ce qui change dans ce tableau GeoGebra. Je peux t'expliquer les clics ou, si tu me le demandes clairement, créer, renommer, déplacer et construire avec les objets présents.",
+              )
+            : text(
+                "Choose voice or text when you want a nudge. Compass asks questions that help you find the next move yourself.",
+                "Choisis la voix ou le texte quand tu as besoin d’un coup de pouce. Compass te pose des questions pour t’aider à trouver toi-même la prochaine étape.",
+              )}
         </p>
       </div>
 
@@ -714,10 +886,10 @@ export function RealtimeSpike({
         <span className="coach-avatar" aria-hidden="true">C</span>
         <span>{text("Your coach", "Ton coach")}</span>
         <strong>{modeTitle(capabilityMode.kind, language)}</strong>
-        <p>{modeStudentCopy(capabilityMode.kind, language)}</p>
+        <p>{modeStudentCopy(capabilityMode.kind, language, tutorProfile)}</p>
         <span className="visually-hidden">
           {capabilityMode.kind.replaceAll("_", " ")}.{" "}
-          {modeExplanation(capabilityMode.kind, language)}
+          {modeExplanation(capabilityMode.kind, language, tutorProfile)}
         </span>
         <span className="capability-mode-reason visually-hidden">
           {text("Reason", "Motif")}: {capabilityMode.reason.replaceAll("_", " ")}
@@ -747,10 +919,23 @@ export function RealtimeSpike({
           </p>
           <p className="connection-copy" aria-live="polite" aria-atomic="true">
             {state === "idle" &&
-              text(
-                "Local deterministic guidance is ready. Choose a live mode only when needed.",
-                "L’accompagnement local est prêt. Choisis un mode en direct seulement si tu en as besoin.",
-              )}
+              (coachReady
+                ? text(
+                    tutorProfile === "general_tutor"
+                      ? "Your confirmed exercise is ready. Choose voice or text when you want help."
+                      : tutorProfile === "geogebra_tutor"
+                        ? "GeoGebra is ready. Start voice or text, then ask for the next click or an explicit construction."
+                        : "Local deterministic guidance is ready. Choose a live mode only when needed.",
+                    tutorProfile === "general_tutor"
+                      ? "Ton exercice confirmé est prêt. Choisis la voix ou le texte quand tu veux de l'aide."
+                      : tutorProfile === "geogebra_tutor"
+                        ? "GeoGebra est prêt. Lance la voix ou le texte, puis demande le prochain clic ou un tracé précis."
+                        : "L’accompagnement local est prêt. Choisis un mode en direct seulement si tu en as besoin.",
+                  )
+                : text(
+                    "Confirm an exercise first so Compass knows what to help with.",
+                    "Confirme d'abord un exercice pour que Compass sache sur quoi t'aider.",
+                  ))}
             {state === "connecting" &&
               (transportIntent === "typed_live"
                 ? text(
@@ -779,8 +964,12 @@ export function RealtimeSpike({
             {state === "failed" && error}
             {state === "closed" &&
               text(
-                "All live resources are closed. Local construction and validation continue.",
-                "Toutes les ressources en direct sont fermées. La construction et la validation locales continuent.",
+                tutorProfile === "general_tutor"
+                  ? "All live resources are closed. Your exercise stays available on this page."
+                  : "All live resources are closed. Local construction and validation continue.",
+                tutorProfile === "general_tutor"
+                  ? "Toutes les ressources en direct sont fermées. Ton exercice reste disponible sur cette page."
+                  : "Toutes les ressources en direct sont fermées. La construction et la validation locales continuent.",
               )}
           </p>
           <div className="connection-actions">
@@ -791,7 +980,8 @@ export function RealtimeSpike({
                 state === "connecting" ||
                 state === "live" ||
                 !support.liveVoice ||
-                !retryReady
+                !retryReady ||
+                !coachReady
               }
             >
               {text("Start voice", "Démarrer la voix")}
@@ -804,7 +994,8 @@ export function RealtimeSpike({
                 state === "connecting" ||
                 state === "live" ||
                 !support.typedLive ||
-                !retryReady
+                !retryReady ||
+                !coachReady
               }
             >
               {text("Use live text", "Utiliser le texte en direct")}
@@ -863,7 +1054,7 @@ export function RealtimeSpike({
 
         <details
           className="coach-diagnostics"
-          open={state === "live" || state === "failed"}
+          open={layout !== "dock" && (state === "live" || state === "failed")}
         >
           <summary>{text("Connection details", "Détails de connexion")}</summary>
           <div className="connection-evidence" aria-live="polite">

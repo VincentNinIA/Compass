@@ -3,10 +3,10 @@ import type {
   ExerciseInitializationOptions,
   InitializationResultV1,
 } from "@/lib/geogebra/exercise-initialization";
-import type { GatewayContext, ToolGateway, ToolPhase } from "./gateway";
+import type { GatewayContext, ToolGatewayExecutor, ToolPhase } from "./gateway";
 
 export type ToolRuntime = {
-  gateway: ToolGateway;
+  gateway: ToolGatewayExecutor;
   getContext(turnId: string): GatewayContext | undefined;
 };
 

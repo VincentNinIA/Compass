@@ -115,6 +115,7 @@ import {
 } from "./invariance-experiment";
 import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 import { useLanguage } from "@/components/language-provider";
+import { useMascotController } from "@/components/compass-mascot";
 
 type SpikeState =
   | { phase: "loading" }
@@ -158,6 +159,12 @@ export function GeoGebraSpike({
   latencyMonitor?: LatencyBudgetMonitor;
 }) {
   const { text } = useLanguage();
+  const {
+    start: startMascot,
+    stop: stopMascot,
+    pulse: pulseMascot,
+    reset: resetMascot,
+  } = useMascotController();
   const containerRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<SpikeState>({ phase: "loading" });
   const [progress, setProgress] = useState(initialProgress());
@@ -375,19 +382,24 @@ export function GeoGebraSpike({
       hintConfirmationsRef.current?.invalidate(pendingId);
     }
     pendingGuidedHintRef.current = undefined;
-    if (hintCancelled || pendingId) setHintStatus("idle");
+    if (hintCancelled || pendingId) {
+      stopMascot("guided-hint");
+      setHintStatus("idle");
+    }
     return hintCancelled || Boolean(pendingId);
-  }, []);
+  }, [stopMascot]);
 
   const resetConstruction = async () => {
     const reset = globalResetRef.current;
     if (!reset || resetInFlightRef.current) return;
     resetInFlightRef.current = true;
     setResetStatus("resetting");
+    startMascot("workspace-reset", "modifying");
     try {
       const result = await reset("user_request", activePlanRef.current ?? undefined);
       if (!result.ok) {
         setResetStatus(result.error.state === "fatal" ? "fatal" : "failed");
+        pulseMascot("workspace-reset-error", "error", 2_400);
         return;
       }
       delete window.__GEOTUTOR_INITIALIZATION__;
@@ -397,9 +409,12 @@ export function GeoGebraSpike({
       delete window.__GEOTUTOR_LAST_ACTION__;
       delete window.__GEOTUTOR_VALIDATION__;
       setResetStatus(result.value.recovered ? "recovered" : "idle");
+      resetMascot();
     } catch {
       setResetStatus("failed");
+      pulseMascot("workspace-reset-error", "error", 2_400);
     } finally {
+      stopMascot("workspace-reset");
       resetInFlightRef.current = false;
     }
   };
@@ -416,6 +431,7 @@ export function GeoGebraSpike({
       hintConfirmationsRef.current?.invalidate(pending.directive.directiveId);
     }
     pendingGuidedHintRef.current = undefined;
+    stopMascot("guided-hint");
     setHintStatus("idle");
   };
 
@@ -429,8 +445,10 @@ export function GeoGebraSpike({
     const current = pedagogyStateRef.current;
     if (!orchestrator || !current) {
       setHintStatus("failed");
+      pulseMascot("guided-hint-error", "error", 2_400);
       return;
     }
+    startMascot("guided-hint", "hinting");
     setHintStatus("delivering");
     const requestStatus = requestProactive?.(decision, directive) ?? "unavailable";
     if (requestStatus !== "item_sent") {
@@ -442,6 +460,8 @@ export function GeoGebraSpike({
         });
       }
       setHintStatus("failed");
+      stopMascot("guided-hint");
+      pulseMascot("guided-hint-error", "error", 2_400);
       return;
     }
     const deliveryPromise = orchestrator.deliver(
@@ -455,10 +475,15 @@ export function GeoGebraSpike({
     let delivery: HintDeliveryResult;
     try {
       delivery = await deliveryPromise;
+    } catch {
+      setHintStatus("failed");
+      pulseMascot("guided-hint-error", "error", 2_400);
+      return;
     } finally {
       if (activeHintDeliveryRef.current === deliveryPromise) {
         activeHintDeliveryRef.current = undefined;
       }
+      stopMascot("guided-hint");
     }
     const live = pedagogyStateRef.current;
     if (delivery.status === "delivered" && live) {
@@ -473,6 +498,7 @@ export function GeoGebraSpike({
       return;
     }
     setHintStatus("failed");
+    pulseMascot("guided-hint-error", "error", 2_400);
   };
 
   const requestExplicitHint = async () => {
@@ -604,6 +630,7 @@ export function GeoGebraSpike({
           phase: "unavailable",
           message: "GeoGebra did not become ready within 30 seconds.",
         });
+        pulseMascot("geogebra-error", "error", 2_400);
       }
     }, LOAD_TIMEOUT_MS);
 
@@ -728,14 +755,18 @@ export function GeoGebraSpike({
             if (!(cancelRealtime?.("stale_revision") ?? false)) {
               cancelLocalEffects("stale_revision");
             }
+            const wasComplete = currentValidationRef.current?.score === 2;
             const validation = validator.validate(action.revision);
             currentValidationRef.current = validation.ok
               ? validation.value
               : null;
             if (validation.ok && validation.value.score === 2) {
-              commitActionUi(() =>
-                setInvarianceRuntime(invarianceRuntimeRef.current),
-              );
+              commitActionUi(() => {
+                setInvarianceRuntime(invarianceRuntimeRef.current);
+                if (!wasComplete) {
+                  pulseMascot("construction-complete", "celebrating", 2_600);
+                }
+              });
             }
             commitActionUi(() => {
               window.__GEOTUTOR_VALIDATION__ = validation;
@@ -1275,6 +1306,7 @@ export function GeoGebraSpike({
             message:
               error instanceof Error ? error.message : "GeoGebra is unavailable.",
           });
+          pulseMascot("geogebra-error", "error", 2_400);
         }
       }
     };
@@ -1335,6 +1367,12 @@ export function GeoGebraSpike({
       hintConfirmationsRef.current = undefined;
       hintOrchestrator?.cancelActive();
       hintOrchestratorRef.current = undefined;
+      stopMascot("guided-hint");
+      stopMascot("guided-hint-error");
+      stopMascot("workspace-reset");
+      stopMascot("workspace-reset-error");
+      stopMascot("construction-complete");
+      stopMascot("geogebra-error");
       onToolRuntime?.(undefined);
       onExerciseInitializationRuntime?.(undefined);
       onPedagogyRuntime?.(undefined);
@@ -1356,9 +1394,11 @@ export function GeoGebraSpike({
     latencyMonitor,
     onInvarianceSummaryRuntime,
     operationArbiter,
+    pulseMascot,
     requestProactive,
     rejectPendingInvarianceRenderAcks,
     renderInvarianceSummary,
+    stopMascot,
     toolWorkflowAuthority,
   ]);
 

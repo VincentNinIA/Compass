@@ -1,18 +1,23 @@
-import { act, cleanup, render, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TutorWorkspace } from "./tutor-workspace";
 import {
   deriveExercisePlanV1,
   type ExerciseExtractionWireV1,
 } from "@/lib/exercise/exercise-contracts";
-import type { ExerciseConfirmedV1 } from "@/lib/exercise/exercise-confirmation";
+import type {
+  ConfirmedExercise,
+  ExerciseConfirmedV1,
+} from "@/lib/exercise/exercise-confirmation";
 import type { ExerciseInitializationRuntime } from "@/lib/geogebra/exercise-initialization";
 import type { ToolWorkflowAuthority } from "@/lib/tools/runtime";
 
 const captured = vi.hoisted(() => ({
   confirmationProps: undefined as unknown,
   geogebraProps: undefined as unknown,
+  scratchpadProps: undefined as unknown,
+  realtimeProps: undefined as unknown,
 }));
 
 vi.mock("./exercise-photo/exercise-confirmation", () => ({
@@ -30,11 +35,21 @@ vi.mock("./geogebra-spike", () => ({
 }));
 
 vi.mock("./realtime-spike", () => ({
-  RealtimeSpike: () => null,
+  RealtimeSpike: (props: unknown) => {
+    captured.realtimeProps = props;
+    return null;
+  },
+}));
+
+vi.mock("./geogebra-scratchpad", () => ({
+  GeoGebraScratchpad: (props: unknown) => {
+    captured.scratchpadProps = props;
+    return <section data-testid="geogebra-scratchpad" />;
+  },
 }));
 
 type ConfirmationProps = {
-  onConfirmed(confirmation: ExerciseConfirmedV1): void;
+  onConfirmed(confirmation: ConfirmedExercise): void;
   onDraftChanged(): void;
   onRetryInitialization?(): void;
   initializationState: {
@@ -89,8 +104,110 @@ function geogebraProps(): GeogebraProps {
   return captured.geogebraProps as GeogebraProps;
 }
 
+function realtimeProps(): {
+  tutorProfile: string;
+  layout?: string;
+  exerciseContext?: { tasks: string[]; statement: string };
+} {
+  return captured.realtimeProps as {
+    tutorProfile: string;
+    layout?: string;
+    exerciseContext?: { tasks: string[]; statement: string };
+  };
+}
+
+function renderSpecialistWorkspace() {
+  window.history.replaceState({}, "", "/?specialist=geometry");
+  return render(<TutorWorkspace />);
+}
+
 describe("TutorWorkspace exercise data minimization", () => {
-  afterEach(cleanup);
+  beforeEach(() => {
+    captured.confirmationProps = undefined;
+    captured.geogebraProps = undefined;
+    captured.scratchpadProps = undefined;
+    captured.realtimeProps = undefined;
+    window.history.replaceState({}, "", "/");
+  });
+
+  afterEach(() => {
+    cleanup();
+    window.history.replaceState({}, "", "/");
+  });
+
+  it("routes a confirmed general exercise to the no-tool coach without initializing GeoGebra", () => {
+    render(<TutorWorkspace />);
+
+    expect(captured.geogebraProps).toBeUndefined();
+
+    act(() =>
+      confirmationProps().onConfirmed({
+        kind: "general",
+        confirmationId: "general-1",
+        confirmedAt: 123,
+        exercise: {
+          schemaVersion: "general_exercise.v1",
+          outcome: "ready",
+          language: "fr",
+          subject: "history",
+          title: "Les Lumières",
+          statement: "Présente deux idées des Lumières.",
+          tasks: ["Présenter deux idées.", "Donner un exemple."],
+          concepts: ["Lumières"],
+          ambiguityCode: null,
+          clarificationQuestion: null,
+        },
+      }),
+    );
+
+    expect(realtimeProps()).toMatchObject({
+      tutorProfile: "general_tutor",
+      exerciseContext: {
+        statement: "Présente deux idées des Lumières.",
+        tasks: ["Présenter deux idées.", "Donner un exemple."],
+      },
+    });
+    expect(screen.getByText("Your exercise, one step at a time")).toBeInTheDocument();
+    expect(screen.queryByText(/perpendicular bisector/i)).not.toBeInTheDocument();
+    expect(document.querySelector(".legacy-geometry-module")).not.toBeInTheDocument();
+  });
+
+  it("routes a confirmed maths exercise to the GeoGebra-aware dock and dominant workbench", () => {
+    render(<TutorWorkspace screen="work" />);
+
+    act(() =>
+      confirmationProps().onConfirmed({
+        kind: "general",
+        confirmationId: "maths-1",
+        confirmedAt: 123,
+        exercise: {
+          schemaVersion: "general_exercise.v1",
+          outcome: "ready",
+          language: "fr",
+          subject: "mathematics",
+          title: "Droites et demi-droites",
+          statement: "Tracer une droite passant par F et G.",
+          tasks: ["Placer F et G.", "Tracer la droite (FG)."],
+          concepts: ["droite", "géométrie"],
+          ambiguityCode: null,
+          clarificationQuestion: null,
+        },
+      }),
+    );
+
+    expect(realtimeProps()).toMatchObject({
+      tutorProfile: "geogebra_tutor",
+      layout: "panorama",
+      exerciseContext: {
+        statement: "Tracer une droite passant par F et G.",
+      },
+    });
+    expect(captured.scratchpadProps).toMatchObject({
+      onToolRuntime: expect.any(Function),
+    });
+    expect(screen.getByTestId("geogebra-scratchpad")).toBeInTheDocument();
+    expect(document.querySelector(".geogebra-workbench")).toBeInTheDocument();
+  });
 
   it("retains only a confirmed plan for failed Retry and cannot replay it after success, reset, or draft discard", async () => {
     const initialize = vi
@@ -126,7 +243,7 @@ describe("TutorWorkspace exercise data minimization", () => {
       initialize,
       recover: vi.fn(),
     } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("success")));
@@ -228,7 +345,7 @@ describe("TutorWorkspace exercise data minimization", () => {
       },
     );
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("confirmation-a")));
@@ -275,7 +392,7 @@ describe("TutorWorkspace exercise data minimization", () => {
       },
     );
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("confirmation-a")));
@@ -305,7 +422,7 @@ describe("TutorWorkspace exercise data minimization", () => {
       },
     );
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("same-id")));
@@ -331,7 +448,7 @@ describe("TutorWorkspace exercise data minimization", () => {
         rolledBack: false,
       });
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("definitive")));
@@ -372,7 +489,7 @@ describe("TutorWorkspace exercise data minimization", () => {
         created: ["A", "B", "AB"],
       });
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("transient")));
@@ -410,7 +527,7 @@ describe("TutorWorkspace exercise data minimization", () => {
         rolledBack: true,
       });
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    const view = render(<TutorWorkspace />);
+    const view = renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("unmount")));
@@ -443,7 +560,7 @@ describe("TutorWorkspace exercise data minimization", () => {
       },
     );
     const runtime = { initialize } as unknown as ExerciseInitializationRuntime;
-    render(<TutorWorkspace />);
+    renderSpecialistWorkspace();
 
     act(() => geogebraProps().onExerciseInitializationRuntime(runtime));
     act(() => confirmationProps().onConfirmed(confirmation("failure")));

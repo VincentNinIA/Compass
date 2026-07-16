@@ -88,7 +88,7 @@ async function initializeCandidate(page: Page, expression: string) {
       body: JSON.stringify(readyExercise),
     }),
   );
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
   await page.getByRole("button", { name: "Read my exercise" }).click();
@@ -168,7 +168,7 @@ async function installRealtimeProbe(page: Page) {
 test("T5-C03 real applet measures five finite positions and restores its inventory", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
 
   const evidence = await page.evaluate(async () => {
@@ -405,7 +405,7 @@ test("T5-C07 incorrect candidate stays local and cannot request a synthesis", as
       body: JSON.stringify(readyExercise),
     }),
   );
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
   await page.getByRole("button", { name: "Read my exercise" }).click();
@@ -611,7 +611,7 @@ test("T5-C06 real UI is keyboard-operable, reduced-motion safe, cancellable, and
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
 
   const idleExperiment = page.getByRole("region", {

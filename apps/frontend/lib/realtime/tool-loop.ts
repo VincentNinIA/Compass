@@ -1,5 +1,9 @@
 import type { EvidenceLog } from "@/lib/pedagogy/evidence-log";
-import type { GatewayContext, GatewayEnvelope, ToolGateway } from "@/lib/tools/gateway";
+import type {
+  GatewayContext,
+  GatewayEnvelope,
+  ToolGatewayExecutor,
+} from "@/lib/tools/gateway";
 import type {
   OperationArbiter,
   OperationAuthority,
@@ -26,7 +30,7 @@ type ClientEvent =
   };
 
 type ToolLoopDependencies = {
-  gateway: ToolGateway;
+  gateway: ToolGatewayExecutor;
   getContext(turnId: string): GatewayContext | undefined;
   send(event: ClientEvent): boolean;
   onContinuation(): boolean;

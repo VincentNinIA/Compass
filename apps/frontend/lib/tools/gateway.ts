@@ -62,6 +62,10 @@ export type GatewayEnvelope =
       evidenceIds: string[];
     };
 
+export type ToolGatewayExecutor = {
+  execute(call: GatewayCall, context: GatewayContext): Promise<GatewayEnvelope>;
+};
+
 export type ToolHandlers = {
   [Name in ToolName]: (
     arguments_: ToolArguments[Name],

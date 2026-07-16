@@ -57,7 +57,7 @@ function makeFile(name = "private-filename.jpg") {
 }
 
 function selectImage(file = makeFile()) {
-  fireEvent.change(screen.getByLabelText("Take or choose a photo"), {
+  fireEvent.change(screen.getByLabelText("Choose a photo"), {
     target: { files: [file] },
   });
 }
@@ -383,7 +383,8 @@ describe("exercise data minimization", () => {
         initializationState={{ status: "waiting_for_applet" }}
       />,
     );
-    expect(screen.getByLabelText("Take or choose a photo")).toBeEnabled();
+    expect(screen.getByLabelText("Choose a photo")).toBeEnabled();
+    expect(screen.getByLabelText("Take a photo")).toBeEnabled();
 
     rerender(
       <ExerciseConfirmation
@@ -392,6 +393,7 @@ describe("exercise data minimization", () => {
         initializationState={{ status: "initializing" }}
       />,
     );
-    expect(screen.getByLabelText("Take or choose a photo")).toBeDisabled();
+    expect(screen.getByLabelText("Choose a photo")).toBeDisabled();
+    expect(screen.getByLabelText("Take a photo")).toBeDisabled();
   });
 });

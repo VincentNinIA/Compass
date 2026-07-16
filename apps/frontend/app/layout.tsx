@@ -5,9 +5,9 @@ import "./globals.css";
 import { LanguageProvider } from "@/components/language-provider";
 
 export const metadata: Metadata = {
-  title: "Compass — Make geometry click",
+  title: "Compass — Understand any exercise",
   description:
-    "A bilingual geometry tutor that helps students build, test and understand one exercise at a time.",
+    "A bilingual tutor that reads any school exercise and helps students reason through it one step at a time.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

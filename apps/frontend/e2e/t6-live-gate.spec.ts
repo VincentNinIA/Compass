@@ -391,7 +391,7 @@ test("@live T6-C07 completes one strict golden journey", async ({ page }) => {
     });
 
     await runStep("photo_extraction", async () => {
-      const response = await page.goto("/");
+      const response = await page.goto("/?specialist=geometry");
       expect(response).not.toBeNull();
       expect(new URL(page.url()).protocol).toBe("https:");
       expect(await page.evaluate(() => window.isSecureContext)).toBe(true);
@@ -499,7 +499,7 @@ test("@live T6-C07 completes one strict golden journey", async ({ page }) => {
       expect(probe.attachedAudioTracks).toEqual(["live"]);
       expect(session).toMatchObject({
         sessionModel: "gpt-realtime-2.1",
-        sessionVoice: "marin",
+        sessionVoice: "cedar",
         reasoningEffort: "low",
       });
       return {

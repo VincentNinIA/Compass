@@ -346,9 +346,9 @@ type ResponseCreateEvent = {
 };
 
 type ResponseOverrides = Readonly<{
-  output_modalities: ["text"];
-  tools: [];
-  tool_choice: "none";
+  output_modalities?: ["text"];
+  tools?: [];
+  tool_choice?: "none";
 }>;
 
 function responseRequest(

@@ -16,6 +16,7 @@ const ALLOWED_IMAGE_MIMES = [
 ] as const;
 
 export const EXERCISE_IMAGE_ACCEPT = ALLOWED_IMAGE_MIMES.join(",");
+export const EXERCISE_CAMERA_ACCEPT = "image/*";
 export const MAX_EXERCISE_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export type ExerciseImageMime = (typeof ALLOWED_IMAGE_MIMES)[number];
@@ -255,27 +256,47 @@ export function ExerciseUploader({
                 <circle cx="24" cy="27" r="7" />
               </svg>
             </span>
-            <label htmlFor="exercise-photo-input">
-              {selection
-                ? text("Choose a different photo", "Choisir une autre photo")
-                : text("Take or choose a photo", "Prendre ou choisir une photo")}
-            </label>
+            <div className="photo-source-actions">
+              <span className="photo-source-control">
+                <label htmlFor="exercise-photo-input">
+                  {selection
+                    ? text("Choose a different photo", "Choisir une autre photo")
+                    : text("Choose a photo", "Choisir une photo")}
+                </label>
+                <input
+                  id="exercise-photo-input"
+                  type="file"
+                  accept={EXERCISE_IMAGE_ACCEPT}
+                  aria-describedby="exercise-photo-help exercise-photo-state"
+                  aria-invalid={state === "client_rejected"}
+                  disabled={locked}
+                  onChange={handleChange}
+                />
+              </span>
+              <span className="photo-source-control photo-source-camera">
+                <label htmlFor="exercise-camera-input">
+                  {selection
+                    ? text("Take another photo", "Reprendre une photo")
+                    : text("Take a photo", "Prendre une photo")}
+                </label>
+                <input
+                  id="exercise-camera-input"
+                  type="file"
+                  accept={EXERCISE_CAMERA_ACCEPT}
+                  capture="environment"
+                  aria-describedby="exercise-photo-help exercise-photo-state"
+                  aria-invalid={state === "client_rejected"}
+                  disabled={locked}
+                  onChange={handleChange}
+                />
+              </span>
+            </div>
             <p>
               {text(
                 "Use a bright, straight photo of the question.",
                 "Cadre tout l'énoncé avec une photo droite et lumineuse.",
               )}
             </p>
-            <input
-              id="exercise-photo-input"
-              type="file"
-              accept={EXERCISE_IMAGE_ACCEPT}
-              capture="environment"
-              aria-describedby="exercise-photo-help exercise-photo-state"
-              aria-invalid={state === "client_rejected"}
-              disabled={locked}
-              onChange={handleChange}
-            />
           </div>
           <p id="exercise-photo-help" className="photo-help">
             {text("JPEG, PNG or WebP · 10 MB maximum", "JPEG, PNG ou WebP · 10 Mo maximum")}
@@ -329,6 +350,7 @@ export function ExerciseUploader({
 
         <div
           className="photo-preview"
+          data-has-image={selection ? "true" : "false"}
           aria-label={text(
             "Selected exercise image preview",
             "Aperçu de l'image de l'exercice sélectionné",

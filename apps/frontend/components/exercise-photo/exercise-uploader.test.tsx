@@ -9,6 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  EXERCISE_CAMERA_ACCEPT,
   EXERCISE_IMAGE_ACCEPT,
   ExerciseUploader,
   MAX_EXERCISE_IMAGE_BYTES,
@@ -60,10 +61,13 @@ describe("ExerciseUploader", () => {
     const onAnalyze = vi.fn<(selection: SelectedExerciseImage) => void>();
     render(<ExerciseUploader onAnalyze={onAnalyze} />);
 
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
+    const cameraInput = screen.getByLabelText("Take a photo");
     const file = makeFile(name, type);
     expect(input).toHaveAttribute("accept", EXERCISE_IMAGE_ACCEPT);
-    expect(input).toHaveAttribute("capture", "environment");
+    expect(input).not.toHaveAttribute("capture");
+    expect(cameraInput).toHaveAttribute("accept", EXERCISE_CAMERA_ACCEPT);
+    expect(cameraInput).toHaveAttribute("capture", "environment");
 
     fireEvent.change(input, { target: { files: [file] } });
 
@@ -99,7 +103,7 @@ describe("ExerciseUploader", () => {
     async (name, type, size, expectedMessage) => {
       const onAnalyze = vi.fn();
       render(<ExerciseUploader onAnalyze={onAnalyze} />);
-      const input = screen.getByLabelText("Take or choose a photo");
+      const input = screen.getByLabelText("Choose a photo");
       const file = makeFileWithSize(name, type, size);
 
       fireEvent.change(input, { target: { files: [file] } });
@@ -120,7 +124,7 @@ describe("ExerciseUploader", () => {
   it("rejects multiple files and submits none", () => {
     const onAnalyze = vi.fn();
     render(<ExerciseUploader onAnalyze={onAnalyze} />);
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
 
     fireEvent.change(input, {
       target: {
@@ -138,7 +142,7 @@ describe("ExerciseUploader", () => {
 
   it("revokes every Object URL on replacement, rejection, cancellation, and unmount", () => {
     const { unmount } = render(<ExerciseUploader onAnalyze={vi.fn()} />);
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
 
     fireEvent.change(input, {
       target: { files: [makeFile("first.jpg", "image/jpeg")] },
@@ -176,7 +180,7 @@ describe("ExerciseUploader", () => {
       }),
     );
     render(<ExerciseUploader onAnalyze={onAnalyze} />);
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
     fireEvent.change(input, {
       target: { files: [makeFile("exercise.jpg", "image/jpeg")] },
     });
@@ -206,7 +210,7 @@ describe("ExerciseUploader", () => {
         onSelectionChange={onSelectionChange}
       />,
     );
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
     const first = makeFile("first.jpg", "image/jpeg");
     const second = makeFile("second.png", "image/png");
 
@@ -230,7 +234,7 @@ describe("ExerciseUploader", () => {
   it("blocks Read my exercise independently while keeping replacement and cancellation available", async () => {
     const onAnalyze = vi.fn();
     render(<ExerciseUploader onAnalyze={onAnalyze} analyzeEnabled={false} />);
-    const input = screen.getByLabelText("Take or choose a photo");
+    const input = screen.getByLabelText("Choose a photo");
 
     fireEvent.change(input, {
       target: { files: [makeFile("exercise.jpg", "image/jpeg")] },

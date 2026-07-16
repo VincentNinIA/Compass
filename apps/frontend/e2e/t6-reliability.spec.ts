@@ -97,7 +97,7 @@ async function installVoiceWithoutRemoteAudio(page: Page) {
                       interrupt_response: true,
                     },
                   },
-                  output: { voice: "marin" },
+                  output: { voice: "cedar" },
                 },
                 reasoning: { effort: "low" },
               },
@@ -182,7 +182,7 @@ test("T6-C05 measures real local paths and exposes first-audio degradation witho
       body: "v=0\r\no=- 2 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n",
     }),
   );
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible({
     timeout: 30_000,
   });

@@ -22,6 +22,7 @@ export type GeoGebraApi = {
   registerClientListener?(listener: GeoGebraClientListener): void;
   registerRemoveListener?(listener: GeoGebraObjectListener): void;
   registerUpdateListener?(listener: GeoGebraObjectListener): void;
+  renameObject?(oldLabel: string, newLabel: string): boolean;
   remove?(): void;
   setBase64?(base64: string, callback?: () => void): void;
   setCoordSystem(xMin: number, xMax: number, yMin: number, yMax: number): void;

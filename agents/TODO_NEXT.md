@@ -2,9 +2,10 @@
 
 ## Prochaine action
 
-Préparer la machine jury : certificat de confiance, microphone physique,
-connectivité aux services externes et répétition du runbook. T8 est close; ne
-rouvrir une tranche produit que sur nouvelle contractualisation explicite.
+T14-C02 est close `pass` et aucune carte Builder n'est active. La prochaine
+tranche doit être priorisée avec l'utilisateur; l'audition de `cedar` sur un
+appareil réel avec permission microphone peut compléter la qualification
+humaine sans rouvrir les contrats déterministes.
 
 ## Dépendances
 
@@ -83,16 +84,33 @@ rouvrir une tranche produit que sur nouvelle contractualisation explicite.
 
 ## Blocages actuels
 
-Aucun blocage déterministe produit connu. Le candidat T3 est figé dans Git;
+Aucun blocage déterministe produit connu. T9-C01 à T9-C03 sont closes `pass` et
+le runtime de mascotte n'effectue aucun appel modèle. Le candidat T3 est figé dans Git;
 T7, T8 et leurs preuves doivent être préservées. Le gate automatisé C07 a utilisé une clé valide,
 une piste micro synthétique et un certificat local auto-signé. Le micro physique,
 le certificat de confiance et les services externes restent à contrôler sur la
 machine jury. La réserve live T2-C01 reste ouverte et ne doit pas être confondue
-avec le gate C07 réussi.
+avec le gate C07 réussi. T11-C01 est close avec 629/629 Vitest, 34/34
+Playwright hors live et la lecture réelle de la capture utilisateur en six tâches.
+T12-C01 est close avec 630/630 Vitest, 34/34 Playwright hors live, build, trois
+viewports sans débordement et un applet générique réellement prêt. Son choix
+historique `general_tutor` sans outil pour GeoGebra est explicitement remplacé
+par T13 dans l'atelier mathématique public.
+T13-C01 est close avec 639/639 Vitest, 34/34 Playwright hors live, build et zéro
+overflow aux trois viewports. Le replay credentialed réel crée
+`compassLineFG = Line(F,G)` en vert après une demande explicite.
+T14-C01 est close avec 642/642 Vitest, lint, typecheck et build. Le navigateur
+intégré prouve Point → clic canevas → Undo actif; le contrôle visuel desktop et
+mobile contre l'option 1 est `passed`. Les deltas temps réel et la palette
+élargie sont désormais livrés par T14-C02.
+T14-C02 est close avec 650/650 Vitest sur 57 fichiers, lint, typecheck et build.
+Le vrai applet en session texte a créé E, F et G, avancé la mission 1 à ✓ et le
+score à 20 XP; le renommage E → A a retiré la preuve puis A → E l'a restaurée.
+Un chargement navigateur propre ne rapporte aucune erreur console.
 
 ## Hors périmètre immédiat
 
-Ne pas modifier le périmètre fonctionnel T1 à T6. SLA production, analytics
-persistants, IndexedDB, historique distant, commande GeoGebra générique et
-second exercice restent hors périmètre. La langue de la voix et la traduction
-de texte modèle libre restent hors T8.
+Ne pas modifier les contrats spécialisés T1 à T6. SLA production, analytics
+persistants, IndexedDB, historique distant, commande GeoGebra générique,
+création arbitraire de points et vérification automatique de toutes les matières
+restent hors périmètre.

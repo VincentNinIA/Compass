@@ -24,18 +24,26 @@ import {
   type ExerciseAmbiguityCodeV1,
 } from "@/lib/exercise/exercise-contracts";
 import {
+  GENERAL_EXERCISE_AMBIGUITY_CODES_V1,
+  GENERAL_EXERCISE_REFUSAL_MESSAGE_V1,
+  getGeneralExerciseClarificationMessageV1,
+  parseGeneralExerciseReadyV1,
+  type GeneralExerciseAmbiguityCodeV1,
+} from "@/lib/exercise/general-exercise-contracts";
+import {
   INITIAL_EXERCISE_CONFIRMATION_STATE,
   MAX_EXERCISE_CLARIFICATION_CHARACTERS,
   MAX_EXERCISE_CLARIFICATIONS,
   countClarificationCharacters,
   exerciseConfirmationReducer,
-  type ExerciseConfirmedV1,
+  type ConfirmedExercise,
   type ExerciseConfirmationState,
 } from "@/lib/exercise/exercise-confirmation";
-import type { ParseExerciseResultV1 } from "@/lib/exercise/exercise-parse-route";
+import type { ParseExerciseResult } from "@/lib/exercise/exercise-parse-route";
 import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 import { parseAppErrorPayload } from "@/lib/reliability/app-error";
 import { useLanguage } from "@/components/language-provider";
+import { useMascotController } from "@/components/compass-mascot";
 
 type ParseExerciseInput = {
   file: File;
@@ -46,11 +54,12 @@ type ParseExerciseInput = {
 
 export type ExerciseParser = (
   input: ParseExerciseInput,
-) => Promise<ParseExerciseResultV1>;
+) => Promise<ParseExerciseResult>;
 
 type ExerciseConfirmationProps = {
-  onConfirmed: (confirmation: ExerciseConfirmedV1) => void;
+  onConfirmed: (confirmation: ConfirmedExercise) => void;
   onDraftChanged?: () => void;
+  onAnalysisStarted?: () => void;
   initializationState?: ExerciseInitializationViewState;
   onRetryInitialization?: () => void;
   parseExercise?: ExerciseParser;
@@ -59,6 +68,7 @@ type ExerciseConfirmationProps = {
   now?: () => number;
   resetToken?: number;
   latencyMonitor?: LatencyBudgetMonitor;
+  view?: "combined" | "upload" | "confirmation";
 };
 
 export type ExerciseInitializationViewState =
@@ -92,9 +102,18 @@ function isExerciseAmbiguityCodeV1(
   );
 }
 
+function isGeneralExerciseAmbiguityCodeV1(
+  value: unknown,
+): value is GeneralExerciseAmbiguityCodeV1 {
+  return (
+    typeof value === "string" &&
+    (GENERAL_EXERCISE_AMBIGUITY_CODES_V1 as readonly string[]).includes(value)
+  );
+}
+
 export function parseExerciseResultPayload(
   value: unknown,
-): ParseExerciseResultV1 {
+): ParseExerciseResult {
   if (!isRecord(value) || typeof value.status !== "string") {
     throw new Error("invalid_parse_result");
   }
@@ -116,6 +135,13 @@ export function parseExerciseResultPayload(
     };
   }
 
+  if (value.status === "ready_general") {
+    return {
+      status: "ready_general",
+      exercise: parseGeneralExerciseReadyV1(value.exercise),
+    };
+  }
+
   if (
     value.status === "needs_clarification" &&
     isExerciseAmbiguityCodeV1(value.code)
@@ -124,6 +150,17 @@ export function parseExerciseResultPayload(
       status: "needs_clarification",
       code: value.code,
       question: getExerciseClarificationMessageV1(value.code),
+    };
+  }
+
+  if (
+    value.status === "needs_clarification_general" &&
+    isGeneralExerciseAmbiguityCodeV1(value.code)
+  ) {
+    return {
+      status: "needs_clarification_general",
+      code: value.code,
+      question: getGeneralExerciseClarificationMessageV1(value.code),
     };
   }
 
@@ -136,6 +173,13 @@ export function parseExerciseResultPayload(
 
   if (value.status === "refused") {
     return { status: "refused", message: EXERCISE_REFUSAL_MESSAGE_V1 };
+  }
+
+  if (value.status === "refused_general") {
+    return {
+      status: "refused_general",
+      message: GENERAL_EXERCISE_REFUSAL_MESSAGE_V1,
+    };
   }
 
   throw new Error("invalid_parse_result");
@@ -219,6 +263,7 @@ function stateAnnouncement(
             "Il me manque un petit détail avant de continuer.",
           );
     case "awaiting_confirmation":
+    case "awaiting_general_confirmation":
       return text(
         "I found the exercise. Check it before we build.",
         "J'ai trouvé l'exercice. Vérifie-le avant de construire.",
@@ -247,22 +292,26 @@ function stateAnnouncement(
 }
 
 function localizedClarification(
-  code: ExerciseAmbiguityCodeV1,
+  code: ExerciseAmbiguityCodeV1 | GeneralExerciseAmbiguityCodeV1,
   fallback: string,
   text: Localize,
 ) {
   const french = {
     missing_labels: "Quelles sont les lettres des extrémités du segment ?",
-    unreadable_text: "Quelle construction l'énoncé demande-t-il ?",
+    unreadable_text: "Que dit l'énoncé de l'exercice ?",
     conflicting_instruction: "Dois-tu construire la médiatrice de AB ?",
     missing_segment: "Quels sont les deux points qui définissent le segment ?",
-  } satisfies Record<ExerciseAmbiguityCodeV1, string>;
+    cropped_content: "Peux-tu inclure l'exercice entier dans la photo ?",
+    missing_context: "Quelles informations accompagnent la question ?",
+    conflicting_content: "Quelle consigne dois-je suivre ?",
+  } satisfies Record<ExerciseAmbiguityCodeV1 | GeneralExerciseAmbiguityCodeV1, string>;
   return text(fallback, french[code]);
 }
 
 export function ExerciseConfirmation({
   onConfirmed,
   onDraftChanged,
+  onAnalysisStarted,
   initializationState = { status: "idle" },
   onRetryInitialization,
   parseExercise = fetchExerciseParse,
@@ -271,8 +320,14 @@ export function ExerciseConfirmation({
   now = Date.now,
   resetToken = 0,
   latencyMonitor,
+  view = "combined",
 }: ExerciseConfirmationProps) {
   const { text } = useLanguage();
+  const {
+    start: startMascot,
+    stop: stopMascot,
+    pulse: pulseMascot,
+  } = useMascotController();
   const [state, dispatch] = useReducer(
     exerciseConfirmationReducer,
     INITIAL_EXERCISE_CONFIRMATION_STATE,
@@ -283,6 +338,7 @@ export function ExerciseConfirmation({
   const confirmationLock = useRef(false);
   const workflowFocus = useRef<HTMLHeadingElement>(null);
   const previousResetToken = useRef(resetToken);
+  const activeMascotAnalysis = useRef<string | undefined>(undefined);
   const pendingRequest = useRef<
     { requestId: string; controller: AbortController } | undefined
   >(undefined);
@@ -292,18 +348,34 @@ export function ExerciseConfirmation({
     pendingRequest.current = undefined;
   }, []);
 
-  useEffect(() => cancelPendingRequest, [cancelPendingRequest]);
+  const stopActiveMascotAnalysis = useCallback(() => {
+    const source = activeMascotAnalysis.current;
+    if (!source) return;
+    activeMascotAnalysis.current = undefined;
+    stopMascot(source);
+  }, [stopMascot]);
+
+  useEffect(
+    () => () => {
+      cancelPendingRequest();
+      stopActiveMascotAnalysis();
+      stopMascot("exercise-received");
+    },
+    [cancelPendingRequest, stopActiveMascotAnalysis, stopMascot],
+  );
 
   useEffect(() => {
     if (previousResetToken.current === resetToken) return;
     previousResetToken.current = resetToken;
     cancelPendingRequest();
+    stopActiveMascotAnalysis();
+    stopMascot("exercise-received");
     confirmationLock.current = false;
     setClarification("");
     setClarificationError(undefined);
     dispatch({ type: "image_cleared" });
     setCleanupToken((current) => current + 1);
-  }, [cancelPendingRequest, resetToken]);
+  }, [cancelPendingRequest, resetToken, stopActiveMascotAnalysis, stopMascot]);
 
   useEffect(() => {
     if (
@@ -319,6 +391,10 @@ export function ExerciseConfirmation({
     async (file: File, clarificationText: string | null, requestId: string) => {
       const startedAt = now();
       cancelPendingRequest();
+      stopActiveMascotAnalysis();
+      const mascotSource = `exercise-analysis:${requestId}`;
+      activeMascotAnalysis.current = mascotSource;
+      startMascot(mascotSource, "thinking");
       const controller = new AbortController();
       pendingRequest.current = { requestId, controller };
       try {
@@ -333,6 +409,9 @@ export function ExerciseConfirmation({
           setClarificationError(undefined);
         }
         dispatch({ type: "parse_resolved", requestId, result });
+        if (result.status === "unsupported" || result.status === "refused") {
+          pulseMascot("exercise-analysis-error", "error", 2_400);
+        }
       } catch (error) {
         dispatch({
           type: "parse_failed",
@@ -348,19 +427,38 @@ export function ExerciseConfirmation({
                   "L'analyse est temporairement indisponible. Réessaie quand tu veux.",
                 ),
         });
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          pulseMascot("exercise-analysis-error", "error", 2_400);
+        }
       } finally {
+        stopMascot(mascotSource);
+        if (activeMascotAnalysis.current === mascotSource) {
+          activeMascotAnalysis.current = undefined;
+        }
         latencyMonitor?.record("image", Math.max(0, now() - startedAt));
         if (pendingRequest.current?.requestId === requestId) {
           pendingRequest.current = undefined;
         }
       }
     },
-    [cancelPendingRequest, latencyMonitor, now, parseExercise, text],
+    [
+      cancelPendingRequest,
+      latencyMonitor,
+      now,
+      parseExercise,
+      pulseMascot,
+      startMascot,
+      stopActiveMascotAnalysis,
+      stopMascot,
+      text,
+    ],
   );
 
   const handleSelectionChange = useCallback(
     (selection?: SelectedExerciseImage) => {
       cancelPendingRequest();
+      stopActiveMascotAnalysis();
+      stopMascot("exercise-received");
       onDraftChanged?.();
       confirmationLock.current = false;
       setClarification("");
@@ -370,8 +468,17 @@ export function ExerciseConfirmation({
           ? { type: "image_selected", file: selection.file }
           : { type: "image_cleared" },
       );
+      if (selection) {
+        pulseMascot("exercise-received", "receiving", 2_200);
+      }
     },
-    [cancelPendingRequest, onDraftChanged],
+    [
+      cancelPendingRequest,
+      onDraftChanged,
+      pulseMascot,
+      stopActiveMascotAnalysis,
+      stopMascot,
+    ],
   );
 
   const handleAnalyze = useCallback(
@@ -380,9 +487,10 @@ export function ExerciseConfirmation({
 
       const requestId = createRequestId();
       dispatch({ type: "parse_started", requestId });
+      onAnalysisStarted?.();
       await resolveParse(selection.file, null, requestId);
     },
-    [createRequestId, resolveParse, state],
+    [createRequestId, onAnalysisStarted, resolveParse, state],
   );
 
   const handleClarification = async (event: FormEvent<HTMLFormElement>) => {
@@ -430,28 +538,56 @@ export function ExerciseConfirmation({
   };
 
   const handleConfirm = () => {
-    if (state.status !== "awaiting_confirmation" || confirmationLock.current) {
-      return;
-    }
-
-    const plan = validateExercisePlanV1(state.plan);
-    if (!plan.success) {
-      dispatch({
-        type: "confirmation_rejected",
-        message: text(
-          "The exercise plan changed and must be analyzed again.",
-          "Le plan de l'exercice a changé et doit être analysé à nouveau.",
-        ),
-      });
+    if (
+      (state.status !== "awaiting_confirmation" &&
+        state.status !== "awaiting_general_confirmation") ||
+      confirmationLock.current
+    ) {
       return;
     }
 
     confirmationLock.current = true;
-    const confirmation: ExerciseConfirmedV1 = {
-      plan: plan.data,
-      confirmationId: createConfirmationId(),
-      confirmedAt: now(),
-    };
+    let confirmation: ConfirmedExercise;
+    if (state.status === "awaiting_general_confirmation") {
+      let exercise;
+      try {
+        exercise = parseGeneralExerciseReadyV1(state.exercise);
+      } catch {
+        confirmationLock.current = false;
+        dispatch({
+          type: "confirmation_rejected",
+          message: text(
+            "The exercise summary changed and must be analyzed again.",
+            "Le résumé de l'exercice a changé et doit être analysé à nouveau.",
+          ),
+        });
+        return;
+      }
+      confirmation = {
+        kind: "general",
+        exercise,
+        confirmationId: createConfirmationId(),
+        confirmedAt: now(),
+      };
+    } else {
+      const plan = validateExercisePlanV1(state.plan);
+      if (!plan.success) {
+        confirmationLock.current = false;
+        dispatch({
+          type: "confirmation_rejected",
+          message: text(
+            "The exercise plan changed and must be analyzed again.",
+            "Le plan de l'exercice a changé et doit être analysé à nouveau.",
+          ),
+        });
+        return;
+      }
+      confirmation = {
+        plan: plan.data,
+        confirmationId: createConfirmationId(),
+        confirmedAt: now(),
+      };
+    }
     dispatch({ type: "confirmed", confirmation });
     try {
       onConfirmed(confirmation);
@@ -469,19 +605,22 @@ export function ExerciseConfirmation({
 
   return (
     <>
-      <ExerciseUploader
-        onAnalyze={handleAnalyze}
-        onSelectionChange={handleSelectionChange}
-        cleanupToken={cleanupToken}
-        analyzeEnabled={state.status === "preview"}
-        locked={initializationState.status === "initializing"}
-      />
+      <div className="exercise-upload-stage" hidden={view === "confirmation"}>
+        <ExerciseUploader
+          onAnalyze={handleAnalyze}
+          onSelectionChange={handleSelectionChange}
+          cleanupToken={cleanupToken}
+          analyzeEnabled={state.status === "preview"}
+          locked={initializationState.status === "initializing"}
+        />
+      </div>
 
       <section
         className="exercise-confirmation spike workspace-card workspace-card-check"
         aria-labelledby="exercise-confirmation-title"
         aria-busy={state.status === "parsing"}
         data-state={state.status}
+        hidden={view === "upload"}
       >
         <div className="spike-heading">
           <div>
@@ -604,6 +743,50 @@ export function ExerciseConfirmation({
           </div>
         ) : null}
 
+        {state.status === "awaiting_general_confirmation" ? (
+          <div
+            className="exercise-flow-panel exercise-summary exercise-summary-general"
+            aria-labelledby="exercise-summary-title"
+          >
+            <h3 id="exercise-summary-title" ref={workflowFocus} tabIndex={-1}>
+              {text("Here's what I found", "Voici ce que j'ai trouvé")}
+            </h3>
+            <dl>
+              <div>
+                <dt>{text("Subject", "Matière")}</dt>
+                <dd>{state.exercise.subject.replaceAll("_", " ")}</dd>
+              </div>
+              {state.exercise.title ? (
+                <div>
+                  <dt>{text("Title", "Titre")}</dt>
+                  <dd>{state.exercise.title}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>{text("Exercise", "Énoncé")}</dt>
+                <dd className="exercise-statement">{state.exercise.statement}</dd>
+              </div>
+            </dl>
+            <div className="exercise-task-summary">
+              <h4>{text("What you'll work through", "Les étapes à travailler")}</h4>
+              <ol>
+                {state.exercise.tasks.map((task, index) => (
+                  <li key={`${index}-${task}`}>{task}</li>
+                ))}
+              </ol>
+            </div>
+            <p className="exercise-initialization-note">
+              {text(
+                "Confirm this reading, then Compass will help you one step at a time without changing your exercise.",
+                "Confirme cette lecture, puis Compass t'aidera étape par étape sans modifier ton exercice.",
+              )}
+            </p>
+            <button type="button" onClick={handleConfirm}>
+              {text("Looks right — start", "C'est bien mon exercice — commencer")}
+            </button>
+          </div>
+        ) : null}
+
         {state.status === "unsupported" ? (
           <div className="exercise-flow-panel">
             <h3 ref={workflowFocus} tabIndex={-1}>
@@ -661,7 +844,15 @@ export function ExerciseConfirmation({
             <h3 ref={workflowFocus} tabIndex={-1}>
               {text("Your exercise is ready", "Ton exercice est prêt")}
             </h3>
-            {initializationState.status === "idle" ? (
+            {state.kind === "general" ? (
+              <p role="status">
+                {text(
+                  "Your exercise is now available to the general coach. Choose a step and explain where you're stuck.",
+                  "Ton exercice est maintenant disponible pour le coach généraliste. Choisis une étape et explique où tu bloques.",
+                )}
+              </p>
+            ) : null}
+            {state.kind === "legacy_mediator" && initializationState.status === "idle" ? (
               <p>
                 {text(
                   "I understood the plan and I'm preparing your canvas.",
@@ -669,17 +860,17 @@ export function ExerciseConfirmation({
                 )}
               </p>
             ) : null}
-            {initializationState.status === "waiting_for_applet" ? (
+            {state.kind === "legacy_mediator" && initializationState.status === "waiting_for_applet" ? (
               <p role="status">
                 {text("Opening your geometry workspace…", "Ouverture de ton espace de géométrie…")}
               </p>
             ) : null}
-            {initializationState.status === "initializing" ? (
+            {state.kind === "legacy_mediator" && initializationState.status === "initializing" ? (
               <p role="status">
                 {text("Placing A, B and AB for you…", "Placement de A, B et AB…")}
               </p>
             ) : null}
-            {initializationState.status === "initialized" ? (
+            {state.kind === "legacy_mediator" && initializationState.status === "initialized" ? (
               <p role="status">
                 {text(
                   "Canvas initialized with A, B and AB only. Your turn: construct the perpendicular bisector.",
@@ -687,7 +878,7 @@ export function ExerciseConfirmation({
                 )}
               </p>
             ) : null}
-            {initializationState.status === "failed" ? (
+            {state.kind === "legacy_mediator" && initializationState.status === "failed" ? (
               <div>
                 <p role="alert">
                   {initializationState.code === "recovery_required"

@@ -1,0 +1,814 @@
+{
+  "ok": true,
+  "atlas": {
+    "width": 1536,
+    "height": 1872,
+    "mode": "RGBA"
+  },
+  "states": [
+    "idle",
+    "receiving",
+    "thinking",
+    "listening",
+    "speaking",
+    "modifying",
+    "hinting",
+    "celebrating",
+    "error"
+  ],
+  "frames": [
+    {
+      "state": "idle",
+      "frame": 0,
+      "bbox": [
+        71,
+        6,
+        137,
+        202
+      ],
+      "opaquePixels": 8340
+    },
+    {
+      "state": "idle",
+      "frame": 1,
+      "bbox": [
+        63,
+        6,
+        128,
+        202
+      ],
+      "opaquePixels": 8365
+    },
+    {
+      "state": "idle",
+      "frame": 2,
+      "bbox": [
+        63,
+        7,
+        128,
+        202
+      ],
+      "opaquePixels": 8277
+    },
+    {
+      "state": "idle",
+      "frame": 3,
+      "bbox": [
+        63,
+        7,
+        128,
+        202
+      ],
+      "opaquePixels": 8303
+    },
+    {
+      "state": "idle",
+      "frame": 4,
+      "bbox": [
+        64,
+        7,
+        128,
+        202
+      ],
+      "opaquePixels": 8174
+    },
+    {
+      "state": "idle",
+      "frame": 5,
+      "bbox": [
+        63,
+        7,
+        129,
+        202
+      ],
+      "opaquePixels": 8312
+    },
+    {
+      "state": "idle",
+      "frame": 6,
+      "bbox": [
+        64,
+        7,
+        128,
+        202
+      ],
+      "opaquePixels": 8247
+    },
+    {
+      "state": "idle",
+      "frame": 7,
+      "bbox": [
+        57,
+        6,
+        123,
+        202
+      ],
+      "opaquePixels": 8356
+    },
+    {
+      "state": "receiving",
+      "frame": 0,
+      "bbox": [
+        66,
+        4,
+        132,
+        198
+      ],
+      "opaquePixels": 7701
+    },
+    {
+      "state": "receiving",
+      "frame": 1,
+      "bbox": [
+        57,
+        7,
+        132,
+        200
+      ],
+      "opaquePixels": 7785
+    },
+    {
+      "state": "receiving",
+      "frame": 2,
+      "bbox": [
+        61,
+        5,
+        128,
+        200
+      ],
+      "opaquePixels": 7791
+    },
+    {
+      "state": "receiving",
+      "frame": 3,
+      "bbox": [
+        63,
+        4,
+        129,
+        200
+      ],
+      "opaquePixels": 7705
+    },
+    {
+      "state": "receiving",
+      "frame": 4,
+      "bbox": [
+        63,
+        12,
+        128,
+        201
+      ],
+      "opaquePixels": 7468
+    },
+    {
+      "state": "receiving",
+      "frame": 5,
+      "bbox": [
+        66,
+        5,
+        128,
+        201
+      ],
+      "opaquePixels": 7525
+    },
+    {
+      "state": "receiving",
+      "frame": 6,
+      "bbox": [
+        66,
+        9,
+        127,
+        201
+      ],
+      "opaquePixels": 7437
+    },
+    {
+      "state": "receiving",
+      "frame": 7,
+      "bbox": [
+        61,
+        8,
+        122,
+        202
+      ],
+      "opaquePixels": 7668
+    },
+    {
+      "state": "thinking",
+      "frame": 0,
+      "bbox": [
+        68,
+        6,
+        137,
+        202
+      ],
+      "opaquePixels": 8554
+    },
+    {
+      "state": "thinking",
+      "frame": 1,
+      "bbox": [
+        61,
+        6,
+        130,
+        202
+      ],
+      "opaquePixels": 8586
+    },
+    {
+      "state": "thinking",
+      "frame": 2,
+      "bbox": [
+        60,
+        6,
+        131,
+        202
+      ],
+      "opaquePixels": 8441
+    },
+    {
+      "state": "thinking",
+      "frame": 3,
+      "bbox": [
+        63,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 8110
+    },
+    {
+      "state": "thinking",
+      "frame": 4,
+      "bbox": [
+        64,
+        6,
+        130,
+        202
+      ],
+      "opaquePixels": 8133
+    },
+    {
+      "state": "thinking",
+      "frame": 5,
+      "bbox": [
+        61,
+        6,
+        131,
+        202
+      ],
+      "opaquePixels": 8400
+    },
+    {
+      "state": "thinking",
+      "frame": 6,
+      "bbox": [
+        60,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 8444
+    },
+    {
+      "state": "thinking",
+      "frame": 7,
+      "bbox": [
+        65,
+        6,
+        130,
+        202
+      ],
+      "opaquePixels": 8438
+    },
+    {
+      "state": "listening",
+      "frame": 0,
+      "bbox": [
+        70,
+        7,
+        138,
+        202
+      ],
+      "opaquePixels": 8385
+    },
+    {
+      "state": "listening",
+      "frame": 1,
+      "bbox": [
+        61,
+        6,
+        128,
+        202
+      ],
+      "opaquePixels": 8412
+    },
+    {
+      "state": "listening",
+      "frame": 2,
+      "bbox": [
+        62,
+        7,
+        130,
+        202
+      ],
+      "opaquePixels": 8451
+    },
+    {
+      "state": "listening",
+      "frame": 3,
+      "bbox": [
+        64,
+        15,
+        131,
+        202
+      ],
+      "opaquePixels": 8450
+    },
+    {
+      "state": "listening",
+      "frame": 4,
+      "bbox": [
+        59,
+        11,
+        133,
+        202
+      ],
+      "opaquePixels": 8409
+    },
+    {
+      "state": "listening",
+      "frame": 5,
+      "bbox": [
+        61,
+        8,
+        129,
+        202
+      ],
+      "opaquePixels": 8366
+    },
+    {
+      "state": "listening",
+      "frame": 6,
+      "bbox": [
+        63,
+        8,
+        130,
+        202
+      ],
+      "opaquePixels": 8306
+    },
+    {
+      "state": "listening",
+      "frame": 7,
+      "bbox": [
+        60,
+        7,
+        128,
+        202
+      ],
+      "opaquePixels": 8366
+    },
+    {
+      "state": "speaking",
+      "frame": 0,
+      "bbox": [
+        68,
+        6,
+        134,
+        202
+      ],
+      "opaquePixels": 8379
+    },
+    {
+      "state": "speaking",
+      "frame": 1,
+      "bbox": [
+        63,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 8401
+    },
+    {
+      "state": "speaking",
+      "frame": 2,
+      "bbox": [
+        63,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 8048
+    },
+    {
+      "state": "speaking",
+      "frame": 3,
+      "bbox": [
+        64,
+        6,
+        128,
+        202
+      ],
+      "opaquePixels": 7935
+    },
+    {
+      "state": "speaking",
+      "frame": 4,
+      "bbox": [
+        63,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 8002
+    },
+    {
+      "state": "speaking",
+      "frame": 5,
+      "bbox": [
+        63,
+        8,
+        129,
+        202
+      ],
+      "opaquePixels": 7937
+    },
+    {
+      "state": "speaking",
+      "frame": 6,
+      "bbox": [
+        63,
+        8,
+        128,
+        202
+      ],
+      "opaquePixels": 8220
+    },
+    {
+      "state": "speaking",
+      "frame": 7,
+      "bbox": [
+        58,
+        6,
+        123,
+        202
+      ],
+      "opaquePixels": 8305
+    },
+    {
+      "state": "modifying",
+      "frame": 0,
+      "bbox": [
+        69,
+        6,
+        129,
+        202
+      ],
+      "opaquePixels": 7234
+    },
+    {
+      "state": "modifying",
+      "frame": 1,
+      "bbox": [
+        66,
+        9,
+        125,
+        202
+      ],
+      "opaquePixels": 7169
+    },
+    {
+      "state": "modifying",
+      "frame": 2,
+      "bbox": [
+        68,
+        9,
+        123,
+        202
+      ],
+      "opaquePixels": 6686
+    },
+    {
+      "state": "modifying",
+      "frame": 3,
+      "bbox": [
+        68,
+        19,
+        121,
+        199
+      ],
+      "opaquePixels": 6481
+    },
+    {
+      "state": "modifying",
+      "frame": 4,
+      "bbox": [
+        72,
+        28,
+        122,
+        198
+      ],
+      "opaquePixels": 5932
+    },
+    {
+      "state": "modifying",
+      "frame": 5,
+      "bbox": [
+        68,
+        33,
+        123,
+        199
+      ],
+      "opaquePixels": 5905
+    },
+    {
+      "state": "modifying",
+      "frame": 6,
+      "bbox": [
+        68,
+        6,
+        124,
+        202
+      ],
+      "opaquePixels": 6939
+    },
+    {
+      "state": "modifying",
+      "frame": 7,
+      "bbox": [
+        64,
+        6,
+        123,
+        202
+      ],
+      "opaquePixels": 7580
+    },
+    {
+      "state": "hinting",
+      "frame": 0,
+      "bbox": [
+        65,
+        6,
+        138,
+        202
+      ],
+      "opaquePixels": 8286
+    },
+    {
+      "state": "hinting",
+      "frame": 1,
+      "bbox": [
+        61,
+        9,
+        131,
+        202
+      ],
+      "opaquePixels": 7868
+    },
+    {
+      "state": "hinting",
+      "frame": 2,
+      "bbox": [
+        57,
+        7,
+        136,
+        202
+      ],
+      "opaquePixels": 8661
+    },
+    {
+      "state": "hinting",
+      "frame": 3,
+      "bbox": [
+        58,
+        10,
+        126,
+        202
+      ],
+      "opaquePixels": 7707
+    },
+    {
+      "state": "hinting",
+      "frame": 4,
+      "bbox": [
+        65,
+        18,
+        134,
+        201
+      ],
+      "opaquePixels": 7391
+    },
+    {
+      "state": "hinting",
+      "frame": 5,
+      "bbox": [
+        63,
+        7,
+        127,
+        202
+      ],
+      "opaquePixels": 7637
+    },
+    {
+      "state": "hinting",
+      "frame": 6,
+      "bbox": [
+        65,
+        16,
+        129,
+        202
+      ],
+      "opaquePixels": 7326
+    },
+    {
+      "state": "hinting",
+      "frame": 7,
+      "bbox": [
+        57,
+        7,
+        126,
+        202
+      ],
+      "opaquePixels": 8513
+    },
+    {
+      "state": "celebrating",
+      "frame": 0,
+      "bbox": [
+        71,
+        6,
+        140,
+        202
+      ],
+      "opaquePixels": 8530
+    },
+    {
+      "state": "celebrating",
+      "frame": 1,
+      "bbox": [
+        61,
+        8,
+        127,
+        202
+      ],
+      "opaquePixels": 8345
+    },
+    {
+      "state": "celebrating",
+      "frame": 2,
+      "bbox": [
+        63,
+        4,
+        130,
+        200
+      ],
+      "opaquePixels": 7800
+    },
+    {
+      "state": "celebrating",
+      "frame": 3,
+      "bbox": [
+        63,
+        4,
+        128,
+        195
+      ],
+      "opaquePixels": 7393
+    },
+    {
+      "state": "celebrating",
+      "frame": 4,
+      "bbox": [
+        61,
+        4,
+        130,
+        184
+      ],
+      "opaquePixels": 7135
+    },
+    {
+      "state": "celebrating",
+      "frame": 5,
+      "bbox": [
+        63,
+        5,
+        129,
+        199
+      ],
+      "opaquePixels": 8199
+    },
+    {
+      "state": "celebrating",
+      "frame": 6,
+      "bbox": [
+        60,
+        7,
+        132,
+        202
+      ],
+      "opaquePixels": 8273
+    },
+    {
+      "state": "celebrating",
+      "frame": 7,
+      "bbox": [
+        57,
+        8,
+        124,
+        201
+      ],
+      "opaquePixels": 8178
+    },
+    {
+      "state": "error",
+      "frame": 0,
+      "bbox": [
+        64,
+        7,
+        131,
+        202
+      ],
+      "opaquePixels": 8297
+    },
+    {
+      "state": "error",
+      "frame": 1,
+      "bbox": [
+        63,
+        7,
+        129,
+        202
+      ],
+      "opaquePixels": 8272
+    },
+    {
+      "state": "error",
+      "frame": 2,
+      "bbox": [
+        64,
+        6,
+        127,
+        202
+      ],
+      "opaquePixels": 7708
+    },
+    {
+      "state": "error",
+      "frame": 3,
+      "bbox": [
+        62,
+        7,
+        125,
+        202
+      ],
+      "opaquePixels": 7857
+    },
+    {
+      "state": "error",
+      "frame": 4,
+      "bbox": [
+        66,
+        11,
+        129,
+        202
+      ],
+      "opaquePixels": 7944
+    },
+    {
+      "state": "error",
+      "frame": 5,
+      "bbox": [
+        62,
+        6,
+        127,
+        202
+      ],
+      "opaquePixels": 7925
+    },
+    {
+      "state": "error",
+      "frame": 6,
+      "bbox": [
+        65,
+        7,
+        124,
+        202
+      ],
+      "opaquePixels": 7270
+    },
+    {
+      "state": "error",
+      "frame": 7,
+      "bbox": [
+        65,
+        7,
+        129,
+        202
+      ],
+      "opaquePixels": 8103
+    }
+  ],
+  "errors": []
+}

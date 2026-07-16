@@ -17,7 +17,7 @@ export class GeoGebraAccessibilityGuard {
     this.observer = new MutationObserver(() => this.sync());
     this.observer.observe(this.root, {
       attributes: true,
-      attributeFilter: ["aria-disabled", "aria-hidden"],
+      attributeFilter: ["aria-disabled", "aria-hidden", "class", "hidden", "style"],
       childList: true,
       subtree: true,
     });
@@ -53,7 +53,9 @@ export class GeoGebraAccessibilityGuard {
 
   sync() {
     const hidden = new Set(
-      this.root.querySelectorAll<HTMLElement>('[aria-hidden="true"]'),
+      [...this.root.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter(
+        (element) => this.isActuallyHidden(element),
+      ),
     );
     for (const element of hidden) {
       if (!this.previousInert.has(element)) {
@@ -125,6 +127,19 @@ export class GeoGebraAccessibilityGuard {
       if (element.isConnected) element.disabled = disabled;
       this.disabledControls.delete(element);
     }
+  }
+
+  private isActuallyHidden(element: HTMLElement) {
+    if (element.hidden) return true;
+    const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+    if (
+      style?.display === "none" ||
+      style?.visibility === "hidden" ||
+      style?.contentVisibility === "hidden"
+    ) {
+      return true;
+    }
+    return element.getClientRects().length === 0 && element.offsetParent === null;
   }
 
   private restoreInert(element: HTMLElement, inert: boolean) {

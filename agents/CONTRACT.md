@@ -1,36 +1,224 @@
-# Contrat Builder — T8 Identité Compass et interface bilingue — close
+# Contrat Builder — T14-C02 Monde GeoGebra vivant — close `pass`
 
-## État actif
+## État
 
-- T8 est close le 15 juillet 2026 avec verdict `pass` et le nom public est
-  `Compass`; les identifiants techniques historiques restent inchangés.
-- L'ordre T8-C01 identité publique et état de langue → T8-C02 traduction de la
-  surface élève → T8-C03 responsive, accessibilité et qualification navigateur
-  a été respecté.
-- Carte active : aucune. Le prochain travail reste la préparation physique de
-  la machine jury et n'ouvre pas une nouvelle tranche produit.
+- T14-C02 est close `pass` au 16 juillet 2026. Aucune carte Builder n'est active.
+- T14-C01 et T13 restent les bases d'interface et de sécurité à préserver.
 
-## Périmètre contractualisé
+## Tranche contractualisée — T14-C02
 
-- Remplacer `GeoTutor` par `Compass` dans la marque, les métadonnées et toute
-  copie publique, sans renommer packages, globals de preuve ou contrats runtime.
-- Ajouter un provider client EN/FR sans dépendance ni persistance, mettre à jour
-  `document.lang` et exposer un bouton compact à drapeau en haut à droite.
-- Traduire le shell, photo/confirmation, canvas/progrès, expérience, coach,
-  états dégradés et détails secondaires. Les données d'exercice extraites et
-  les diagnostics techniques bruts restent fidèles à leur source.
-- Conserver le parcours anglais par défaut afin de préserver les gates
-  historiques; le basculement français doit être couvert explicitement.
+### Objectif
 
-## Hors périmètre actif
+Relier l'état réel de GeoGebra au coach, étendre ses actions sémantiques sûres
+et transformer les missions vérifiables en progression honnête avec XP, tout en
+donnant à Compass une voix adulte cohérente avec son personnage.
 
-- Traduction de la sortie libre du modèle, changement de langue de la voix,
-  localisation serveur, routes préfixées, persistance de préférence ou ajout de
-  bibliothèque i18n.
-- Nouveau template d'exercice, changement de modèle ou d'autorité T1 à T7,
-  `QA_REPORT.md` côté Builder et `HANDOFF.md` sans reprise réelle.
+### Inclus
 
-## Gates de clôture
+- Produire un snapshot initial borné du tableau puis des mises à jour
+  stabilisées sur ajout, retrait, renommage, déplacement et style; publier ce
+  contexte dans la session Realtime active sans déclencher une réponse modèle à
+  chaque événement.
+- Vérifier de manière déterministe les relations géométriques disponibles pour
+  l'exercice confirmé; attribuer 20 XP une seule fois par mission effectivement
+  satisfaite et conserver les tâches non démontrables dans l'état `à faire`.
+- Étendre la palette fermée avec création et déplacement de point, renommage,
+  style, cercle et polygone, en plus de l'inventaire, droite, demi-droite et
+  segment existants.
+- Conserver la demande explicite, les schémas stricts, l'idempotence et le
+  budget d'une mutation maximum par tour; aucune commande GeoGebra libre.
+- Utiliser la voix Realtime `cedar` avec une consigne de tuteur adulte,
+  chaleureuse et posée, en voix comme en texte.
+
+### Hors périmètre
+
+- Pas de commande `evalCommand` fournie librement au modèle, de suppression
+  arbitraire, d'exécution de code ou d'accès aux primitives GeoGebra non
+  contractualisées.
+- Pas de validation par le modèle, de score inventé, de note scolaire ni de
+  validation automatique d'une réponse écrite non observable sur le tableau.
+- Pas d'ouverture automatique du microphone et pas de modification destructive
+  des modules spécialisés T1 à T6.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# navigateur réel : progression 0 → 20 XP après E/F/G non alignés
+```
+
+### Définition de fini
+
+- Le coach reçoit un état initial borné puis une mise à jour significative sans
+  `response.create` automatique et peut décrire les objets réellement présents.
+- La mission 1 de l'exercice utilisateur passe à `vérifié` seulement lorsque
+  E, F et G existent et ne sont pas alignés; l'affichage passe alors à 20 XP.
+- Le gateway renomme un objet existant et couvre les nouvelles actions sans
+  permettre d'argument supplémentaire, de label invalide ou de deuxième
+  mutation dans le même tour.
+- Les profils Realtime publient `cedar`; le prompt demande un timbre adulte,
+  chaleureux et naturel sans revendiquer une garantie de genre du fournisseur.
+- Les gates passent et le parcours réel confirme GeoGebra cliquable, mission
+  validée et score mis à jour.
+
+### Preuves de clôture
+
+- `lint`, `typecheck` et le build Next.js passent; Vitest rend 650/650 sur
+  57 fichiers.
+- Les tests prouvent le snapshot/delta sans `response.create`, les relations
+  géométriques, la borne de quarante objets, le renommage, le rejet des actions
+  libres et le budget d'une mutation par tour.
+- Dans le vrai applet connecté en texte, Compass crée successivement E, F et G;
+  le rail passe alors à la mission 2, affiche ✓ sur la mission 1 et 20 XP.
+- Le renommage réel E → A retire immédiatement la preuve et remet le score à
+  zéro; A → E restaure 20 XP. Un nouvel onglet chargé à froid ne rapporte aucune
+  erreur console.
+- Les configurations serveur, session et E2E attendent toutes `cedar`. L'essai
+  audio physique reste un contrôle humain soumis à permission microphone, pas
+  un gate automatique.
+
+## Archive — T14-C01
+
+# Contrat Builder — T14 Atelier GeoGebra panoramique — close `pass`
+
+## État
+
+- T14-C01 est close `pass` au 15 juillet 2026. Aucune carte Builder n'est active.
+- La direction visuelle retenue par l'utilisateur est l'option 1 : barre coach
+  horizontale, plan GeoGebra pleine largeur et rail de missions horizontal.
+- T13 reste la base fonctionnelle à préserver; aucune capacité fermée Realtime
+  existante ne doit régresser.
+
+## Tranche contractualisée — T14-C01 — close
+
+### Objectif
+
+Rendre l'atelier immédiatement jouable : corriger les contrôles GeoGebra
+neutralisés, donner au plan toute la largeur utile, déplacer le coach au-dessus
+et les six missions sous le plan, puis remplacer la boucle permanente de la
+mascotte par des réactions finies ancrées aux événements réels.
+
+### Inclus
+
+- Corriger la garde d'accessibilité afin qu'un contrôle GeoGebra visible portant
+  `aria-hidden` reste cliquable, tout en gardant les sous-arbres réellement
+  masqués inertes.
+- Vérifier dans un navigateur réel le parcours outil Point → clic plan → objet
+  créé, ainsi que clavier et absence de contrôle bloqué.
+- Supprimer la colonne latérale du workbench : coach horizontal compact,
+  GeoGebra pleine largeur et hauteur liée au viewport, rail de six missions
+  horizontal sous le canevas.
+- Transformer les missions en états `à faire`, `en cours` et `vérifié` sans
+  revendiquer une validation lorsque le runtime déterministe ne la fournit pas.
+- Jouer les huit frames d'une activité de mascotte au plus une fois, conserver
+  une pose de repos stable et respecter `prefers-reduced-motion`.
+- Intégrer un asset propre de la mascotte dans la barre panoramique sans
+  réutiliser visuellement l'atlas complet.
+
+### Hors périmètre de C01
+
+- Le flux de deltas GeoGebra injecté dans la conversation Realtime et les
+  nouvelles actions sémantiques appartiennent à T14-C02.
+- Pas d'ouverture automatique du microphone, de commande GeoGebra libre, de
+  validation modèle, de score inventé ou de notation à enjeu élevé.
+- Aucun changement destructif des modules spécialisés T1 à T6.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# parcours réel dans le navigateur choisi : Point → clic plan → Undo actif
+```
+
+### Définition de fini
+
+- À 1440 px, aucun panneau latéral ne réduit GeoGebra; le coach précède le plan
+  et le rail de missions le suit sur toute la largeur.
+- À 390 et 768 px, la même hiérarchie reste utilisable sans débordement et les
+  contrôles persistants ne masquent pas le plan.
+- Un test navigateur sur le vrai applet sélectionne Point et crée un objet par
+  clic; la garde continue à neutraliser un vrai sous-arbre masqué.
+- La mascotte ne boucle plus indéfiniment : une réaction atteint sa pose finale
+  puis revient au repos; mouvement réduit reste immobile.
+- Les gates passent et le contrôle visuel contre la cible sélectionnée conclut
+  `final result: passed` dans `design-qa.md`.
+
+### Preuves de clôture
+
+- `lint`, `typecheck` et le build Next.js passent; Vitest rend 642/642 sur
+  56 fichiers.
+- Dans le navigateur intégré sur le vrai applet, l'outil Point devient actif,
+  un clic sur le canevas crée un objet et réactive Undo. Le test de la garde
+  confirme qu'un outil visible portant `aria-hidden` ne reçoit plus `inert`.
+- Les captures desktop et mobile confirment coach horizontal, plan sans colonne
+  latérale et rail compact. Les collisions trouvées au premier passage ont été
+  corrigées; `design-qa.md` conclut `final result: passed`.
+- La réaction non idle de la mascotte joue une séquence finie puis reste sur la
+  pose de repos; les tests reduced motion et cleanup passent.
+
+## Tranche candidate — T14-C02 — monde GeoGebra temps réel
+
+- Publier un snapshot initial borné et des deltas significatifs stabilisés vers
+  la session active.
+- Étendre la palette par actions sémantiques fermées : point, focus/highlight,
+  choix d'outil, centrage/zoom, couleur et primitives autorisées.
+- Conserver demande explicite, budget, idempotence, annulation et absence de
+  commande arbitraire.
+
+## Archive — T13
+
+# Contrat Builder — T13 Atelier GeoGebra assisté — close `pass`
+
+## État
+
+- T13-C01 est close `pass` au 15 juillet 2026. Aucune carte Builder n'est active.
+- Cette tranche remédie le retour de test utilisateur : GeoGebra devient la
+  surface principale, le coach comprend le contexte de l'applet et peut aider à
+  tracer avec une surface d'outils fermée.
+
+## Tranche contractualisée — T13-C01 — close
+
+### Objectif
+
+Transformer l'atelier mathématique en poste de travail GeoGebra clair : grand
+canevas, coach compact et contextualisé, aide vocale ou textuelle capable de
+créer une droite, une demi-droite ou un segment entre des points existants à la
+demande explicite de l'élève.
+
+### Inclus
+
+- Une composition grand écran où GeoGebra reçoit au moins 65 % de la largeur du
+  workbench et une hauteur utile liée au viewport; le coach et les tâches
+  occupent une colonne secondaire.
+- Sur mobile, l'ordre coach → GeoGebra → tâches, sans débordement horizontal.
+- Un profil Realtime `geogebra_tutor` qui reçoit l'exercice confirmé comme donnée
+  non fiable, sait que l'élève est dans GeoGebra et bannit toute recommandation
+  d'instrument physique.
+- Quatre outils de fonction fermés : inventaire borné, droite par deux points,
+  demi-droite par deux points et segment par deux points.
+- Un gateway local validant noms, arguments, phase, autorité, idempotence et
+  budget d'une mutation maximum par tour. Aucun point manquant n'est créé.
+- Une copie élève honnête : Compass peut regarder l'inventaire et tracer sur
+  demande, mais ne valide ni ne note automatiquement la construction.
+
+### Hors périmètre
+
+- Aucune commande GeoGebra libre, génération de code, suppression, déplacement
+  ou création arbitraire de point par le modèle.
+- Aucune preuve de correction, notation ou vérification déterministe générale.
+- Aucun changement destructif des modules spécialisés T1 à T6 ou du profil
+  général sans outil utilisé pour les autres matières.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
 
 ```sh
 pnpm --dir apps/frontend lint
@@ -40,10 +228,327 @@ pnpm --dir apps/frontend build
 pnpm --dir apps/frontend exec playwright test --grep-invert @live
 ```
 
-La clôture exige aussi une inspection réelle à 390 × 844, 768 × 1024 et
-1440 × 900 dans les deux langues, un parcours clavier, l'absence de débordement
-horizontal, `lang` correct et le maintien des 30 scénarios historiques. Une
-capture française doit montrer la marque Compass et le contrôle de retour EN.
+### Définition de fini
+
+- À 1440 px, le canevas GeoGebra occupe au moins 65 % de la largeur du workbench
+  et reste visible avec le coach compact sans long préambule vertical.
+- À 390 et 768 px, le coach vient avant le tableau puis les tâches, sans
+  débordement ni contrôle inaccessible.
+- Les configurations voix et texte du profil `geogebra_tutor` exposent
+  exactement les quatre outils fermés avec `tool_choice:"auto"`; le profil
+  `general_tutor` conserve `tools:[]` et `tool_choice:"none"`.
+- Sur le vrai applet, F et G existants permettent de créer une droite verte;
+  un point absent échoue sans mutation, un `callId` rejoué est idempotent et une
+  deuxième mutation du même tour est refusée.
+- Un replay Realtime publie le `function_call_output` puis une seule continuation.
+- Le prompt système interdit explicitement les instruments physiques et décrit
+  les clics de barre d'outils lorsque l'élève préfère construire lui-même.
+
+### Preuves de clôture
+
+- Lint, typecheck et build passent; Vitest rend 639/639 tests sur 55 fichiers.
+- Playwright hors `@live` rend 34/34. Le scénario T13 couvre les quatre écrans,
+  l'applet réellement prêt, l'ordre mobile/tablette et la largeur desktop.
+- À 1440 × 900, GeoGebra occupe 72,0 % des 1320 px du workbench; à 390 × 844
+  et 768 × 1024, l'ordre est coach → tableau → tâches et l'overflow vaut zéro.
+- Le replay credentialed réel sur l'exercice utilisateur a connecté
+  `geogebra_tutor` en texte, inspecté F/G, créé `compassLineFG`, puis répondu en
+  français. L'API retourne exactement `Line[F, G]` et la couleur `#2E7D32`.
+- Les tests du gateway prouvent point absent sans mutation, idempotence du
+  `callId`, une mutation par tour, arguments stricts et rejet d'un outil libre.
+- Les captures finales sont
+  `output/playwright/T13-geogebra-live-line-1440x900.png`,
+  `T13-geogebra-assisted-768x1024.png` et
+  `T13-geogebra-assisted-390x844.png`.
+
+## Archive — T12
+
+# Contrat Builder — T12 Parcours en écrans et atelier contextualisé — close `pass`
+
+## État de clôture
+
+- T12-C01 est close `pass` le 15 juillet 2026. Aucune carte Builder n'est active.
+- Le parcours public rend quatre écrans exclusifs et ouvre l'atelier uniquement
+  après confirmation. Pour la capture utilisateur, le coach vocal précède un
+  GeoGebra vierge puis les six tâches sur mobile.
+
+## Tranche contractualisée — T12-C01 — close
+
+### Objectif
+
+Remplacer la page élève empilée par quatre écrans successifs — accueil, photo,
+vérification, atelier — et garder dans l'atelier le coach vocal au-dessus du
+support de travail. Pour un exercice mathématique ou géométrique générique,
+GeoGebra est un tableau libre et non un validateur spécialisé.
+
+### Inclus
+
+- Une machine de navigation locale en mémoire qui conserve le draft entre les
+  écrans et n'affiche qu'une étape métier à la fois.
+- Un bouton d'accueil qui ouvre l'acquisition, l'analyse qui ouvre immédiatement
+  la vérification, puis la confirmation qui ouvre l'atelier.
+- Des retours explicites vers l'étape précédente ou l'accueil, un focus déplacé
+  au nouveau titre et une progression accessible EN/FR.
+- Un atelier avec mascotte et coach Realtime en tête; l'action voix reste visible
+  dès l'ouverture et le contexte confirmé demeure l'unique contexte du coach.
+- Un tableau GeoGebra vierge pour les exercices de mathématiques/géométrie, sans
+  bootstrap A/B/AB, mutation par le modèle, observation, score ou validation
+  automatique. Les autres matières gardent l'espace de tâches général.
+- Le mode `?specialist=geometry` historique reste un banc compatible avec les
+  preuves T1 à T6 et n'est pas confondu avec le parcours public.
+- Qualification à 390, 768 et 1440 px, clavier, EN/FR et absence de débordement.
+
+### Hors périmètre
+
+- Aucun routage matière vers un outil arbitraire, aucune génération de commande
+  GeoGebra et aucune promesse de correction automatique du tableau libre.
+- Aucun changement des contrats `general_exercise.v1`, Realtime ou des autorités
+  spécialisées T1 à T6; aucun stockage persistant.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+```
+
+### Définition de fini
+
+- Le parcours nominal passe de l'accueil à la photo, puis à la vérification et
+  à l'atelier sans ancre ni long scroll entre ces étapes.
+- La capture utilisateur de géométrie ouvre un atelier où le coach, la voix,
+  les six tâches et un tableau GeoGebra vierge restent simultanément accessibles.
+- L'atelier ne contient aucune copie médiatrice/AB/PA-PB ni fausse validation et
+  le profil général conserve `tools:[]` et `tool_choice:"none"`.
+- Les modes erreur, clarification, nouvelle photo et retour sont utilisables au
+  clavier; les gates et les trois viewports passent sans débordement.
+
+### Preuves de clôture
+
+- Lint, typecheck et build passent; Vitest rend 630/630 tests sur 54 fichiers.
+- Playwright hors `@live` rend 34/34. Le scénario T12 attend un applet réellement
+  `ready`, six tâches, le coach et la voix, puis vérifie 390, 768 et 1440 px sans
+  débordement ainsi que les retours nouvel exercice et accueil.
+- La capture `output/playwright/T12-four-screen-workspace-390x844.png` montre
+  l'ordre mobile coach → GeoGebra → tâches, sans médiatrice, A/B/AB ni PA/PB.
+- L'applet générique contient des enfants injectés mais aucun bootstrap, listener
+  métier, score ou outil Realtime; le profil général reste sans outil.
+
+## Archive — T11
+
+# Contrat Builder — T11 Tuteur généraliste — close `pass`
+
+## État de clôture
+
+- T11-C01 est close `pass` le 15 juillet 2026. Aucune carte Builder n'est
+  active.
+- La surface publique accepte tout exercice scolaire lisible dans
+  `general_exercise.v1`, demande une confirmation fidèle, puis active un coach
+  sans outil spécialisé.
+- Le module médiatrice historique est absent du parcours par défaut; un mode
+  spécialiste explicite le conserve pour les tests et les modules compatibles.
+
+## Tranche contractualisée — T11-C01 — close
+
+### Objectif
+
+Retirer la médiatrice comme exercice imposé sur la surface publique et permettre
+à Compass d'accompagner tout exercice scolaire lisible. La confirmation reste
+obligatoire; le coach général ne possède aucun outil spécialisé et ne revendique
+aucune vérification automatique.
+
+### Inclus
+
+- Ajouter une enveloppe `general_exercise.v1` stricte et bornée contenant langue,
+  matière, titre, énoncé, tâches ordonnées et notions, avec seulement les issues
+  `ready` et `needs_clarification`.
+- Modifier la route photo réelle afin qu'elle ne classe plus une matière ou un
+  type d'exercice en `unsupported`; seuls l'illisibilité, l'incomplétude ou les
+  contradictions demandent une précision.
+- Afficher et faire confirmer le contenu générique avant toute activation du
+  coach, sans convertir le texte modèle en commande, permission ou preuve.
+- Remplacer le canevas médiatrice public par un espace d'accompagnement
+  générique. Le module historique peut rester disponible au code et aux tests,
+  mais il n'est ni monté ni annoncé pour un exercice général.
+- Ouvrir les sessions Realtime publiques avec le profil `general_tutor` sans
+  outil, transmettre l'exercice confirmé comme item utilisateur délimité, puis
+  permettre la voix ou le texte avec une pédagogie socratique concise.
+- Qualifier la capture réelle fournie par l'utilisateur, au moins deux autres
+  matières, EN/FR, clavier, reflow et l'absence de copie médiatrice dans le
+  parcours général.
+
+### Hors périmètre
+
+- Pas de commande GeoGebra générique, de code arbitraire, de notation à enjeu
+  élevé ni de promesse de correction déterministe hors module spécialisé.
+- Pas de stockage du média ou de l'énoncé; le contexte reste en mémoire de
+  session et `store:false` demeure requis pour l'extraction.
+- Pas de changement destructif des contrats T1 à T10 ni de leurs preuves.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+```
+
+### Preuves de clôture
+
+- La capture française réelle fournie par l'utilisateur retourne HTTP 200 en
+  `ready_general`, avec le titre `Exercice 1`, les six consignes dans l'ordre et
+  les notions droite, demi-droite, segment et appartenance.
+- Les contrats couvrent aussi histoire et langue étrangère par la même issue
+  `ready`; les instructions répétées sont conservées et une image illisible
+  reste en `needs_clarification` sans contexte coach.
+- Lint, typecheck et build passent; Vitest rend 629/629 tests sur 54 fichiers.
+- Playwright hors `@live` rend 34/34. Le scénario T11 à 390 × 844 confirme les
+  six étapes, la bascule EN/FR, le coach activé après confirmation, l'absence de
+  médiatrice publique et l'absence de débordement horizontal.
+- Le profil Realtime général est qualifié en voix et en texte avec `tools:[]`,
+  `tool_choice:"none"` et un seul item utilisateur de contexte, sans
+  `response.create` automatique.
+
+### Définition de fini
+
+- La capture française multi-étapes de l'utilisateur atteint `ready` avec ses
+  six tâches dans l'ordre et sans statut `unsupported`.
+- Une image lisible d'une autre matière atteint la même confirmation; une image
+  illisible demande une précision et ne crée aucun contexte coach.
+- L'exercice confirmé est le seul contexte transmis au profil général, qui
+  expose `tools:[]` et `tool_choice:"none"`; l'item de contexte ne déclenche pas
+  seul une réponse.
+- La surface publique ne montre plus la médiatrice, AB, 0/2 ou PA/PB pour un
+  exercice général et reste utilisable à 390, 768 et 1440 px.
+- Les gates ci-dessus passent et les documents pilote reflètent les preuves.
+
+## Archive — T10
+
+# Contrat Builder — T10 Acquisition photo fiable — close `pass`
+
+## État de clôture
+
+- T10-C01 est close `pass` le 15 juillet 2026. Aucune carte Builder n'est active.
+- La galerie utilise une entrée sans `capture`; la caméra possède une entrée
+  distincte `image/*` avec `capture="environment"`.
+- `pnpm dev` charge le `.env` racine avant Next.js et la route image réelle
+  répond `ready` sans exposer la clé au client.
+
+## Tranche contractualisée — T10-C01 — close
+
+### Inclus
+
+- Séparer l'entrée fichier de l'entrée caméra afin que l'élève puisse choisir
+  explicitement une image existante ou ouvrir la caméra arrière de son mobile.
+- Conserver une validation, un aperçu et un nettoyage identiques quelle que
+  soit la source de l'image.
+- Faire charger au script `pnpm dev` la configuration serveur `.env` située à
+  la racine, comme les gates live existants, sans jamais l'exposer au client.
+- Qualifier les deux entrées, la bascule EN/FR et une lecture d'image réelle.
+
+### Hors périmètre
+
+- Aucun changement de modèle, prompt, schéma d'extraction, politique
+  pédagogique, stockage, géométrie, Realtime ou animation de mascotte.
+- Aucune demande automatique de permission caméra au chargement : le navigateur
+  la demande uniquement après l'action explicite de l'élève.
+- Pas de `QA_REPORT.md` côté Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+```
+
+### Preuves de clôture
+
+- 36/36 tests ciblés photo/confirmation/minimisation, puis 615/615 tests Vitest
+  sur 52 fichiers; lint, typecheck et build passent.
+- Playwright hors `@live` passe 33/33. Le scénario mobile vérifie les deux
+  entrées, leurs attributs, leur ordre clavier et la validation locale.
+- L'eval OpenAI credentialed rend 7/7; deux appels à la route locale lancée avec
+  l'environnement corrigé renvoient `ready`, dont un via la commande racine.
+- La page ouverte bascule EN → FR et expose les deux actions traduites; la
+  caméra est inactive tant que l'élève ne l'actionne pas.
+
+## Archive — T9
+
+## État de clôture
+
+- T9 est close `pass` le 15 juillet 2026. Aucune carte Builder n'est active.
+- L'ordre contractuel reste T9-C01 identité et atlas → T9-C02 intégration et
+  événements → T9-C03 responsive, accessibilité et qualification navigateur.
+- T9-C01 est close `pass` : atlas RGBA 8 × 9, 72 cellules non vides, scripts de
+  validation et planche de contact inspectée. T9-C02 est close `pass` :
+  contrôleur prioritaire, mappings fermés et 6/6 tests ciblés. T9-C03 est close
+  `pass` après qualification responsive, mouvement réduit, EN/FR et navigateur.
+
+## Périmètre vérifié
+
+- Qualifier la présence flottante aux viewports 390, 768 et 1440 px sans
+  débordement horizontal ni action principale masquée.
+- Vérifier les libellés anglais/français et l'absence d'annonce live redondante.
+- Figer la première pose de chaque état sous `prefers-reduced-motion: reduce`.
+- Ajouter un scénario navigateur des neuf états et rejouer les gates historiques.
+
+## Hors périmètre préservé
+
+- Aucun changement de modèle, prompt produit, policy pédagogique, whitelist
+  d'outils, géométrie, stockage, journal de preuve ou langue vocale.
+- Pas de `QA_REPORT.md` côté Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+## Gates T9-C03
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+```
+
+## Preuves de clôture T9
+
+- Les validateurs d'atlas passent avec 9 états, 8 frames par état, 72 cellules
+  non vides, transparence RGBA et dimensions 1 536 × 1 872 px.
+- Lint, typecheck et build passent; Vitest rend 615/615 tests sur 52 fichiers.
+- Playwright hors `@live` rend 33/33, dont 3/3 scénarios T9 : neuf états sans
+  modèle, bascule EN/FR, Axe ciblé sans violation, pose 0 sous mouvement réduit
+  et reflow à 390 × 844, 768 × 1 024 et 1 440 × 900.
+- Les captures `output/playwright/T9-mascot-hinting-*.png` ont été inspectées :
+  mascotte entière, `pointer-events: none`, action principale utilisable et
+  aucun débordement horizontal. Les preuves historiques T5/T6 ont été restaurées
+  après le replay afin de ne pas les remplacer par des captures T9.
+
+## Définition de fini T9
+
+- C01 livre l'atlas et ses preuves visuelles; C02 branche les événements réels
+  sans créer une nouvelle autorité métier; C03 qualifie reflow, clavier,
+  mouvement réduit, EN/FR et non-régression des gates historiques.
+- Le runtime n'appelle aucun modèle pour animer la mascotte et ne déduit jamais
+  un état depuis un texte libre.
+- Les événements tardifs, reset et unmount rendent la mascotte à un état sûr;
+  une priorité déterministe empêche les animations concurrentes de clignoter.
+- Les gates finaux restent lint, typecheck, Vitest, build et Playwright hors
+  `@live`, complétés par une inspection à 390, 768 et 1440 px.
+
+## Archive — T8
+
+- T8 est close le 15 juillet 2026 avec verdict `pass`; Compass reste la seule
+  marque publique et l'interface EN/FR éphémère demeure inchangée.
+- L'ordre T8-C01 → T8-C02 → T8-C03 et les preuves consignées ci-dessous restent
+  autoritatifs.
 
 ## Clôture de T8
 

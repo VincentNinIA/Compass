@@ -58,7 +58,7 @@ const exerciseImage = {
   ),
 };
 
-test("T3 photo mobile capture accepts supported files and rejects before network", async ({
+test("T3 photo gallery and mobile camera accept supported files and reject before network", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -68,25 +68,20 @@ test("T3 photo mobile capture accepts supported files and rejects before network
     if (request.url().includes("/api/exercise/")) exerciseRequests.push(request.url());
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   const input = page.locator("#exercise-photo-input");
+  const cameraInput = page.locator("#exercise-camera-input");
   await expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/webp");
-  await expect(input).toHaveAttribute("capture", "environment");
+  await expect(input).not.toHaveAttribute("capture");
+  await expect(cameraInput).toHaveAttribute("accept", "image/*");
+  await expect(cameraInput).toHaveAttribute("capture", "environment");
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("link", { name: "Skip to your exercise" }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
-    page.getByRole("link", { name: "Compass home" }),
-  ).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("link", { name: "Start" }),
-  ).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("link", { name: "Your coach" }),
+    page.getByRole("button", { name: "Compass home" }),
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(
@@ -98,6 +93,8 @@ test("T3 photo mobile capture accepts supported files and rejects before network
   ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(input).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(cameraInput).toBeFocused();
 
   for (const image of allowedImages) {
     await input.setInputFiles(image);
@@ -135,7 +132,7 @@ test("T3 photo ready stays inert until explicit confirmation", async ({ page }) 
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(readyResult) });
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
   await page.getByRole("button", { name: "Read my exercise" }).click();
 
@@ -175,7 +172,7 @@ test("T3 photo clarification resubmits the same image before ready", async ({ pa
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
   await page.getByRole("button", { name: "Read my exercise" }).click();
   await expect(
@@ -213,7 +210,7 @@ test("T3 photo unsupported offers replacement and never confirmation", async ({ 
     });
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await page.locator("#exercise-photo-input").setInputFiles(exerciseImage);
   await page.getByRole("button", { name: "Read my exercise" }).click();
 
@@ -237,7 +234,7 @@ test("T3 photo Confirm initializes only A/B/AB and Reset preserves the exercise 
     });
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible({
     timeout: 30_000,
   });

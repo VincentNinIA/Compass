@@ -20,8 +20,9 @@ travaux en vol, restaure le hash initial, réinscrit exactement quatre listeners
 et reconstruit la fixture canonique si le hash ou l'inventaire exhaustif diverge,
 ou si le callback `setBase64` dépasse trois secondes.
 
-T2 fixe côté serveur `gpt-realtime-2.1`, la voix `marin`, l'effort faible, le
-VAD explicite et quatre outils produit à schémas fermés. Un gestionnaire de tours
+T2 fixe côté serveur `gpt-realtime-2.1`; T14 aligne la voix sur `cedar`, avec
+un effort faible. Le VAD reste explicite avec quatre outils produit à schémas
+fermés dans le module spécialisé historique. Un gestionnaire de tours
 déduplique les commits et possède seul les réponses initiales comme les
 continuations. Chaque réponse transporte son `geotutor_turn_id`; les réponses
 tardives ou non possédées sont rejetées avant la boucle d'outils. Le gateway
@@ -259,15 +260,105 @@ dupliquer les runtimes. Les sorties libres du modèle, contrats réseau, package
 `@geotutor/*` et globals `__GEOTUTOR_*` restent hors de cette couche afin de
 préserver les autorités et preuves T1 à T7.
 
+T9 ajoute une présence visuelle sans nouvelle autorité métier. Un atlas local
+8 × 9 contient huit frames pour neuf états fermés. Un contrôleur React reçoit
+les événements du flux photo, des callbacks Realtime, de la boucle outil et de
+l'orchestrateur d'indices, applique une priorité déterministe puis revient à
+`idle` au terminal, au reset ou au cleanup. Il n'analyse aucun transcript et ne
+déclenche aucun effet GeoGebra ou réseau. Sous `prefers-reduced-motion`, la pose
+initiale et le libellé d'état restent visibles sans lecture animée de l'atlas.
+
+T10 sépare l'acquisition en deux contrôles : galerie sans attribut `capture` et
+caméra mobile avec `capture="environment"`. Les deux convergent vers la même
+normalisation en mémoire. Le lanceur racine charge la configuration serveur
+avant Next.js sans exposer la clé au client.
+
+T11 place `general_exercise.v1` devant les anciens templates spécialisés. La
+route publique produit un énoncé et des tâches ordonnées pour toute matière
+lisible; elle ne demande une clarification que si le contenu est illisible,
+incomplet ou contradictoire. La confirmation explicite est l'unique autorité
+qui rend ce contexte disponible au coach général.
+
+Le workspace public rend l'enveloppe générique et garde le module médiatrice
+masqué. Le mode `?specialist=geometry` conserve un banc explicite pour les tests
+historiques et les futurs routages compatibles, sans modifier le défaut public.
+Le profil Realtime `general_tutor` reçoit l'exercice confirmé dans un unique
+`conversation.item.create` de rôle utilisateur. Les configurations voix et
+texte imposent `tools:[]` et `tool_choice:"none"`; l'ajout du contexte ne
+déclenche pas seul de `response.create`.
+
+T12 place une machine d'écran locale au-dessus de cette composition. Le shell
+rend exclusivement `landing`, `upload`, `confirm` ou `work` et conserve le
+composant de confirmation monté entre acquisition et vérification pour ne pas
+perdre le `File` en mémoire. Une transition déplace le focus vers le titre du
+nouvel écran; elle ne modifie ni les contrats réseau ni l'autorité du clic de
+confirmation.
+
+Dans `work`, le profil général et la mascotte forment l'en-tête du poste de
+travail. Les enveloppes dont la matière ou les notions indiquent mathématiques
+ou géométrie montent un `GeoGebraScratchpad` vierge via l'adaptateur épinglé.
+Cet applet n'enregistre aucun listener métier, ne reçoit aucune commande modèle
+et n'alimente aucun score. Les tâches confirmées restent le seul guide visible;
+les autres matières gardent le workspace générique. Le banc
+`?specialist=geometry` continue de monter l'architecture historique complète.
+
+T13 sépare le support mathématique du profil général. Le workbench desktop
+devient une grille à deux colonnes : GeoGebra occupe la colonne principale et
+sa hauteur suit le viewport; le coach compact puis les tâches occupent la
+colonne latérale. Sous 980 px, l'ordre documentaire et visuel devient coach,
+GeoGebra, tâches.
+
+Le profil `geogebra_tutor` reçoit le même contexte confirmé non fiable, plus
+quatre outils de fonction sémantiques. Un gateway dédié lit un inventaire borné
+ou traduit uniquement un couple de points validés vers `Line`, `Ray` ou
+`Segment`. Il conserve idempotence par `callId`, limite les appels et interdit
+une seconde mutation dans le même tour. Aucun `evalCommand` fourni par le modèle
+n'atteint l'adaptateur; le nom de commande est construit exclusivement par
+l'application. Les outputs rejoignent la boucle Realtime existante avant une
+continuation unique. Ce chemin assiste le geste, sans rejoindre le validateur
+ni créer d'evidence de correction.
+
+## T14 — atelier panoramique
+
+T14-C01 remplace la grille latérale T13 par une scène à colonne unique. Le coach
+est un bandeau horizontal, l'applet occupe toute la largeur utile et le rail de
+missions reste fixé en bas du viewport. Le rail reçoit seulement un ensemble
+d'indices vérifiés; son score dérive de cet ensemble et ne dépend ni d'un timer,
+ni d'une inférence du modèle.
+
+La garde d'accessibilité GeoGebra observe aussi `class`, `hidden` et `style`,
+mais ne pose `inert` que lorsqu'un élément est réellement absent du rendu. Cela
+préserve les contrôles visibles auxquels GeoGebra peut attribuer
+`aria-hidden=true` pour sa propre gestion interne. La mascotte de bandeau est un
+asset raster transparent dédié; la mascotte flottante conserve l'atlas local,
+mais chaque activité non idle parcourt au plus huit frames avant de revenir au
+repos. Aucun de ces changements n'élargit l'autorité du gateway T13.
+
+T14-C02 ajoute un observateur au scratchpad général. Il lit au maximum quarante
+objets, stabilise les événements GeoGebra et publie un snapshot puis les seuls
+objets ajoutés, retirés ou modifiés dans la conversation active. Ces items sont
+marqués comme observations applicatives, ne créent aucune réponse et ne valent
+jamais autorisation de mutation.
+
+Le validateur local reconnaît les cinq relations graphiques de l'exercice de
+démonstration : E/F/G non alignés, droite FG verte, demi-droite EF bleue,
+segment EG rouge et K sur la demi-droite au-delà de F. La progression reste
+séquentielle et chaque preuve ajoute 20 XP; la réponse écrite finale reste en
+attente. Le gateway compte désormais dix actions sémantiques strictes : lecture,
+point, renommage, déplacement, style, droite, demi-droite, segment, cercle et
+polygone. Le modèle ne reçoit toujours aucune commande GeoGebra libre.
+
 ## Frontières cibles
 
 ```mermaid
 flowchart LR
-    UI["Interface élève"] --> GGB["GeoGebra adapter"]
-    UI --> RTC["Session Realtime WebRTC"]
     Photo["Photo/upload"] --> Parse["Route Responses / parse"]
-    Parse --> Plan["ExercisePlan validé"]
-    Plan --> GGB
+    Parse --> General["general_exercise.v1 validé"]
+    General --> Confirm["Confirmation élève"]
+    Confirm --> UI["Workspace général"]
+    Confirm --> RTC["Realtime général ou geogebra_tutor"]
+    Confirm -. "module compatible" .-> Plan["Plan spécialisé validé"]
+    Plan --> GGB["GeoGebra adapter"]
     GGB --> Events["Event bridge + stabilizer"]
     Events --> Validate["Validateur déterministe"]
     Validate --> Policy["Policy SILENT / QUEUE / SPEAK"]
@@ -280,7 +371,8 @@ flowchart LR
 
 ## Responsabilités
 
-- Interface navigateur : photo, micro, transcript, contrôles, progrès local et applet.
+- Interface navigateur : photo, confirmation, tâches ordonnées, micro, texte,
+  contrôles et modules spécialisés compatibles.
 - Route Realtime : validation SDP, secret serveur et création de l'appel WebRTC.
 - Route exercise parse : normalisation image, Responses API et sortie structurée.
 - Adaptateur GeoGebra : seul composant autorisé à traduire les intentions produit en appels API.
@@ -288,7 +380,8 @@ flowchart LR
 - Validateur : preuves numériques et tolérances applicatives.
 - Policy : autorité exclusive des interventions proactives.
 - Gateway : validation, permissions, budgets, révisions et idempotence des outils.
-- Session state : exercice, objets, actions, interaction, checkpoints et evidence IDs en mémoire.
+- Session state : exercice général confirmé et, seulement dans un module
+  compatible, objets, actions, checkpoints et evidence IDs en mémoire.
 
 ## Flux Realtime cible
 
@@ -317,7 +410,7 @@ flowchart LR
 - Logs expurgés : aucun audio brut, image, SDP complet, clé ou donnée personnelle.
 - Les actions visibles et destructives sont séparées par permissions et confirmations.
 
-## Éléments non implémentés
+## État livré et limites
 
 Les frontières Realtime et GeoGebra, le gateway vocal T2, le flux photo T3, la
 boucle pédagogique T4, le pipeline T5-C01 à T5-C07, le reset/recovery global
@@ -331,4 +424,13 @@ reconstruit seulement A/B/AB depuis le plan confirmé si le checkpoint mémoire
 est absent ou corrompu, sinon elle publie un fatal réessayable. T6 à T8 ne
 conservent plus de carte d'implémentation ouverte; les deux contre-audits QA
 sont `pass`.
-La prochaine action est uniquement la préparation physique de la machine jury.
+T9, T10, T11 et T12 sont également closes : mascotte locale, acquisition,
+parcours généraliste puis navigation en écrans et atelier contextualisé sont
+livrés. T13-C01 est close : GeoGebra est dominant et l'assistance sémantique
+bornée est reliée aux modes voix et texte. T14-C01 et C02 sont closes : la scène
+est panoramique, le monde borné alimente le coach, les cinq missions graphiques
+progressent par preuve locale et la palette fermée couvre le renommage et les
+constructions usuelles. Le tutorat transversal reste
+conversationnel; la vérification déterministe automatique de toutes les
+matières, la notation à enjeu élevé et la génération d'outils arbitraires ne
+sont pas implémentées.

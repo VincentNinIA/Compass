@@ -100,7 +100,7 @@ async function initializeExercise(page: Page) {
       body: JSON.stringify(readyExercise),
     }),
   );
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible({
     timeout: 30_000,
   });

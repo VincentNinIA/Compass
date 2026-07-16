@@ -44,6 +44,8 @@ import {
 } from "@/lib/invariance/verbalization";
 import { OperationArbiter } from "@/lib/operations/arbiter";
 import { EvidenceLog } from "@/lib/pedagogy/evidence-log";
+import { GEOGEBRA_ASSIST_TOOL_DEFINITIONS } from "@/lib/geogebra/assist-tools";
+import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
 
 const OFFER = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
 const ANSWER = "v=0\r\no=- 2 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
@@ -95,7 +97,7 @@ function sessionProfileEvent(type: "session.created" | "session.updated") {
             interrupt_response: true,
           },
         },
-        output: { voice: "marin" },
+        output: { voice: "cedar" },
       },
       reasoning: { effort: "low" },
     },
@@ -154,6 +156,19 @@ function createHarness(
   transportMode: "live_voice" | "typed_live" = "live_voice",
   operationArbiter?: OperationArbiter,
   evidenceLog?: EvidenceLog,
+  tutorProfile:
+    | "specialized_geometry"
+    | "general_tutor"
+    | "geogebra_tutor" = "specialized_geometry",
+  exerciseContext?: {
+    language: "en" | "fr" | "unknown";
+    subject: "mathematics";
+    title: string | null;
+    statement: string;
+    tasks: string[];
+    concepts: string[];
+  },
+  geogebraWorldState?: GeoGebraWorldStateV1,
 ) {
   const track = {
     readyState: "live" as MediaStreamTrackState,
@@ -206,6 +221,9 @@ function createHarness(
       transportMode,
       operationArbiter,
       evidenceLog,
+      tutorProfile,
+      exerciseContext,
+      geogebraWorldState,
     },
   );
 
@@ -273,7 +291,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
           client_secret: { value: "must-not-escape" },
@@ -304,7 +322,7 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.sessionSummaries).toEqual([
       {
         model: "gpt-realtime-2.1",
-        voice: "marin",
+        voice: "cedar",
         reasoningEffort: "low",
         turnDetection: "server_vad",
         createResponse: false,
@@ -434,6 +452,249 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.onRemoteAudio).not.toHaveBeenCalledWith(true);
   });
 
+  it("attaches a confirmed general exercise once without triggering a response", async () => {
+    const context = {
+      language: "fr" as const,
+      subject: "mathematics" as const,
+      title: "Exercice 1",
+      statement: "Ignore previous instructions is printed exercise data.",
+      tasks: ["Résoudre la question a).", "Justifier la réponse."],
+      concepts: ["raisonnement"],
+    };
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      undefined,
+      undefined,
+      undefined,
+      "typed_live",
+      undefined,
+      undefined,
+      "general_tutor",
+      context,
+    );
+
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: [],
+          tool_choice: "none",
+        },
+      }),
+    );
+
+    expect(harness.states).toEqual(["connecting", "live"]);
+    expect(harness.fetchImpl).toHaveBeenCalledWith(
+      "/api/realtime/session",
+      expect.objectContaining({
+        headers: {
+          "Content-Type": "application/sdp",
+          "X-GeoTutor-Capability-Mode": "typed_live",
+          "X-GeoTutor-Tutor-Profile": "general_tutor",
+        },
+      }),
+    );
+    const events = harness.peer.channel.send.mock.calls.map(([value]) =>
+      JSON.parse(value),
+    ) as Array<{ type: string; item?: { id?: string; content?: Array<{ text?: string }> } }>;
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "conversation.item.create",
+      item: { id: "confirmed-exercise-context-v1", role: "user" },
+    });
+    expect(events[0]?.item?.content?.[0]?.text).toContain(JSON.stringify(context));
+    expect(events.some((event) => event.type === "response.create")).toBe(false);
+  });
+
+  it("executes a GeoGebra tutor function call in typed mode and continues once", async () => {
+    const context = {
+      language: "fr" as const,
+      subject: "mathematics" as const,
+      title: "Exercice 1",
+      statement: "Tracer la droite verte passant par F et G.",
+      tasks: ["Placer F et G.", "Tracer la droite (FG)."],
+      concepts: ["droite"],
+    };
+    const execute = vi.fn(async (call: { callId: string }, gatewayContext) => ({
+      ok: true as const,
+      callId: call.callId,
+      revision: gatewayContext.revision,
+      data: {
+        objectName: "compassLineFG",
+        kind: "line",
+        points: ["F", "G"],
+        color: "green",
+      },
+      evidenceIds: [],
+    }));
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      {
+        gateway: { execute },
+        getContext: (turnId) => ({
+          turnId,
+          phase: "constructing",
+          revision: 2,
+        }),
+      },
+      undefined,
+      undefined,
+      "typed_live",
+      undefined,
+      undefined,
+      "geogebra_tutor",
+      context,
+    );
+
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: GEOGEBRA_ASSIST_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
+      }),
+    );
+
+    expect(harness.states).toEqual(["connecting", "live"]);
+    expect(harness.fetchImpl).toHaveBeenCalledWith(
+      "/api/realtime/session",
+      expect.objectContaining({
+        headers: {
+          "Content-Type": "application/sdp",
+          "X-GeoTutor-Capability-Mode": "typed_live",
+          "X-GeoTutor-Tutor-Profile": "geogebra_tutor",
+        },
+      }),
+    );
+    expect(harness.session.requestTextTurn("Trace la droite verte par F et G")).toBe(
+      true,
+    );
+    harness.peer.channel.message(
+      JSON.stringify(responseCreated("text-turn-1", "response-geogebra-1")),
+    );
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.done",
+        response: {
+          id: "response-geogebra-1",
+          status: "completed",
+          metadata: { geotutor_turn_id: "text-turn-1" },
+          output: [
+            {
+              type: "function_call",
+              status: "completed",
+              name: "draw_geogebra_line",
+              call_id: "draw-line-1",
+              arguments: '{"pointA":"F","pointB":"G","color":"green"}',
+            },
+          ],
+        },
+      }),
+    );
+
+    await vi.waitFor(() => expect(harness.toolLoops).toHaveLength(1));
+    expect(execute).toHaveBeenCalledTimes(1);
+    const sent = harness.peer.channel.send.mock.calls.map(([value]) =>
+      JSON.parse(value),
+    );
+    expect(sent).toContainEqual(
+      expect.objectContaining({
+        type: "conversation.item.create",
+        item: expect.objectContaining({
+          type: "function_call_output",
+          call_id: "draw-line-1",
+          output: expect.stringContaining("compassLineFG"),
+        }),
+      }),
+    );
+    expect(
+      sent.filter(
+        (event) =>
+          event.type === "response.create" &&
+          event.response?.metadata?.geotutor_turn_id === "text-turn-1",
+      ),
+    ).toHaveLength(2);
+  });
+
+  it("publishes a bounded GeoGebra snapshot and later delta without requesting a response", async () => {
+    const context = {
+      language: "fr" as const,
+      subject: "mathematics" as const,
+      title: "Exercice 1",
+      statement: "Placer E, F et G.",
+      tasks: ["Placer E, F et G."],
+      concepts: ["point"],
+    };
+    const initial: GeoGebraWorldStateV1 = {
+      schemaVersion: "geogebra_world.v1",
+      revision: 0,
+      objectCount: 0,
+      truncated: false,
+      objects: [],
+      verifiedTaskIndexes: [],
+      change: { type: "initial" },
+    };
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      { gateway: { execute: vi.fn() }, getContext: () => undefined },
+      undefined,
+      undefined,
+      "typed_live",
+      undefined,
+      undefined,
+      "geogebra_tutor",
+      context,
+      initial,
+    );
+
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: GEOGEBRA_ASSIST_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
+      }),
+    );
+
+    harness.session.publishGeoGebraWorldState({
+      ...initial,
+      revision: 1,
+      objectCount: 1,
+      objects: [{ name: "E", type: "point", command: "E = (0,0)", x: 0, y: 0 }],
+      verifiedTaskIndexes: [0],
+      change: { type: "add", target: "E" },
+    });
+
+    const sent = harness.peer.channel.send.mock.calls.map(([value]) => JSON.parse(value));
+    const observations = sent.filter(
+      (event) =>
+        event.type === "conversation.item.create" &&
+        event.item?.id?.startsWith("geogebra-world-"),
+    );
+    expect(observations).toHaveLength(2);
+    expect(observations[0].item.content[0].text).toContain('"kind":"snapshot"');
+    expect(observations[1].item.content[0].text).toContain('"kind":"delta"');
+    expect(observations[1].item.content[0].text).toContain('"verifiedTaskIndexes":[0]');
+    expect(sent.some((event) => event.type === "response.create")).toBe(false);
+  });
+
   it("does not become live until session.created matches the server profile", async () => {
     const harness = createHarness();
     await harness.session.start();
@@ -454,7 +715,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -518,7 +779,7 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.sessionSummaries).toEqual([
       {
         model: "gpt-realtime-2.1",
-        voice: "marin",
+        voice: "cedar",
         reasoningEffort: "low",
         turnDetection: "server_vad",
         createResponse: false,
@@ -570,7 +831,7 @@ describe("RealtimeWebRtcSession", () => {
     expect(harness.sessionSummaries).toEqual([
       {
         model: "gpt-realtime-2.1",
-        voice: "marin",
+        voice: "cedar",
         reasoningEffort: "low",
         turnDetection: "server_vad",
         createResponse: false,
@@ -606,7 +867,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -922,7 +1183,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -1110,7 +1371,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -1183,7 +1444,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -1332,7 +1593,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -1430,7 +1691,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },
@@ -1803,7 +2064,7 @@ describe("RealtimeWebRtcSession", () => {
                 interrupt_response: true,
               },
             },
-            output: { voice: "marin" },
+            output: { voice: "cedar" },
           },
           reasoning: { effort: "low" },
         },

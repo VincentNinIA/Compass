@@ -616,6 +616,60 @@ main {
   min-width: 0;
 }
 
+.compass-mascot-presence {
+  position: fixed;
+  z-index: 24;
+  right: clamp(8px, 1.8vw, 26px);
+  bottom: 10px;
+  width: clamp(142px, 12vw, 188px);
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+  filter: drop-shadow(0 18px 18px rgb(25 34 29 / 18%));
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.compass-mascot-presence[data-mascot-state="idle"] {
+  opacity: 0.9;
+}
+
+.compass-mascot-sprite {
+  width: 100%;
+  aspect-ratio: 192 / 208;
+  background-image: url("/mascot/compass-mentor-atlas.webp");
+  background-repeat: no-repeat;
+  background-size: 800% 900%;
+  image-rendering: auto;
+}
+
+.compass-mascot-presence p {
+  max-width: 170px;
+  margin: -5px 0 0;
+  padding: 7px 11px;
+  border: 1px solid rgb(25 34 29 / 12%);
+  border-radius: 11px 11px 5px 11px;
+  color: var(--ink);
+  background: rgb(255 250 244 / 94%);
+  box-shadow: 0 8px 24px rgb(84 49 25 / 12%);
+  font-family: var(--display-font);
+  font-size: 0.7rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+  backdrop-filter: blur(10px);
+}
+
+.compass-mascot-presence[data-mascot-state="celebrating"] p {
+  color: #fff;
+  background: var(--success);
+}
+
+.compass-mascot-presence[data-mascot-state="error"] p {
+  color: #fff;
+  background: var(--danger);
+}
+
 .spike,
 .workspace-card {
   margin-top: 0;
@@ -744,15 +798,40 @@ main {
   stroke-width: 2.6;
 }
 
-.photo-dropzone label {
+.photo-source-actions {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.photo-source-control {
+  position: relative;
+  display: inline-flex;
+}
+
+.photo-dropzone .photo-source-control label {
   min-height: auto;
   padding: 10px 15px;
   display: inline-flex;
   align-items: center;
+  margin: 0;
   color: #fff;
   background: var(--ink);
   box-shadow: 0 7px 0 #000;
   font-size: 0.88rem;
+}
+
+.photo-dropzone .photo-source-camera label {
+  color: var(--ink);
+  background: var(--accent-soft);
+  box-shadow: 0 7px 0 #e7b4a6;
+}
+
+.photo-source-control:has(input:focus-visible) label {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
 }
 
 .photo-dropzone > p {
@@ -1560,6 +1639,20 @@ main {
 
   .student-workspace {
     gap: 16px;
+  }
+
+  .compass-mascot-presence {
+    right: 4px;
+    bottom: 4px;
+    width: 104px;
+  }
+
+  .compass-mascot-presence p {
+    max-width: 102px;
+    margin-top: -3px;
+    padding: 5px 7px;
+    border-radius: 9px 9px 4px 9px;
+    font-size: 0.59rem;
   }
 
   .spike,
@@ -2906,4 +2999,1537 @@ li span {
   }
 }
 
+}
+.legacy-geometry-module[data-active="false"] {
+  display: none;
+}
+
+.general-exercise-workspace {
+  overflow: hidden;
+}
+
+.general-workspace-empty {
+  min-height: 28rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.85rem;
+  padding: clamp(2rem, 6vw, 5rem);
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  background:
+    linear-gradient(color-mix(in srgb, var(--paper) 88%, transparent), color-mix(in srgb, var(--paper) 88%, transparent)),
+    repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--ink) 7%, transparent) 31px 32px),
+    repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--ink) 7%, transparent) 31px 32px);
+}
+
+.general-workspace-empty > span {
+  display: grid;
+  place-items: center;
+  width: 7.5rem;
+  height: 7.5rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  color: var(--accent-deep);
+  background: var(--paper);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.general-workspace-empty h3,
+.general-workspace-empty p,
+.general-task-list p,
+.general-honesty-note {
+  margin: 0;
+}
+
+.general-workspace-empty p {
+  max-width: 38rem;
+}
+
+.general-exercise-board {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.general-exercise-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 1rem;
+}
+
+.general-exercise-meta span {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.general-exercise-meta strong {
+  font-size: clamp(1.2rem, 2vw, 1.75rem);
+}
+
+.general-task-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.general-task-list li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.general-task-list li > span {
+  color: var(--accent-deep);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.general-task-list p,
+.exercise-statement {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.general-honesty-note {
+  padding: 1rem 1.2rem;
+  border-left: 3px solid var(--accent-deep);
+  background: color-mix(in srgb, var(--accent-soft) 54%, var(--paper));
+}
+
+.exercise-task-summary {
+  margin-block: 1.25rem;
+}
+
+.exercise-task-summary h4 {
+  margin: 0 0 0.75rem;
+}
+
+.exercise-task-summary ol {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-inline-start: 1.35rem;
+}
+
+@media (max-width: 560px) {
+  .general-workspace-empty {
+    min-height: 22rem;
+    padding: 2rem 1rem;
+  }
+
+  .general-task-list li {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: 0.65rem;
+  }
+}
+
+/* T12 — four-screen journey and contextual workbench */
+
+.brand[type="button"] {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+}
+
+.brand[type="button"]:hover,
+.brand[type="button"]:active {
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.site-header .screen-progress {
+  min-width: min(100%, 34rem);
+  padding: 5px;
+}
+
+.site-header .screen-progress ol {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-header .screen-progress li {
+  min-height: 38px;
+  padding: 5px 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 9px;
+  color: var(--ink-soft);
+  background: transparent;
+  font-size: 0.7rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.site-header .screen-progress li > span:first-child {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 50%;
+  color: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0;
+}
+
+.site-header .screen-progress li > span:last-child {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.site-header .screen-progress li[data-complete="true"] {
+  color: var(--success);
+}
+
+.site-header .screen-progress li[data-active="true"] {
+  color: var(--ink);
+  background: #fff;
+}
+
+.site-header .screen-progress li[data-active="true"] > span:first-child {
+  color: #fff;
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.learning-workspace,
+.learning-screen {
+  min-width: 0;
+}
+
+.learning-workspace {
+  padding-top: 26px;
+}
+
+.learning-screen {
+  min-height: calc(100dvh - 132px);
+}
+
+.learning-screen[hidden],
+.exercise-upload-stage[hidden],
+.exercise-confirmation[hidden] {
+  display: none !important;
+}
+
+.learning-screen-intake {
+  width: min(1040px, 100%);
+  margin: 0 auto;
+  padding-bottom: 56px;
+}
+
+.learning-screen-bar {
+  min-height: 48px;
+  margin-bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.screen-back-button {
+  min-height: 42px;
+  padding: 8px 14px;
+}
+
+.screen-step-label {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.learning-screen-intro,
+.work-screen-heading {
+  margin-bottom: 28px;
+}
+
+.learning-screen-intro h1,
+.work-screen-heading h1 {
+  max-width: 900px;
+  font-family: var(--display-font);
+  font-size: clamp(2.55rem, 6vw, 5.4rem);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.98;
+}
+
+.learning-screen-intake .workspace-card {
+  border-radius: 28px 28px 12px 28px;
+}
+
+.learning-screen-intake .exercise-upload-stage > .photo-uploader,
+.learning-screen-intake .exercise-confirmation {
+  margin: 0;
+}
+
+.learning-screen-intake .exercise-confirmation .spike-heading,
+.learning-screen-intake .photo-uploader .spike-heading {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.65fr);
+}
+
+.learning-screen-intake .exercise-confirmation .spike-heading h2,
+.learning-screen-intake .photo-uploader .spike-heading h2 {
+  font-size: clamp(2rem, 4vw, 3.7rem);
+}
+
+.learning-screen-work {
+  width: min(1320px, 100%);
+  margin: 0 auto;
+  padding-bottom: 72px;
+}
+
+.work-screen-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.55fr);
+  align-items: end;
+  gap: 40px;
+}
+
+.work-screen-heading > p {
+  margin: 0 0 6px;
+  color: var(--ink-soft);
+}
+
+.coach-workbench-header {
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 166px minmax(0, 1fr);
+  align-items: end;
+  gap: 18px;
+}
+
+.learning-screen-work--geogebra .work-screen-heading {
+  margin-bottom: 18px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+  gap: 28px;
+}
+
+.learning-screen-work--geogebra .learning-screen-bar {
+  min-height: 42px;
+  margin-bottom: 10px;
+}
+
+.learning-screen-work--geogebra .work-screen-heading h1 {
+  font-size: clamp(2.5rem, 4.8vw, 4.8rem);
+  line-height: 0.94;
+}
+
+.geogebra-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(300px, 0.8fr);
+  grid-template-areas:
+    "canvas coach"
+    "canvas tasks";
+  align-items: start;
+  gap: 22px 24px;
+}
+
+.geogebra-workbench > .geogebra-scratchpad {
+  grid-area: canvas;
+}
+
+.geogebra-workbench > .general-exercise-workspace--sidebar {
+  grid-area: tasks;
+  position: static;
+  max-height: none;
+}
+
+.geogebra-workbench-coach {
+  position: relative;
+  grid-area: coach;
+  min-width: 0;
+  padding-top: 52px;
+}
+
+.geogebra-workbench-coach .compass-mascot-presence--workspace {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 14px;
+  bottom: auto;
+  width: 92px;
+}
+
+.geogebra-workbench-coach .compass-mascot-presence--workspace p {
+  display: none;
+}
+
+.compass-mascot-presence--workspace {
+  position: relative;
+  z-index: 1;
+  right: auto;
+  bottom: auto;
+  width: 166px;
+  align-self: end;
+  filter: drop-shadow(0 14px 16px rgb(25 34 29 / 16%));
+}
+
+.compass-mascot-presence--workspace p {
+  max-width: 150px;
+}
+
+.realtime-spike--workspace {
+  padding: clamp(22px, 3vw, 34px);
+  border-radius: 28px 28px 12px 28px;
+}
+
+.realtime-spike--workspace .spike-heading {
+  margin-bottom: 18px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.75fr);
+  align-items: center;
+  gap: 24px;
+}
+
+.realtime-spike--workspace .spike-heading h2 {
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.realtime-spike--workspace .capability-mode {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+}
+
+.realtime-spike--workspace .connection-copy {
+  min-height: 0;
+  margin-bottom: 12px;
+}
+
+.realtime-spike--workspace .connection-actions {
+  margin-bottom: 12px;
+}
+
+.realtime-spike--workspace .coach-diagnostics:not([open]) {
+  margin-top: 0;
+}
+
+.realtime-spike--dock {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 24px 24px 9px 24px;
+}
+
+.realtime-spike--dock .spike-heading {
+  display: block;
+  margin-bottom: 14px;
+  padding-right: 58px;
+}
+
+.realtime-spike--dock .spike-heading h2 {
+  max-width: 12ch;
+  margin-top: 4px;
+  font-size: clamp(1.65rem, 2.4vw, 2.3rem);
+  line-height: 1;
+}
+
+.realtime-spike--dock .spike-heading > p {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.realtime-spike--dock .capability-mode {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.realtime-spike--dock .capability-mode p,
+.realtime-spike--dock .capability-mode time {
+  display: none;
+}
+
+.realtime-spike--dock .connection-copy {
+  min-height: 0;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+}
+
+.realtime-spike--dock .realtime-console {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+}
+
+.realtime-spike--dock .connection-control {
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 16px 7px 16px 16px;
+  background: rgb(255 255 255 / 8%);
+}
+
+.realtime-spike--dock .connection-state {
+  margin-bottom: 8px;
+}
+
+.realtime-spike--dock .coach-diagnostics {
+  display: none;
+}
+
+.realtime-spike--dock .connection-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 10px;
+}
+
+.realtime-spike--dock .connection-actions button {
+  width: 100%;
+}
+
+.realtime-spike--dock .connection-actions button:last-child {
+  grid-column: 1 / -1;
+}
+
+.realtime-spike--dock .connection-actions button:disabled {
+  display: none;
+}
+
+.realtime-spike--dock .realtime-test-prompt label {
+  font-size: 0.76rem;
+}
+
+.realtime-spike--dock .coach-diagnostics:not([open]) {
+  margin-top: 0;
+}
+
+.learning-workbench-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.38fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+.learning-workbench-grid--general {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.general-exercise-workspace--sidebar {
+  position: sticky;
+  top: 104px;
+  max-height: calc(100dvh - 126px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 24px 24px 10px 24px;
+}
+
+.general-exercise-workspace--sidebar .spike-heading {
+  margin-bottom: 22px;
+  display: block;
+}
+
+.general-exercise-workspace--sidebar .spike-heading h2 {
+  margin-bottom: 12px;
+  font-size: clamp(1.65rem, 2.5vw, 2.35rem);
+  line-height: 1.05;
+}
+
+.general-exercise-workspace--sidebar .spike-heading > p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.general-exercise-workspace--sidebar .general-task-list li {
+  min-height: 0;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.55rem;
+  padding: 0.85rem 0;
+  background: transparent;
+}
+
+.general-exercise-workspace--sidebar .general-task-list p {
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.geogebra-scratchpad {
+  min-width: 0;
+  padding: 24px;
+  overflow: hidden;
+  border-radius: 28px 28px 12px 28px;
+  background: #fffdf8;
+}
+
+.geogebra-workbench .geogebra-scratchpad {
+  padding: 18px;
+}
+
+.geogebra-workbench .scratchpad-heading {
+  margin-bottom: 12px;
+  grid-template-columns: minmax(230px, 0.8fr) minmax(300px, 1.2fr);
+  gap: 20px;
+}
+
+.geogebra-workbench .scratchpad-heading h2 {
+  font-size: clamp(1.9rem, 3vw, 3rem);
+}
+
+.scratchpad-heading {
+  margin-bottom: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+  align-items: end;
+  gap: 24px;
+}
+
+.scratchpad-heading h2 {
+  font-family: var(--display-font);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  font-size: clamp(2rem, 3.5vw, 3.4rem);
+}
+
+.scratchpad-heading > p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.geogebra-quick-guide {
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+}
+
+.geogebra-quick-guide li {
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  border: 1px solid rgb(25 34 29 / 10%);
+  border-radius: 10px;
+  background: #f7f3eb;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.geogebra-quick-guide li span {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  border-radius: 50%;
+  background: var(--ink);
+  font-weight: 800;
+}
+
+.geogebra-scratchpad-shell {
+  position: relative;
+  min-height: 620px;
+  overflow: hidden;
+  border: 1px solid rgb(25 34 29 / 14%);
+  border-radius: 18px 18px 7px 18px;
+  background: #fff;
+}
+
+.geogebra-scratchpad-canvas {
+  width: 100%;
+  min-height: 620px;
+  overflow: hidden;
+}
+
+.scratchpad-loading,
+.scratchpad-unavailable {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 32px;
+  color: var(--ink);
+  background: #fffdf8;
+  text-align: center;
+}
+
+.scratchpad-loading > span {
+  width: 58px;
+  height: 58px;
+  border: 8px solid var(--panel);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: scratchpad-spin 900ms linear infinite;
+}
+
+@keyframes scratchpad-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 980px) {
+  .site-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .header-tagline {
+    display: none;
+  }
+
+  .site-header .screen-progress li {
+    padding-inline: 6px;
+  }
+
+  .site-header .screen-progress li > span:last-child {
+    display: none;
+  }
+
+  .work-screen-heading,
+  .learning-screen-intake .exercise-confirmation .spike-heading,
+  .learning-screen-intake .photo-uploader .spike-heading,
+  .scratchpad-heading {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .learning-workbench-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-screen-work--geogebra .work-screen-heading {
+    grid-template-columns: 1fr;
+    margin-bottom: 14px;
+  }
+
+  .learning-screen-work--geogebra .work-screen-heading > p,
+  .realtime-spike--dock .connection-copy {
+    display: none;
+  }
+
+  .geogebra-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "coach"
+      "canvas"
+      "tasks";
+  }
+
+  .geogebra-workbench-coach {
+    padding-top: 0;
+  }
+
+  .realtime-spike--dock .spike-heading {
+    min-height: 74px;
+    padding-right: 92px;
+  }
+
+  .realtime-spike--dock .spike-heading > p {
+    display: none;
+  }
+
+  .general-exercise-workspace--sidebar {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-header {
+    top: 8px;
+    width: calc(100% - 16px);
+    min-height: 60px;
+    margin-top: 8px;
+    padding: 8px 9px;
+    border-radius: 16px;
+  }
+
+  .brand[type="button"] > span:last-child {
+    display: none;
+  }
+
+  .site-header .screen-progress {
+    min-width: 0;
+  }
+
+  .site-header .screen-progress li {
+    min-height: 32px;
+    padding: 3px;
+  }
+
+  .site-header .screen-progress li > span:first-child {
+    width: 18px;
+    height: 18px;
+  }
+
+  .language-switch {
+    min-width: 52px;
+    min-height: 38px;
+  }
+
+  main {
+    width: min(100% - 20px, 1320px);
+    padding-bottom: 42px;
+  }
+
+  .learning-workspace {
+    padding-top: 18px;
+  }
+
+  .learning-screen-bar {
+    margin-bottom: 18px;
+  }
+
+  .screen-step-label {
+    max-width: 9rem;
+    text-align: right;
+  }
+
+  .learning-screen-intro h1,
+  .work-screen-heading h1 {
+    font-size: clamp(2.2rem, 11vw, 3rem);
+  }
+
+  .learning-screen-work--geogebra .work-screen-heading {
+    margin-bottom: 14px;
+  }
+
+  .learning-screen-work--geogebra .work-screen-heading h1 {
+    font-size: clamp(2.2rem, 10.5vw, 2.8rem);
+  }
+
+  .learning-screen-work--geogebra .work-screen-heading > p {
+    display: none;
+  }
+
+  .learning-screen-intro {
+    margin-bottom: 18px;
+  }
+
+  .learning-screen-intake .photo-uploader .spike-heading {
+    margin-bottom: 18px;
+  }
+
+  .learning-screen-intake .photo-uploader .spike-heading h2 {
+    font-size: clamp(2rem, 10vw, 2.65rem);
+  }
+
+  .learning-screen-intake .photo-uploader .spike-heading > p {
+    margin-top: 8px;
+  }
+
+  .learning-screen-intake .photo-picker {
+    padding: 14px;
+  }
+
+  .learning-screen-intake .photo-dropzone {
+    min-height: 176px;
+    padding: 16px 12px;
+  }
+
+  .learning-screen-intake .photo-dropzone-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+
+  .learning-screen-intake .photo-dropzone > p,
+  .learning-screen-intake .photo-help,
+  .learning-screen-intake .photo-privacy-notice,
+  .learning-screen-intake .photo-state,
+  .learning-screen-intake .photo-actions {
+    margin-top: 12px;
+  }
+
+  .learning-screen-intake .photo-preview[data-has-image="false"] {
+    display: none;
+  }
+
+  .learning-screen-intake .workspace-card,
+  .geogebra-scratchpad,
+  .general-exercise-workspace--sidebar {
+    padding: 20px;
+    border-radius: 22px 22px 9px 22px;
+  }
+
+  .coach-workbench-header {
+    position: relative;
+    display: block;
+  }
+
+  .compass-mascot-presence--workspace {
+    position: absolute;
+    z-index: 2;
+    top: 12px;
+    right: 12px;
+    width: 86px;
+  }
+
+  .compass-mascot-presence--workspace p {
+    display: none;
+  }
+
+  .realtime-spike--workspace {
+    padding: 20px;
+  }
+
+  .realtime-spike--workspace .spike-heading {
+    display: block;
+    padding-right: 74px;
+  }
+
+  .realtime-spike--workspace .spike-heading > p {
+    margin-top: 10px;
+  }
+
+  .realtime-spike--workspace .capability-mode {
+    grid-template-columns: auto 1fr;
+  }
+
+  .realtime-spike--workspace .capability-mode p,
+  .realtime-spike--workspace .capability-mode time {
+    display: none;
+  }
+
+  .realtime-spike--workspace .connection-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .realtime-spike--dock {
+    padding: 16px;
+  }
+
+  .realtime-spike--dock .spike-heading {
+    min-height: 62px;
+    margin-bottom: 10px;
+  }
+
+  .realtime-spike--dock .spike-heading h2 {
+    font-size: 1.65rem;
+  }
+
+  .realtime-spike--dock .capability-mode {
+    margin-bottom: 8px;
+    padding: 8px 10px;
+  }
+
+  .realtime-spike--dock .connection-control {
+    padding: 12px;
+  }
+
+  .realtime-spike--dock .connection-copy {
+    display: none;
+  }
+
+  .realtime-spike--dock .realtime-test-prompt {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .realtime-spike--dock .realtime-test-prompt:has(input:disabled) {
+    display: none;
+  }
+
+  .realtime-spike--dock .realtime-test-prompt label {
+    display: none;
+  }
+
+  .realtime-spike--dock .realtime-test-prompt button {
+    max-width: 108px;
+    padding-inline: 8px;
+    font-size: 0.68rem;
+  }
+
+  .scratchpad-heading {
+    display: block;
+  }
+
+  .learning-workbench-grid .geogebra-scratchpad {
+    order: 1;
+  }
+
+  .geogebra-quick-guide {
+    grid-template-columns: 1fr;
+  }
+
+  .learning-workbench-grid .general-exercise-workspace--sidebar {
+    order: 2;
+  }
+
+  .scratchpad-heading > p {
+    margin-top: 10px;
+  }
+
+  .geogebra-scratchpad-shell,
+  .geogebra-scratchpad-canvas {
+    min-height: 520px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scratchpad-loading > span {
+    animation: none;
+    border-top-color: var(--panel);
+  }
+}
+
+/* T14 — panoramic GeoGebra quest */
+
+.learning-screen-work--geogebra {
+  width: min(1440px, 100%);
+}
+
+.learning-screen-work--geogebra .work-screen-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.geogebra-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "coach"
+    "canvas"
+    "tasks";
+  gap: 10px;
+}
+
+.geogebra-workbench-coach {
+  position: relative;
+  grid-area: coach;
+  min-width: 0;
+  padding-top: 0;
+}
+
+.geogebra-workbench-coach .compass-mascot-presence--workspace {
+  position: absolute;
+  z-index: 5;
+  top: -28px;
+  left: 18px;
+  right: auto;
+  bottom: auto;
+  width: 218px;
+  filter: drop-shadow(0 14px 16px rgb(25 34 29 / 12%));
+}
+
+.compass-mascot-portrait {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.geogebra-workbench-coach .compass-mascot-presence--workspace p {
+  position: absolute;
+  top: 68px;
+  left: 214px;
+  width: max-content;
+  max-width: 210px;
+  margin: 0;
+  color: var(--ink);
+  background: #fffdf8;
+}
+
+.realtime-spike--panorama {
+  min-height: 122px;
+  padding: 14px 20px 14px 236px;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(420px, 1.45fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 28px;
+  overflow: visible;
+  border-radius: 24px 24px 8px 24px;
+  color: var(--ink);
+  background: #fffdf8;
+  box-shadow: 0 12px 34px rgb(84 49 25 / 10%);
+}
+
+.realtime-spike--panorama .spike-heading {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  display: block;
+}
+
+.realtime-spike--panorama .spike-heading h2 {
+  max-width: 15ch;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 2vw, 1.82rem);
+  line-height: 0.98;
+}
+
+.realtime-spike--panorama .spike-heading > p {
+  display: none;
+}
+
+.realtime-spike--panorama .capability-mode {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
+  color: var(--ink-soft);
+  background: transparent;
+}
+
+.realtime-spike--panorama .capability-mode .coach-avatar,
+.realtime-spike--panorama .capability-mode > span:not(.visually-hidden),
+.realtime-spike--panorama .capability-mode p,
+.realtime-spike--panorama .capability-mode time {
+  display: none;
+}
+
+.realtime-spike--panorama .capability-mode strong {
+  color: var(--success);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.realtime-spike--panorama .realtime-console {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  padding: 0;
+  display: block;
+  color: var(--ink);
+  background: transparent;
+}
+
+.realtime-spike--panorama .connection-control {
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 22px;
+  border: 0;
+  background: transparent;
+}
+
+.realtime-spike--panorama .connection-state {
+  grid-column: 1;
+  margin: 0;
+  justify-self: start;
+}
+
+.realtime-spike--panorama .connection-copy {
+  grid-column: 1;
+  min-height: 0;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.realtime-spike--panorama .connection-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.realtime-spike--panorama .connection-actions button {
+  min-width: 128px;
+  min-height: 48px;
+  padding-inline: 16px;
+}
+
+.realtime-spike--panorama .connection-actions button:last-child {
+  grid-column: 1 / -1;
+}
+
+.realtime-spike--panorama .connection-actions button:disabled {
+  display: none;
+}
+
+.realtime-spike--panorama .connection-actions .button-secondary:not(:disabled) {
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  background: #fff;
+  box-shadow: none;
+}
+
+.realtime-spike--panorama .realtime-test-prompt {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  padding-top: 10px;
+}
+
+.realtime-spike--panorama .realtime-test-prompt:has(input:disabled) {
+  display: none;
+}
+
+.realtime-spike--panorama .coach-diagnostics {
+  display: none;
+}
+
+.geogebra-workbench > .geogebra-scratchpad {
+  grid-area: canvas;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px 20px 6px 20px;
+  background: #fff;
+  box-shadow: 0 12px 34px rgb(84 49 25 / 8%);
+}
+
+.geogebra-workbench .scratchpad-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.geogebra-workbench .geogebra-quick-guide {
+  display: none;
+}
+
+.geogebra-workbench .geogebra-scratchpad-shell {
+  min-height: min(800px, calc(100dvh - 224px));
+  border-radius: inherit;
+}
+
+.geogebra-workbench .geogebra-scratchpad-canvas {
+  min-height: min(800px, calc(100dvh - 224px));
+}
+
+.general-exercise-workspace--rail {
+  position: fixed;
+  z-index: 30;
+  left: 50%;
+  bottom: 12px;
+  width: min(1320px, calc(100% - 32px));
+  transform: translateX(-50%);
+  min-width: 0;
+  min-height: 92px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: minmax(320px, 1.25fr) minmax(360px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  border: 1px solid rgb(25 34 29 / 10%);
+  border-radius: 18px 18px 6px 18px;
+  background: #fffdf8;
+  box-shadow: 0 12px 34px rgb(84 49 25 / 10%);
+}
+
+.learning-screen-work--geogebra .geogebra-workbench {
+  padding-bottom: 106px;
+}
+
+.mission-current {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.mission-current span {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mission-current strong {
+  overflow: hidden;
+  font-family: var(--display-font);
+  font-size: 0.94rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mission-track {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  list-style: none;
+}
+
+.mission-track li {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 0;
+  display: block;
+  background: transparent;
+}
+
+.mission-track button {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink-soft);
+  background: var(--panel-soft);
+  box-shadow: none;
+  font-family: var(--display-font);
+  font-weight: 850;
+}
+
+.mission-track li[data-mission-status="active"] button {
+  width: 54px;
+  min-width: 54px;
+  height: 54px;
+  min-height: 54px;
+  border-color: var(--accent);
+  color: #fff;
+  background: var(--ink);
+  box-shadow: 0 0 0 5px var(--accent-soft);
+}
+
+.mission-track li[data-mission-status="verified"] button {
+  border-color: var(--success);
+  color: #fff;
+  background: var(--success);
+  animation: mission-verified-pop 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.mission-track button[aria-current="step"] {
+  outline: 3px solid var(--accent-soft);
+  outline-offset: 3px;
+}
+
+.mission-score {
+  min-width: 82px;
+  padding-left: 16px;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
+  border-left: 1px solid var(--line);
+}
+
+.mission-score strong {
+  color: var(--success);
+  font-family: var(--display-font);
+  font-size: 1.35rem;
+}
+
+.mission-score span {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.general-exercise-workspace--rail:not([data-score="0"]) .mission-score {
+  animation: mission-xp-pop 620ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes mission-verified-pop {
+  0% { transform: scale(0.72); }
+  62% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+@keyframes mission-xp-pop {
+  0% { transform: translateY(4px) scale(0.86); opacity: 0.55; }
+  55% { transform: translateY(-2px) scale(1.12); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@media (max-width: 980px) {
+  .realtime-spike--panorama {
+    min-height: 166px;
+    padding-left: 190px;
+    grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+    gap: 4px 18px;
+  }
+
+  .geogebra-workbench-coach .compass-mascot-presence--workspace {
+    top: -12px;
+    left: 10px;
+    width: 176px;
+  }
+
+  .geogebra-workbench-coach .compass-mascot-presence--workspace p {
+    display: none;
+  }
+
+  .realtime-spike--panorama .connection-copy {
+    display: none;
+  }
+
+  .realtime-spike--panorama .connection-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .general-exercise-workspace--rail {
+    width: calc(100% - 20px);
+    bottom: 8px;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
+  }
+
+  .mission-current {
+    grid-column: auto;
+  }
+
+  .mission-track {
+    justify-content: center;
+    overflow: visible;
+    padding: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .learning-screen-work--geogebra {
+    width: 100%;
+  }
+
+  .realtime-spike--panorama {
+    min-height: 202px;
+    padding: 118px 14px 14px;
+    display: block;
+    overflow: hidden;
+  }
+
+  .geogebra-workbench-coach .compass-mascot-presence--workspace {
+    top: -12px;
+    left: 8px;
+    width: 150px;
+  }
+
+  .realtime-spike--panorama .spike-heading {
+    position: absolute;
+    top: 24px;
+    left: 158px;
+    right: 12px;
+  }
+
+  .realtime-spike--panorama .spike-heading .section-index {
+    display: none;
+  }
+
+  .realtime-spike--panorama .spike-heading h2 {
+    margin: 0;
+    font-size: 1.24rem;
+    line-height: 1;
+  }
+
+  .realtime-spike--panorama .capability-mode {
+    display: none;
+  }
+
+  .realtime-spike--panorama .connection-control {
+    display: block;
+  }
+
+  .realtime-spike--panorama .connection-state {
+    display: none;
+  }
+
+  .realtime-spike--panorama .connection-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .realtime-spike--panorama .connection-actions button {
+    min-width: 0;
+    min-height: 48px;
+    padding-inline: 8px;
+    font-size: 0.75rem;
+  }
+
+  .geogebra-workbench .geogebra-scratchpad-shell,
+  .geogebra-workbench .geogebra-scratchpad-canvas {
+    min-height: 560px;
+  }
+
+  .general-exercise-workspace--rail {
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  .mission-current {
+    grid-column: 1 / -1;
+  }
+
+  .mission-current strong {
+    font-size: 0.82rem;
+  }
+
+  .mission-track {
+    gap: 6px;
+  }
+
+  .mission-track button {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+  }
+
+  .mission-track li[data-mission-status="active"] button {
+    width: 46px;
+    min-width: 46px;
+    height: 46px;
+    min-height: 46px;
+  }
+
+  .mission-score {
+    min-width: 64px;
+    padding-left: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-mascot-portrait {
+    transition: none;
+  }
 }

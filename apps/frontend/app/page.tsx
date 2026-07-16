@@ -1,33 +1,38 @@
 "use client";
 
-import { TutorWorkspace } from "@/components/tutor-workspace";
-import { useLanguage } from "@/components/language-provider";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-function GeometryPlayground({ french }: { french: boolean }) {
+import {
+  TutorWorkspace,
+  type TutorWorkspaceScreen,
+} from "@/components/tutor-workspace";
+import { useLanguage } from "@/components/language-provider";
+import { CompassMascot, MascotProvider } from "@/components/compass-mascot";
+
+function LearningPlayground({ french }: { french: boolean }) {
   return (
     <div className="hero-playground" aria-hidden="true">
       <div className="playground-note playground-note-top">
-        {french ? "à toi" : "your turn"}
+        {french ? "ta question" : "your question"}
       </div>
       <svg viewBox="0 0 520 520" role="presentation">
-        <path className="playground-orbit" d="M74 348C145 124 365 82 452 286" />
-        <path className="playground-guide" d="M116 390L407 174" />
-        <path className="playground-line" d="M118 201L404 404" />
-        <circle className="playground-point" cx="118" cy="201" r="14" />
+        <path className="playground-orbit" d="M68 350C144 98 382 90 454 286" />
+        <path className="playground-guide" d="M112 390C190 318 284 258 410 174" />
+        <path className="playground-line" d="M120 202C220 232 310 328 404 404" />
+        <circle className="playground-point" cx="120" cy="202" r="14" />
         <circle className="playground-point" cx="404" cy="404" r="14" />
         <circle className="playground-midpoint" cx="260" cy="302" r="10" />
-        <path className="playground-angle" d="M248 286L265 273L278 290" />
-        <text x="86" y="188">A</text>
-        <text x="417" y="430">B</text>
-        <text x="279" y="326">M</text>
+        <text x="76" y="186">∑</text>
+        <text x="410" y="438">Aa</text>
+        <text x="272" y="332">?</text>
       </svg>
       <div className="playground-equation">
-        <span>PA</span>
-        <strong>=</strong>
-        <span>PB</span>
+        <span>{french ? "comprendre" : "understand"}</span>
+        <strong>→</strong>
+        <span>{french ? "essayer" : "try"}</span>
       </div>
       <div className="playground-note playground-note-bottom">
-        {french ? "essaie · bouge · observe" : "try · move · see"}
+        {french ? "demande · essaie · explique" : "ask · try · explain"}
       </div>
     </div>
   );
@@ -36,6 +41,34 @@ function GeometryPlayground({ french }: { french: boolean }) {
 export default function Home() {
   const { language, text, toggleLanguage } = useLanguage();
   const french = language === "fr";
+  const specialistGeometryMode = useSyncExternalStore(
+    () => () => undefined,
+    () =>
+      new URLSearchParams(window.location.search).get("specialist") ===
+      "geometry",
+    () => false,
+  );
+  const panoramaDemoMode = useSyncExternalStore(
+    () => () => undefined,
+    () => new URLSearchParams(window.location.search).get("demo") === "geogebra",
+    () => false,
+  );
+  const [screen, setScreen] = useState<"landing" | TutorWorkspaceScreen>(
+    "landing",
+  );
+  const visibleScreen = panoramaDemoMode ? "work" : screen;
+  const mainRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (visibleScreen === "landing") return;
+    const frame = window.requestAnimationFrame(() => {
+      mainRef.current
+        ?.querySelector<HTMLElement>("[data-screen-title]")
+        ?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [visibleScreen]);
+
   const journeySteps = [
     {
       number: "01",
@@ -47,21 +80,33 @@ export default function Home() {
     },
     {
       number: "02",
-      label: text("Build it yourself", "Construis par toi-même"),
+      label: text("Check the reading", "Vérifie la lecture"),
       detail: text(
-        "Draw in GeoGebra while your tutor follows along.",
-        "Construis dans GeoGebra pendant que ton tuteur te suit.",
+        "Confirm the statement and every task before starting.",
+        "Confirme l'énoncé et chaque consigne avant de commencer.",
       ),
     },
     {
       number: "03",
-      label: text("Make it click", "Comprends vraiment"),
+      label: text("Work with Compass", "Travaille avec Compass"),
       detail: text(
-        "Test your idea, explain it and keep the insight.",
-        "Teste ton idée, explique-la et retiens l'essentiel.",
+        "Keep the coach, the tasks and the useful workspace together.",
+        "Garde le coach, les consignes et l'atelier utile au même endroit.",
       ),
     },
   ];
+  const progress = [
+    text("Home", "Accueil"),
+    text("Photo", "Photo"),
+    text("Check", "Vérification"),
+    text("Workspace", "Atelier"),
+  ];
+  const activeStep = specialistGeometryMode
+    ? 3
+    : { landing: 0, upload: 1, confirm: 2, work: 3 }[visibleScreen];
+  const showLanding = visibleScreen === "landing" || specialistGeometryMode;
+
+  const goHome = () => setScreen("landing");
 
   return (
     <>
@@ -70,9 +115,10 @@ export default function Home() {
       </a>
 
       <header className="site-header">
-        <a
+        <button
+          type="button"
           className="brand"
-          href="#top"
+          onClick={goHome}
           aria-label={text("Compass home", "Accueil Compass")}
         >
           <span className="brand-mark" aria-hidden="true">
@@ -81,11 +127,24 @@ export default function Home() {
             <span />
           </span>
           <span>Compass</span>
-        </a>
-        <nav aria-label={text("Main navigation", "Navigation principale")}>
-          <a href="#exercise-photo-title">{text("Start", "Démarrer")}</a>
-          <a href="#geogebra-spike-title">{text("Workspace", "Atelier")}</a>
-          <a href="#realtime-spike-title">{text("Your coach", "Ton coach")}</a>
+        </button>
+        <nav
+          className="screen-progress"
+          aria-label={text("Learning progress", "Progression du parcours")}
+        >
+          <ol>
+            {progress.map((label, index) => (
+              <li
+                key={label}
+                data-active={index === activeStep ? "true" : "false"}
+                data-complete={index < activeStep ? "true" : "false"}
+                aria-current={index === activeStep ? "step" : undefined}
+              >
+                <span aria-hidden="true">{index + 1}</span>
+                <span>{label}</span>
+              </li>
+            ))}
+          </ol>
         </nav>
         <div className="header-actions">
           <p className="header-tagline">
@@ -104,29 +163,38 @@ export default function Home() {
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" tabIndex={-1} ref={mainRef}>
+        {visibleScreen === "landing" && !specialistGeometryMode ? (
+          <MascotProvider>
+            <CompassMascot />
+          </MascotProvider>
+        ) : null}
+        {showLanding ? (
+          <>
         <section className="hero" id="top" aria-labelledby="page-title">
           <div className="hero-copy">
             <p className="eyebrow">
-              <span aria-hidden="true">✦</span>{" "}
-              {text("Your geometry study buddy", "Ton partenaire en géométrie")}
+              {text("Your study buddy for every subject", "Ton partenaire dans toutes les matières")}
             </p>
             <h1 id="page-title">
               {text(
-                "Geometry clicks when you can play with it.",
-                "La géométrie devient claire quand tu peux la manipuler.",
+                "Bring the exercise. Find your own way through it.",
+                "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
               )}
             </h1>
             <p className="lede">
               {text(
-                "Bring one exercise. Compass helps you build, test and understand it — without giving away the answer.",
-                "Apporte un exercice. Compass t'aide à construire, tester et comprendre — sans te donner la réponse.",
+                "Maths, languages, history or science: Compass reads the question, keeps every step and helps without giving away the answer.",
+                "Maths, langues, histoire ou sciences : Compass lit l'énoncé, garde chaque étape et t'aide sans te donner la réponse.",
               )}
             </p>
             <div className="hero-actions">
-              <a className="primary-link" href="#exercise-photo-title">
-                {text("Add my exercise", "Ajouter mon exercice")}{" "}
-                <span aria-hidden="true">↘</span>
+              <a
+                className="primary-link"
+                href="#exercise-photo-title"
+                onClick={() => setScreen("upload")}
+              >
+                {text("Add my exercise", "Ajouter mon exercice")}
               </a>
               <span>{text("One photo. No account.", "Une photo. Aucun compte.")}</span>
             </div>
@@ -139,7 +207,7 @@ export default function Home() {
               <li>{text("Learn at your pace", "Apprends à ton rythme")}</li>
             </ul>
           </div>
-          <GeometryPlayground french={french} />
+          <LearningPlayground french={french} />
         </section>
 
         <section className="journey" aria-labelledby="journey-title">
@@ -161,10 +229,18 @@ export default function Home() {
             ))}
           </ol>
         </section>
-
-        <TutorWorkspace />
+            {specialistGeometryMode ? <TutorWorkspace /> : null}
+          </>
+        ) : (
+          <TutorWorkspace
+            screen={visibleScreen}
+            onScreenChange={setScreen}
+            onHome={goHome}
+          />
+        )}
       </main>
 
+      {showLanding ? (
       <footer className="presentation-footer" aria-labelledby="prototype-title">
         <div>
           <a className="brand brand-footer" href="#top">
@@ -176,14 +252,14 @@ export default function Home() {
             <span>Compass</span>
           </a>
           <h2 id="prototype-title">
-            {text("Keep wondering. Keep drawing.", "Continue à chercher. Continue à construire.")}
+            {text("Keep wondering. Keep trying.", "Continue à chercher. Continue à essayer.")}
           </h2>
         </div>
         <div>
           <p>
             {text(
-              "Compass embeds GeoGebra Geometry for this non-commercial prototype. Commercial use requires a separate GeoGebra agreement.",
-              "Compass intègre GeoGebra Geometry dans ce prototype non commercial. Un usage commercial exige un accord GeoGebra distinct.",
+              "Compass keeps GeoGebra available for verified geometry modules in this non-commercial prototype. Commercial use requires a separate GeoGebra agreement.",
+              "Compass conserve GeoGebra pour les modules de géométrie vérifiés de ce prototype non commercial. Un usage commercial exige un accord GeoGebra distinct.",
             )}
           </p>
           <p>
@@ -201,6 +277,7 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      ) : null}
     </>
   );
 }

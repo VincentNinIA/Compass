@@ -192,7 +192,7 @@ describe("T5-C05 Realtime out-of-band invariance summary", () => {
     const event = requireSentEvent(harness.sent, 0);
     const done = responseDone(event, "response-live-shape", "Live text only.");
     Object.assign(done.response, {
-      audio: { output: { voice: "marin" } },
+      audio: { output: { voice: "cedar" } },
     });
 
     expect(harness.coordinator.handle(done)).toBe(true);

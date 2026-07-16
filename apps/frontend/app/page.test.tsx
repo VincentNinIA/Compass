@@ -13,7 +13,7 @@ import Home from "./page";
 afterEach(cleanup);
 
 describe("Home", () => {
-  it("renders the student-facing Compass journey without requiring a secret", () => {
+  it("renders the landing first, then opens a dedicated upload screen", () => {
     render(
       <LanguageProvider>
         <Home />
@@ -23,12 +23,27 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Geometry clicks when you can play with it.",
+        name: "Bring the exercise. Find your own way through it.",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Add your exercise")).toBeInTheDocument();
-    expect(screen.getByText("Build it yourself")).toBeInTheDocument();
-    expect(screen.getByText("Make it click")).toBeInTheDocument();
+    expect(screen.getByText("Check the reading")).toBeInTheDocument();
+    expect(screen.getByText("Work with Compass")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", {
+        level: 2,
+        name: "Show me your exercise",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Keep wondering. Keep trying.",
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("link", { name: "Add my exercise" }));
+
     expect(
       screen.getByRole("heading", {
         level: 2,
@@ -37,17 +52,9 @@ describe("Home", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
     expect(
-      screen.getByRole("link", { name: "Add my exercise" }),
-    ).toHaveAttribute("href", "#exercise-photo-title");
-    expect(
-      screen.getByRole("link", { name: "License and attribution" }),
-    ).toHaveAttribute("href", "https://www.geogebra.org/license");
-    expect(
-      screen.getByRole("heading", {
-        level: 2,
-        name: "Keep wondering. Keep drawing.",
-      }),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "Keep wondering. Keep trying." }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
   });
 
   it("switches the complete interface between English and French", async () => {
@@ -64,12 +71,12 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "La géométrie devient claire quand tu peux la manipuler.",
+        name: "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Ajoute ton exercice")).toBeInTheDocument();
-    expect(screen.getByText("Construis par toi-même")).toBeInTheDocument();
-    expect(screen.getByText("Comprends vraiment")).toBeInTheDocument();
+    expect(screen.getByText("Vérifie la lecture")).toBeInTheDocument();
+    expect(screen.getByText("Travaille avec Compass")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Switch to English" }),
     ).toHaveTextContent("🇬🇧EN");

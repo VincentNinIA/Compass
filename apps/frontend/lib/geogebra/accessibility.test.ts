@@ -11,6 +11,7 @@ describe("GeoGebraAccessibilityGuard", () => {
     const root = document.createElement("div");
     const hiddenToolbar = document.createElement("div");
     hiddenToolbar.setAttribute("aria-hidden", "true");
+    hiddenToolbar.style.display = "none";
     hiddenToolbar.innerHTML = "<button type='button'>Hidden tool</button>";
     root.append(hiddenToolbar);
     document.body.append(root);
@@ -20,6 +21,7 @@ describe("GeoGebraAccessibilityGuard", () => {
     expect(hiddenToolbar).toHaveAttribute("inert");
 
     hiddenToolbar.setAttribute("aria-hidden", "false");
+    hiddenToolbar.style.display = "block";
     await Promise.resolve();
     expect(hiddenToolbar).not.toHaveAttribute("inert");
     guard.stop();
@@ -33,12 +35,35 @@ describe("GeoGebraAccessibilityGuard", () => {
 
     const hiddenMenu = document.createElement("div");
     hiddenMenu.setAttribute("aria-hidden", "true");
+    hiddenMenu.hidden = true;
     root.append(hiddenMenu);
     await Promise.resolve();
     expect(hiddenMenu).toHaveAttribute("inert");
 
     guard.stop();
     expect(hiddenMenu).not.toHaveAttribute("inert");
+  });
+
+  it("keeps a visible GeoGebra tool interactive even when the applet marks it aria-hidden", () => {
+    const root = document.createElement("div");
+    const tool = document.createElement("button");
+    tool.className = "toolButton";
+    tool.setAttribute("aria-hidden", "true");
+    Object.defineProperty(tool, "offsetParent", { value: root });
+    tool.getClientRects = () =>
+      ({
+        0: tool.getBoundingClientRect(),
+        length: 1,
+        item: () => null,
+      }) as unknown as DOMRectList;
+    root.append(tool);
+    document.body.append(root);
+
+    const guard = new GeoGebraAccessibilityGuard(root);
+    guard.start();
+
+    expect(tool).not.toHaveAttribute("inert");
+    guard.stop();
   });
 
   it("makes the pinned applet scroll panel keyboard reachable and restores it", () => {

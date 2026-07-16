@@ -8,7 +8,7 @@
     "pnpm": "10.6.3"
   },
   "scripts": {
-    "dev": "pnpm --dir apps/frontend dev",
+    "dev": "set -a; [ ! -f .env ] || . ./.env; set +a; pnpm --dir apps/frontend dev",
     "lint": "pnpm --dir apps/frontend lint",
     "typecheck": "pnpm --dir apps/frontend typecheck",
     "test": "pnpm --dir apps/frontend test --run",

@@ -191,7 +191,7 @@ async function expectClosedResources(page: Page) {
 }
 
 test("T0 GeoGebra creates and reads A, B and AB", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
 
   expect(
@@ -224,7 +224,7 @@ test("T0 Realtime failure preserves GeoGebra and releases resources", async ({
       }),
     }),
   );
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
   await installSyntheticMicrophone(page);
 
@@ -259,7 +259,7 @@ test("T0 GeoGebra failure still reaches the isolated Realtime boundary", async (
       }),
     });
   });
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("Applet unavailable", { exact: true })).toBeVisible();
   await installSyntheticMicrophone(page);
 
@@ -275,7 +275,7 @@ test("@live T0 credentialed WebRTC receives audio and cleans up with GeoGebra do
   test.skip(process.env.T0_LIVE !== "1", "Run with pnpm test:e2e:t0:live");
 
   await page.route("**/deployggb.js", (route) => route.abort("failed"));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("Applet unavailable", { exact: true })).toBeVisible();
   await installSyntheticMicrophone(page);
 
@@ -287,7 +287,7 @@ test("@live T0 credentialed WebRTC receives audio and cleans up with GeoGebra do
     await page.evaluate(() => (window as T0Window).__T0_SESSION_PROFILE__),
   ).toEqual({
     model: "gpt-realtime-2.1",
-    voice: "marin",
+    voice: "cedar",
     reasoningEffort: "low",
   });
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();
@@ -341,7 +341,7 @@ test("@live T2 server VAD emits one response.create for at least three committed
   test.setTimeout(90_000);
 
   await page.route("**/deployggb.js", (route) => route.abort("failed"));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await installSyntheticMicrophone(page);
   await page.getByRole("button", { name: "Start voice" }).click();
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();
@@ -388,7 +388,7 @@ test("@live T2 server VAD emits one response.create for at least three committed
 test("@live T2 completes a correlated read_construction tool loop", async ({ page }) => {
   test.skip(process.env.T0_LIVE !== "1", "Run with pnpm test:e2e:t0:live");
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
   await installSyntheticMicrophone(page);
   const revision = await page.evaluate(
@@ -435,7 +435,7 @@ test("@live T2 Stop cancels and clears an active audio response", async ({ page 
   test.skip(process.env.T0_LIVE !== "1", "Run with pnpm test:e2e:t0:live");
 
   await page.route("**/deployggb.js", (route) => route.abort("failed"));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await installSyntheticMicrophone(page);
   await page.getByRole("button", { name: "Start voice" }).click();
   await expect(page.getByText("oai-events open", { exact: true })).toBeVisible();

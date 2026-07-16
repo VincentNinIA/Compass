@@ -37,7 +37,7 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
   expect(response?.headers()["x-frame-options"]).toBe("SAMEORIGIN");
   expect(await page.evaluate(() => window.isSecureContext)).toBe(true);
 
-  await expect(page.getByText("API verified", { exact: true })).toBeVisible();
+  await expect(page.getByText("API verified", { exact: true })).toBeHidden();
   await expect(
     page.getByRole("link", { name: "License and attribution", exact: true }),
   ).toBeVisible();
@@ -76,8 +76,10 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
   expect(axeResult.violations).toEqual([]);
 
   const ariaSnapshot = await page.locator("body").ariaSnapshot();
-  expect(ariaSnapshot).toContain("heading \"Geometry clicks when you can play with it.\"");
-  expect(ariaSnapshot).toContain("link \"License and attribution\"");
+  expect(ariaSnapshot).toContain(
+    "heading \"Add your exercise\"",
+  );
+  expect(ariaSnapshot).not.toContain("link \"License and attribution\"");
   await mkdir(PLAYWRIGHT_OUTPUT, { recursive: true });
   await writeFile(
     path.join(PLAYWRIGHT_OUTPUT, "T6-C06-aria-snapshot.yml"),
@@ -86,10 +88,10 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
   );
 
   expect(
-    await page.locator(".invariance-state-label").evaluate(
+    await page.locator(".compass-mascot-presence").evaluate(
       (element) => getComputedStyle(element).transitionDuration,
     ),
-  ).toBe("0s");
+  ).toMatch(/^(0s|0\.00001s)(, (0s|0\.00001s))*$/);
   await expectNoDocumentOverflow(page);
   await page.screenshot({
     path: path.join(PLAYWRIGHT_OUTPUT, "T6-C06-jury-1440x900.png"),
@@ -143,7 +145,7 @@ test("T6-C06 denied microphone keeps local honest and leaves an explicit typed p
     });
   });
 
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await page.getByRole("button", { name: "Start voice" }).click();
   await expect(page.locator("[data-capability-mode]"))
     .toContainText("Reason: microphone permission denied");

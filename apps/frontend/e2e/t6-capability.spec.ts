@@ -124,7 +124,7 @@ async function installCapabilityTransport(
                         interrupt_response: true,
                       },
                     },
-                    output: { voice: "marin" },
+                    output: { voice: "cedar" },
                   },
                   reasoning: { effort: "low" },
                 },
@@ -258,7 +258,7 @@ test("T6-C02 scripted_local sends no model request and typed_live is a real text
   const requests: string[] = [];
   await installCapabilityTransport(page);
   await page.route("**/api/realtime/session", successfulSessionRoute(requests));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
 
   const badge = page.locator("[data-capability-mode]");
   await expect(badge).toHaveAttribute("data-capability-mode", "scripted_local");
@@ -304,7 +304,7 @@ test("T6-C02 live_voice requires microphone and audio, then a channel loss never
   const requests: string[] = [];
   await installCapabilityTransport(page);
   await page.route("**/api/realtime/session", successfulSessionRoute(requests));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
 
   const badge = page.locator("[data-capability-mode]");
   await page.getByRole("button", { name: "Start voice" }).click();
@@ -338,7 +338,7 @@ test("T6-C02 denied microphone proposes a manual typed fallback without touching
   const requests: string[] = [];
   await installCapabilityTransport(page, { denyMicrophone: true });
   await page.route("**/api/realtime/session", successfulSessionRoute(requests));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
   const before = await page.evaluate(
     () =>
@@ -387,7 +387,7 @@ test("T6-C02 route failure and offline state stay local with zero automatic retr
       }),
     });
   });
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   const badge = page.locator("[data-capability-mode]");
   await page.getByRole("button", { name: "Use live text" }).click();
   await expect(badge).toContainText("Reason: typed connection failed");
@@ -407,7 +407,7 @@ test("T6-C01 reset cancels an active typed response and ignores its late complet
   const requests: string[] = [];
   await installCapabilityTransport(page, { holdTypedResponse: true });
   await page.route("**/api/realtime/session", successfulSessionRoute(requests));
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   await expect(page.getByText("API verified", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Use live text" }).click();
@@ -468,7 +468,7 @@ test("@live T6-C02 credentialed typed_live stays text-only without microphone or
 }) => {
   test.skip(process.env.T0_LIVE !== "1", "Run with the credentialed live gate.");
   await installCredentialedTypedProbe(page);
-  await page.goto("/");
+  await page.goto("/?specialist=geometry");
   const badge = page.locator("[data-capability-mode]");
 
   await page.getByRole("button", { name: "Use live text" }).click();

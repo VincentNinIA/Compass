@@ -637,3 +637,115 @@
   et textes libres issus des modèles ne sont pas renommés ni traduits. Toute
   nouvelle copie publique doit fournir ses deux variantes et passer les mêmes
   gates responsive/accessibilité.
+
+## D-048 - Mascotte pilotée par événements applicatifs fermés
+
+- Décision : représenter Compass par un mentor humain original et un atlas local
+  8 × 9 contenant huit frames pour chacun des états `idle`, `receiving`,
+  `thinking`, `listening`, `speaking`, `modifying`, `hinting`, `celebrating` et
+  `error`. Le contrôleur de présentation reçoit seulement des événements fermés
+  émis aux frontières React existantes.
+- Raison : une présence visuelle rend la session plus incarnée, mais une
+  animation déduite d'un transcript, d'un timer arbitraire ou d'un état réseau
+  approximatif pourrait mentir à l'élève sur ce que fait réellement Compass.
+- Impact : l'atlas est statique et local; il ne déplace aucune autorité T1 à T8.
+  Les sources photo, Realtime, outil et hint publient des signaux bornés avec
+  priorité et cleanup. `prefers-reduced-motion` conserve la première frame et
+  un libellé bilingue rend l'état compréhensible sans mouvement.
+
+## D-049 - Deux entrées photo et configuration locale chargée par le lanceur
+
+- Décision : afficher une action de choix de fichier sans attribut `capture` et
+  une action caméra distincte portant `capture="environment"`; les deux entrées
+  convergent vers la même validation et le même aperçu en mémoire. Le script
+  racine `pnpm dev` charge `.env` avant de lancer Next.js.
+- Raison : un contrôle unique avec `capture` varie selon le navigateur mobile et
+  rend le choix galerie/caméra ambigu. Next.js lancé depuis `apps/frontend` ne
+  charge pas automatiquement le `.env` de la racine, ce qui faisait échouer la
+  route image malgré une clé valide.
+- Impact : la permission caméra reste déclenchée par le navigateur après un geste
+  explicite. `OPENAI_API_KEY` demeure exclusivement dans l'environnement serveur;
+  aucun média, choix de langue ou secret n'est persisté.
+
+## D-050 - Mode généraliste par défaut et modules spécialisés optionnels
+
+- Décision : la route photo publique produit une enveloppe générique bornée pour
+  tout exercice scolaire lisible. La matière n'est jamais un motif de rejet;
+  seules l'illisibilité, l'incomplétude ou une contradiction déclenchent une
+  clarification. Après confirmation, le profil Realtime `general_tutor` reçoit
+  l'énoncé comme item utilisateur délimité et fonctionne avec `tools:[]`.
+- Raison : remplacer la médiatrice par une autre liste de templates déplacerait
+  seulement le blocage. Un socle conversationnel général donne une continuité à
+  l'élève, tandis que les modules déterministes gardent leur valeur lorsqu'ils
+  correspondent réellement à l'exercice.
+- Impact : le module médiatrice historique, ses preuves et ses tests restent
+  conservés mais ne sont plus la surface publique par défaut. Le coach général
+  ne peut ni lire une construction, ni muter GeoGebra, ni affirmer une validation
+  automatique. Le texte extrait reste une donnée non fiable, bornée et en mémoire.
+
+## D-051 - Quatre écrans et support contextualisé non autoritaire
+
+- Décision : faire de l'accueil, de l'acquisition, de la vérification et de
+  l'atelier quatre états de navigation locaux exclusifs. L'atelier place la
+  mascotte et le coach en tête, puis choisit un support à partir de l'enveloppe
+  confirmée. Les mathématiques et la géométrie obtiennent un applet GeoGebra
+  vierge distinct du module médiatrice.
+- Raison : l'empilement de toutes les étapes dans une page longue masque la
+  transition de l'analyse vers l'action et fait disparaître visuellement le
+  canevas lorsque la voix démarre. Un support libre est utile à l'élève sans
+  transformer la matière en permission d'outil ou en preuve.
+- Impact : la navigation, le focus et le reflow appartiennent uniquement à la
+  présentation. Le profil général reste sans outil et ne lit pas l'applet. Le
+  tableau libre ne crée ni A/B/AB, ni score, ni listener métier; seul le mode
+  explicite `?specialist=geometry` monte les autorités spécialisées historiques.
+
+## D-052 - Profil GeoGebra contextuel et outils sémantiques fermés
+
+- Décision : introduire un profil Realtime `geogebra_tutor` distinct du profil
+  général. Il sait que l'élève travaille dans l'applet intégrée et peut appeler
+  seulement `inspect_geogebra_workspace`, `draw_geogebra_line`,
+  `draw_geogebra_ray` ou `draw_geogebra_segment`. Les mutations exigent deux
+  points existants, une demande explicite et un budget d'une action par tour.
+- Raison : une conversation qui recommande une règle physique ou qui ne peut
+  agir quand l'élève demande « trace la droite » rompt la continuité entre le
+  coach et l'outil visible. Une commande GeoGebra générique serait inversement
+  trop large et impossible à qualifier.
+- Impact : l'application exécute les outils et renvoie leur résultat via la
+  boucle Realtime existante. L'inventaire est borné; les arguments, labels,
+  couleurs, phase, autorité, budget et idempotence sont validés localement.
+  L'outil peut assister une construction mais ne produit aucune preuve de
+  correction et ne crée, déplace, supprime ou renomme jamais un point élève.
+
+## D-053 - Scène panoramique, missions honnêtes et réactions finies
+
+- Décision : composer l'atelier GeoGebra en une seule colonne pleine largeur :
+  coach horizontal au-dessus, applet dominant puis rail de missions persistant.
+  Un contrôle GeoGebra visible n'est jamais neutralisé au seul motif que sa
+  bibliothèque lui donne `aria-hidden`; seuls les sous-arbres réellement
+  masqués deviennent inertes. La mascotte panoramique utilise une image propre,
+  regarde le plan et les animations de la présence flottante jouent une fois.
+- Raison : le split vertical réduisait la surface de manipulation, la boucle de
+  sprite paraissait mécanique et la garde d'accessibilité bloquait les vrais
+  outils. Le rail doit encourager l'exploration sans simuler une réussite.
+- Impact : les missions peuvent être consultées librement, mais `vérifié` et XP
+  ne progressent que depuis un ensemble d'indices déterministes. Le navigateur
+  garde un geste explicite pour le micro. L'observation live du monde GeoGebra
+  et les actions supplémentaires restent séparées dans T14-C02.
+
+## D-054 - Monde GeoGebra borné, progression déterministe et voix Compass
+
+- Décision : publier au profil `geogebra_tutor` un snapshot initial de quarante
+  objets maximum puis des deltas stabilisés, sans `response.create` implicite.
+  Étendre le gateway à dix fonctions sémantiques fermées, dont création et
+  déplacement de point, renommage, style, cercle et polygone. Les missions
+  observables sont vérifiées dans l'ordre et rapportent 20 XP chacune.
+- Raison : le coach devait connaître le plan réel, pouvoir renommer un objet et
+  récompenser une relation effectivement construite. Confier ces décisions au
+  modèle ou exposer `evalCommand` aurait rendu l'état, le score et les mutations
+  non qualifiables.
+- Impact : le monde transmis est une observation applicative non injonctive; il
+  ne déclenche aucune réponse. Le budget reste d'une mutation par tour et les
+  arguments supplémentaires sont rejetés. La sixième tâche écrite de l'exercice
+  reste non vérifiée tant qu'aucune preuve structurée n'existe. La voix Realtime
+  devient `cedar`, recommandée par le fournisseur, avec une consigne de tuteur
+  adulte chaleureuse; aucun genre n'est présenté comme une garantie du modèle.

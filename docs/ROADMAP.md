@@ -80,7 +80,8 @@ sous `varignon.v1`, sans ajouter un autre théorème.
 T24-C01 est close `pass` : le merge `4ea885f` intègre `0c8e3f4` dans `main` et
 le candidat `candidate_e6b5349451db363138d6d24b` passe 829 tests, 43
 Playwright hors live, golden 3/3 et smoke Realtime 1/1. La production reste T18
-jusqu'à T24-C03.
+jusqu'à T24-C03. `origin/main` contient la qualification `2f582fd` et la PR #3
+est fusionnée via `4ea885f`.
 
 Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22 → T23 → T24 → T25 → T26 → T27`.
 

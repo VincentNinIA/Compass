@@ -162,9 +162,10 @@ restent hors périmètre. Le LMS complet, le SSO établissement et les comptes
 identité professeur limitée, des classes à pseudonymes et des affectations
 bornées après fermeture des contrats de données, accès, rétention et suppression.
 
-T22 est intégré et qualifié dans `main` local par le merge `4ea885f`; la
-production publique reste néanmoins sur T18. T24-C02 doit protéger la démo avant
-que T24-C03 ne déploie le candidat T22.
+T22 est intégré et qualifié dans `origin/main`; la PR #3 est fusionnée par
+`4ea885f` et la qualification est consignée dans `2f582fd`. La production
+publique reste néanmoins sur T18. T24-C02 doit protéger la démo avant que
+T24-C03 ne déploie le candidat T22.
 
 Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
 démo et une limitation de débit sur les routes OpenAI. Pour les seules démos

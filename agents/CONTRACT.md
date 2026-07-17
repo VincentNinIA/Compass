@@ -75,6 +75,8 @@ disponible; son absence ne doit pas être masquée.
   `environment_1cb73222a3ee6a86fddc5fe0` et Chrome for Testing 149.0.7827.55.
 - Smoke Realtime credentialed : 1/1; négociation v2, lecture du monde publié et
   fermeture propre.
+- `origin/main` reçoit la chaîne jusqu'au commit de qualification `2f582fd` sans
+  force; la PR #3 est marquée `MERGED` avec `4ea885f` comme merge commit.
 
 ## Archive — T23-C02
 

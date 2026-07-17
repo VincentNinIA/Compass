@@ -741,6 +741,14 @@ La première Production de cette frontière est
 deux aliases ciblés qualifient l'ouverture sans élargir la sémantique de
 snapshot des destinataires T25-C03.
 
+L'amendement de démonstration hackathon ajoute un chemin public plus court sans
+runtime parallèle : `page.tsx` construit côté client la publication v2 depuis
+`createTeacherGeometryDraftV2`, la revalide avec le schéma existant puis la
+transmet au même `GeometryPublishedWorkspace`. Ce chemin ne consulte ni classe,
+ni cookie alias, ni catalogue réseau et n'écrit rien en base. Les entrées devoir,
+bibliothèque et classe restent disponibles par surfaces internes/pilotes, mais
+ne sont plus rendues sur l'accueil destiné au jury.
+
 ### Flux de données autorisé
 
 1. Le professeur authentifié crée une classe et distribue un code rotatif.

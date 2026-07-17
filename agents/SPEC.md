@@ -25,6 +25,13 @@ disponible.
 
 ## Expérience élève
 
+- Dans la démonstration hackathon publique, l'accueil présente une seule action
+  élève : lancer l'investigation Varignon préparée par le professeur. Aucun
+  code de classe, pseudonyme, compte, ajout de devoir ou choix de bibliothèque
+  ne précède l'ouverture de GeoGebra.
+- Les parcours d'acquisition d'un devoir, de bibliothèque et de jonction à une
+  classe restent des capacités internes ou pilotes; ils ne concurrencent plus
+  le golden path montré au jury.
 - L'interface publique parle d'exercice, de démarche, d'aide et de progrès;
   elle n'expose pas les noms de tranches, les frontières techniques ou les
   métriques de qualification dans le parcours principal.
@@ -84,14 +91,14 @@ disponible.
 
 ## Parcours principal
 
-1. Depuis l'accueil, l'élève choisit entre apporter un devoir ou travailler sur
-   un exercice préparé par un professeur.
-2. Le devoir personnel ouvre un écran dédié à la galerie ou à la caméra; la
-   bibliothèque professeur ouvre la liste des exercices publiés.
-3. L'application extrait la matière, le titre, l'énoncé et les tâches dans leur
-   ordre, puis affiche un écran de vérification dédié.
-4. Après confirmation ou sélection d'un exercice publié, Compass ouvre
-   l'atelier et transmet cet exercice comme contexte non fiable au coach.
+1. Depuis l'accueil public de démonstration, l'élève lance l'exercice Varignon
+   du professeur avec une seule action visible.
+2. L'application construit localement la publication v2 validée et ouvre le
+   vrai atelier GeoGebra sans code, pseudonyme, cookie élève ou écriture serveur.
+3. L'élève suit les neuf missions, manipule la figure et demande une aide à
+   Compass si nécessaire.
+4. Le retour à la démo retrouve le même accueil simplifié. L'acquisition photo,
+   la bibliothèque et la classe restent disponibles hors de ce golden path.
 5. Le coach reste immédiatement accessible dans l'atelier, avec une action voix
    visible; il demande où l'élève en est, découpe le travail et fournit le plus
    petit indice utile sans donner immédiatement toute la solution.
@@ -158,7 +165,7 @@ disponible.
 | FR-30 | Transformer toutes les tâches confirmées, quelle que soit la matière, en missions séquentielles pouvant être déclarées terminées par l'élève sans être présentées comme vérifiées. |
 | FR-31 | Conserver en mémoire un ledger XP cumulatif et idempotent pour la session : 10 XP par mission déclarée terminée, portés à 20 XP lorsqu'une preuve déterministe compatible existe, sans retrait des points déjà acquis. |
 | FR-32 | Afficher le total XP de session dans l'atelier et le score de l'exercice courant, avec des libellés distincts pour `terminé` et `vérifié`. |
-| FR-33 | Afficher en haut à droite un accès professeur et proposer à l'élève, sur l'accueil, les deux départs `faire un devoir` et `faire des exercices`. |
+| FR-33 | Afficher en haut à droite un accès professeur et proposer à l'élève, sur l'accueil hackathon, un unique départ vers l'exercice Varignon préparé. |
 | FR-34 | Permettre au professeur de fournir soit une image d'exercice, soit un brief matière/niveau/thématique/difficultés avec des consignes pédagogiques optionnelles. |
 | FR-35 | Produire en un appel modèle maximum un brouillon structuré, éditable et non publié par défaut, avec missions, objectif, obstacles et aides graduées. |
 | FR-36 | Publier un exercice validé par le professeur dans un catalogue serveur borné et éphémère, lisible par le parcours élève sans notion de classe. |
@@ -258,8 +265,8 @@ disponible.
 - Un fallback explicite existe pour micro ou API indisponible, sans se présenter comme live.
 - Aucun libellé de tranche (`T0` à `T6`), jargon WebRTC, identifiant de preuve ou
   budget de latence ne domine le parcours élève.
-- À l'arrivée, l'élève identifie l'action de départ et les trois étapes du
-  parcours sans devoir parcourir une documentation technique.
+- À l'arrivée, l'élève identifie immédiatement l'unique action de départ vers
+  Varignon, sans documentation, compte, code de classe ou choix concurrent.
 - Le parcours reste utilisable à 390 px, 768 px et 1440 px, au clavier et avec
   `prefers-reduced-motion`.
 - Le changement EN/FR conserve le même parcours, les mêmes actions et les mêmes
@@ -274,8 +281,8 @@ disponible.
 - Après confirmation d'un exercice générique, aucune surface médiatrice,
   progression 0/2 ou expérience PA/PB n'est imposée; le coach reçoit le contexte
   borné et n'a accès à aucun outil GeoGebra.
-- Depuis l'accueil, chaque action principale remplace l'écran courant; la photo,
-  le résumé puis l'atelier ne sont jamais empilés dans une page longue.
+- Depuis l'accueil de démo, l'unique action principale remplace l'écran courant
+  par l'atelier Varignon; les parcours historiques ne sont pas empilés dessous.
 - Après confirmation d'un exercice de mathématiques ou de géométrie, GeoGebra
   occupe toute la largeur utile entre le coach et les missions; sur mobile, le
   coach précède le tableau, puis les tâches, sans débordement.

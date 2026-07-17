@@ -1,3 +1,71 @@
+# Contrat Builder — amendement démo hackathon, accès direct à Varignon — `in_progress`
+
+## État
+
+- Le porteur demande le 17 juillet 2026 de retirer la friction introduite par
+  le pilote classe : le jury ne doit saisir ni code, ni pseudonyme, ni secret
+  avant de voir l'exercice du professeur.
+- La classe pilote T25 reste disponible comme infrastructure et banc de test,
+  mais elle ne constitue plus le parcours public principal de la démo.
+- Cet amendement remplace temporairement la reprise persistante C04 comme
+  prochaine action produit. Il ne prétend pas transformer le prototype en
+  portail scolaire sécurisé ou en LMS.
+
+## Objectif
+
+Depuis l'URL publique, permettre de lancer l'investigation Varignon préparée par
+le professeur en un clic visible, sans formulaire intermédiaire, puis revenir à
+un accueil tout aussi simple.
+
+## Inclus
+
+- Une page d'accueil centrée sur une seule action élève : démarrer l'exercice
+  Varignon exact dans le runtime GeoGebra T22.
+- Suppression de la surface publique des entrées `devoir`, `bibliothèque` et
+  `rejoindre une classe`; leurs runtimes peuvent rester accessibles aux tests
+  ou à l'espace professeur sans concurrencer la démonstration.
+- Publication de démonstration v2 construite localement depuis le contrat
+  `varignon.v1` déjà qualifié, sans appel réseau, code de classe ou cookie élève.
+- Allègement visuel de l'accueil : copie spécifique, hiérarchie unique, une
+  seule CTA, métadonnées utiles et conservation de l'accès professeur/langue.
+- Tests unitaires et navigateur couvrant le clic public, l'ouverture du vrai
+  atelier, l'absence du bouton devoir et le retour accueil.
+
+## Hors périmètre
+
+- Suppression des routes, migrations ou contrôles d'accès du pilote classe;
+  ils restent nécessaires au futur pilote réel, mais sont hors du chemin jury.
+- Persistance d'un checkpoint, nouveau template, nouvelle génération IA,
+  assouplissement du gateway GeoGebra ou exposition de secrets.
+- Refonte du studio professeur ou des neuf missions Varignon.
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test e2e/t25-demo-direct.spec.ts
+git diff --check
+# smoke Production : accueil -> démarrer -> applet/missions -> retour accueil
+```
+
+## Définition de fini
+
+- L'accueil public ne rend ni bouton devoir, ni code de classe, ni pseudonyme,
+  ni choix de bibliothèque; un seul bouton élève ouvre Varignon.
+- Le clic transmet une publication v2 valide et affiche le vrai atelier avec
+  GeoGebra et les neuf missions sans écriture serveur préalable.
+- Le retour retrouve l'accueil; la langue, le clavier, le mobile et le
+  mouvement réduit restent utilisables sans débordement ni violation Axe.
+- Le build qualifié est déployé sur l'alias stable et son identité est consignée.
+
+---
+
+# Archive — T25-C04A
+
 # Contrat Builder — T25-C04A Classe test et ouverture Varignon — close `pass`
 
 ## État

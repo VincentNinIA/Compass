@@ -13,7 +13,7 @@ test("T24-C02 refuses model routes before parsing and opens only an expiring ses
   ).toBeVisible();
   await expect(
     page.getByRole("heading", {
-      name: "Bring the exercise. Find your own way through it.",
+      name: "Build. Observe. Prove.",
     }),
   ).toHaveCount(0);
 
@@ -49,7 +49,7 @@ test("T24-C02 refuses model routes before parsing and opens only an expiring ses
   await page.getByRole("button", { name: "Open Compass" }).click();
   await expect(
     page.getByRole("heading", {
-      name: "Bring the exercise. Find your own way through it.",
+      name: "Build. Observe. Prove.",
     }),
   ).toBeVisible();
 

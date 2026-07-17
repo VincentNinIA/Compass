@@ -2,39 +2,19 @@
 
 ## Prochaine action
 
-T25-C04A est close `pass` : PostgreSQL et les secrets Production sont actifs,
-l'affectation immédiate est simplifiée, `Ma classe` ouvre le contrat Varignon
-exact dans GeoGebra et la classe `Test Varignon` est qualifiée sur l'alias
-public. T25-C04 reste `in_progress`; la prochaine sous-tranche doit persister et
-restaurer le checkpoint sémantique allowlisté avant de fermer la carte.
+L'amendement démo hackathon est implémenté localement : l'accueil ne présente
+plus devoir, bibliothèque ou jonction par code. Une seule action construit la
+publication Varignon v2 validée et ouvre directement le vrai runtime GeoGebra
+avec ses neuf missions, sans réseau ni écriture serveur préalable. Les gates
+locaux, l'inspection desktop/mobile et les parcours classe historiques passent.
+La prochaine action immédiate est le déploiement Vercel et son smoke public.
 
-L'amendement T24-C03 demandé par le porteur est close `pass` : la Production
-Vercel ouvre directement Compass sans code, le WAF reste actif et les variables
-de session démo ont été retirées. T25-C02 reste close `pass` : identité professeur pilote, création/archivage de
-classe, code rotatif, jonction pseudonyme, roster, retrait d'alias et adapter
-PostgreSQL sont livrés sans dépendance à un exercice. Le porteur confirme que
-`math.pdf` est précisément l'énoncé à utiliser : ses deux pages forment le
-parcours Varignon déjà validé sous `varignon.v1`. T25-C03 est close `pass` :
-template exact, groupes, snapshots classe/groupe/alias, idempotence, retrait,
-aperçu professeur et accusé élève isolé sont livrés. T25-C04 est la prochaine
-carte; elle seule pourra ouvrir une affectation dans GeoGebra et reprendre son
-checkpoint après revalidation du destinataire, de la fenêtre et du hash.
-T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
-`candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
-live, golden 3/3 et smoke Realtime credentialed 1/1.
-
-T23-C01 et T23-C02 sont closes `pass` après audit, replanning et recentrage sur
-le PDF Varignon. La séquence décidée est :
-
-1. T24 — intégrer, protéger et déployer T22 ;
-2. T25 — classe pilote, pseudonymes, affectations, reprise et bilan persistant ;
-3. T26 — recettes Varignon, profil factuel et variantes approuvées ;
-4. T27 — durcissement, instrumentation, pilote réel et candidat final.
-
-T25-C04 est la carte Builder active, ouverte par la sous-tranche C04A décrite
-ci-dessus. T24-C04, vidéo, licence et soumission restent des actions distinctes;
-la migration PostgreSQL réelle appartient désormais à C04A et ne doit plus être
-présentée comme à faire après sa qualification.
+Après clôture de cet amendement, T25-C04 reste `in_progress` sur sa frontière
+pilote distincte : persister et restaurer le checkpoint sémantique allowlisté.
+La classe `Test Varignon`, PostgreSQL Neon, les secrets Production, les routes
+professeur/alias et les affectations ciblées restent opérationnels mais ne
+dominent plus le golden path du jury. T24-C04, vidéo, licence et soumission
+Devpost restent des actions distinctes.
 
 ## Dépendances
 

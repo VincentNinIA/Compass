@@ -60,23 +60,29 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();
 
-  const demoLink = page.getByRole("button", {
-    name: /Add my exercise/,
-  });
-  await demoLink.focus();
-  await page.keyboard.press("Enter");
-  await expect(
-    page.getByRole("heading", { name: "Show me your exercise" }),
-  ).toBeInViewport();
+  expect(
+    await page.locator(".compass-mascot-presence").evaluate(
+      (element) => getComputedStyle(element).transitionDuration,
+    ),
+  ).toMatch(/^(0s|0\.00001s)(, (0s|0\.00001s))*$/);
 
   const axeResult = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(axeResult.violations).toEqual([]);
 
+  const demoLink = page.getByRole("button", {
+    name: /Start the exercise/,
+  });
+  await demoLink.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: "Varignon — the midpoint quadrilateral" }),
+  ).toBeInViewport();
+
   const ariaSnapshot = await page.locator("body").ariaSnapshot();
   expect(ariaSnapshot).toContain(
-    "heading \"Add your exercise\"",
+    "heading \"Varignon — the midpoint quadrilateral\"",
   );
   expect(ariaSnapshot).not.toContain("link \"License and attribution\"");
   await mkdir(PLAYWRIGHT_OUTPUT, { recursive: true });
@@ -86,11 +92,6 @@ test("T6-C06 production candidate exposes secure permissions and an accessible j
     "utf8",
   );
 
-  expect(
-    await page.locator(".compass-mascot-presence").evaluate(
-      (element) => getComputedStyle(element).transitionDuration,
-    ),
-  ).toMatch(/^(0s|0\.00001s)(, (0s|0\.00001s))*$/);
   await expectNoDocumentOverflow(page);
   await page.screenshot({
     path: path.join(PLAYWRIGHT_OUTPUT, "T6-C06-jury-1440x900.png"),

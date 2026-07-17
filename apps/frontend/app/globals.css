@@ -1906,6 +1906,169 @@ main {
   }
 }
 
+/* Hackathon demo — one clear path into the teacher activity */
+
+.site-header--simple {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.hero--demo {
+  min-height: calc(100dvh - 94px);
+  padding-top: clamp(52px, 7vw, 92px);
+  padding-bottom: clamp(56px, 7vw, 86px);
+}
+
+.hero--demo h1 {
+  max-width: 720px;
+  font-size: clamp(4rem, 8vw, 7.7rem);
+  line-height: 0.88;
+}
+
+.demo-primary-action {
+  width: min(100%, 580px);
+  margin-top: 36px;
+}
+
+.demo-start-button {
+  width: 100%;
+  min-height: 96px;
+  padding: 18px 22px 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-radius: 20px 20px 8px 20px;
+  text-align: left;
+}
+
+.demo-start-button > span {
+  display: grid;
+  gap: 2px;
+}
+
+.demo-start-button small {
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.11em;
+  opacity: 1;
+  text-transform: uppercase;
+}
+
+.demo-start-button strong {
+  font-family: var(--display-font);
+  font-size: clamp(1.25rem, 2.6vw, 1.65rem);
+  letter-spacing: -0.04em;
+}
+
+.demo-start-button b {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border: 1px solid rgb(255 255 255 / 38%);
+  border-radius: 15px 15px 5px 15px;
+  font-size: 1.65rem;
+  line-height: 1;
+  place-items: center;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.demo-start-button:hover b {
+  transform: translateX(4px);
+}
+
+.demo-primary-action > p {
+  margin: 16px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.demo-facts {
+  margin: 22px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  list-style: none;
+}
+
+.demo-facts li {
+  min-height: 0;
+  padding: 7px 11px;
+  border: 1px solid rgb(25 34 29 / 11%);
+  border-radius: 9px;
+  color: var(--ink-soft);
+  background: rgb(255 255 255 / 54%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.hero--demo .playground-line {
+  fill: rgb(255 255 255 / 26%);
+  stroke-width: 5;
+}
+
+.hero--demo .playground-guide {
+  fill: rgb(200 59 33 / 9%);
+  stroke-width: 7;
+}
+
+@media (max-width: 980px) {
+  .site-header--simple {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .hero--demo {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-header--simple {
+    width: calc(100% - 20px);
+    padding-left: 12px;
+    gap: 8px;
+  }
+
+  .site-header--simple .header-actions {
+    gap: 6px;
+  }
+
+  .site-header--simple .teacher-access {
+    min-height: 40px;
+    padding-inline: 10px;
+    font-size: 0.68rem;
+  }
+
+  .hero--demo {
+    padding-top: 48px;
+  }
+
+  .hero--demo h1 {
+    font-size: clamp(3.55rem, 18vw, 5.2rem);
+  }
+
+  .demo-primary-action {
+    margin-top: 28px;
+  }
+
+  .demo-start-button {
+    min-height: 88px;
+    padding: 16px 16px 16px 18px;
+  }
+
+  .demo-start-button b {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+}
+
 @layer legacy {
 
 * {

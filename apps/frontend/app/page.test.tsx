@@ -13,7 +13,7 @@ import Home from "./page";
 afterEach(cleanup);
 
 describe("Home", () => {
-  it("renders the landing first, then opens a dedicated upload screen", () => {
+  it("opens the teacher Varignon activity directly without class friction", () => {
     render(
       <LanguageProvider>
         <Home />
@@ -23,45 +23,34 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Bring the exercise. Find your own way through it.",
+        name: "Build. Observe. Prove.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Add your exercise")).toBeInTheDocument();
-    expect(screen.getByText("Check the reading")).toBeInTheDocument();
-    expect(screen.getByText("Work with Compass")).toBeInTheDocument();
     expect(
-      screen.queryByRole("heading", {
-        level: 2,
-        name: "Show me your exercise",
-      }),
+      screen.getByText("No account. No class code."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Add my exercise/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", {
-        level: 2,
-        name: "Keep wondering. Keep trying.",
-      }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: /Join my class/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Professor" })).toBeInTheDocument();
 
-    expect(
-      screen.getByRole("button", { name: /Teacher exercises/ }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Professor" }),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /Add my exercise/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Start the exercise/ }));
 
     expect(
       screen.getByRole("heading", {
-        level: 2,
-        name: "Show me your exercise",
+        level: 1,
+        name: "Varignon — the midpoint quadrilateral",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Read my exercise" })).toBeDisabled();
     expect(
-      screen.queryByRole("heading", { name: "Keep wondering. Keep trying." }),
+      screen.getByRole("button", { name: "Back to the demo" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Class code"),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Step 2 of 4")).toBeInTheDocument();
   });
 
   it("opens the professor studio from the top-right access", () => {
@@ -101,16 +90,14 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
+        name: "Construis. Observe. Prouve.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Ajoute ton exercice")).toBeInTheDocument();
-    expect(screen.getByText("Vérifie la lecture")).toBeInTheDocument();
-    expect(screen.getByText("Travaille avec Compass")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Professeur" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Exercices du professeur/ }),
+      screen.getByRole("button", { name: /Commencer l’exercice/ }),
     ).toBeInTheDocument();
+    expect(screen.queryByText(/devoir/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Switch to English" }),
     ).toHaveTextContent("🇬🇧EN");

@@ -60,6 +60,18 @@ export function createTeacherGeometryDraftV2(
   });
 }
 
+export function createDemoVarignonPublicationV2(
+  locale: "fr" | "en",
+): TeacherExercisePublicationV2 {
+  const draft = createTeacherGeometryDraftV2(locale);
+  return TeacherExercisePublicationV2.parse({
+    ...draft,
+    schemaVersion: TEACHER_EXERCISE_PUBLICATION_V2_SCHEMA_VERSION,
+    id: `teacher_varignon-demo-v1-${locale}`,
+    publishedAt: 0,
+  });
+}
+
 export function reviewTeacherGeometryDraftV2(
   input: unknown,
 ): TeacherGeometryDraftReviewV1 {

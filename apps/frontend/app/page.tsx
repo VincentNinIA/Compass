@@ -21,6 +21,7 @@ import {
   GeometryLearningSessionReportV1,
   type GeometryLearningSessionReportV1 as GeometryLearningReport,
 } from "@/lib/geometry-investigation/contracts";
+import { createDemoVarignonPublicationV2 } from "@/lib/teacher/geometry-exercise";
 
 type AppScreen =
   | "landing"
@@ -33,26 +34,42 @@ function LearningPlayground({ french }: { french: boolean }) {
   return (
     <div className="hero-playground" aria-hidden="true">
       <div className="playground-note playground-note-top">
-        {french ? "ta question" : "your question"}
+        {french ? "quadrilatère libre" : "free quadrilateral"}
       </div>
       <svg viewBox="0 0 520 520" role="presentation">
-        <path className="playground-orbit" d="M68 350C144 98 382 90 454 286" />
-        <path className="playground-guide" d="M112 390C190 318 284 258 410 174" />
-        <path className="playground-line" d="M120 202C220 232 310 328 404 404" />
-        <circle className="playground-point" cx="120" cy="202" r="14" />
-        <circle className="playground-point" cx="404" cy="404" r="14" />
-        <circle className="playground-midpoint" cx="260" cy="302" r="10" />
-        <text x="76" y="186">∑</text>
-        <text x="410" y="438">Aa</text>
-        <text x="272" y="332">?</text>
+        <path className="playground-orbit" d="M82 362C138 104 390 78 452 302" />
+        <path className="playground-line" d="M112 154L416 196L348 414L92 344Z" />
+        <path className="playground-guide" d="M264 175L382 305L220 379L102 249Z" />
+        {[
+          [112, 154, "A"],
+          [416, 196, "B"],
+          [348, 414, "C"],
+          [92, 344, "D"],
+        ].map(([cx, cy, label]) => (
+          <g key={label}>
+            <circle className="playground-point" cx={cx} cy={cy} r="13" />
+            <text x={Number(cx) + 14} y={Number(cy) - 12}>{label}</text>
+          </g>
+        ))}
+        {[
+          [264, 175, "E"],
+          [382, 305, "F"],
+          [220, 379, "G"],
+          [102, 249, "H"],
+        ].map(([cx, cy, label]) => (
+          <g key={label}>
+            <circle className="playground-midpoint" cx={cx} cy={cy} r="10" />
+            <text x={Number(cx) + 12} y={Number(cy) - 10}>{label}</text>
+          </g>
+        ))}
       </svg>
       <div className="playground-equation">
-        <span>{french ? "comprendre" : "understand"}</span>
+        <span>{french ? "observer" : "observe"}</span>
         <strong>→</strong>
-        <span>{french ? "essayer" : "try"}</span>
+        <span>{french ? "conjecturer" : "conjecture"}</span>
       </div>
       <div className="playground-note playground-note-bottom">
-        {french ? "demande · essaie · explique" : "ask · try · explain"}
+        {french ? "construis · déplace · justifie" : "build · drag · justify"}
       </div>
     </div>
   );
@@ -75,7 +92,18 @@ export default function Home() {
     ),
     () => false,
   );
+  const entryScreen = useSyncExternalStore<AppScreen | undefined>(
+    () => () => undefined,
+    () => {
+      const entry = new URLSearchParams(window.location.search).get("entry");
+      if (entry === "upload") return "upload";
+      if (entry === "classroom") return "classroom_join";
+      return undefined;
+    },
+    () => undefined,
+  );
   const [screen, setScreen] = useState<AppScreen>("landing");
+  const [entryDismissed, setEntryDismissed] = useState(false);
   const [assignedExercise, setAssignedExercise] =
     useState<TeacherExercisePublication>();
   const [assignedFromClass, setAssignedFromClass] = useState(false);
@@ -88,7 +116,11 @@ export default function Home() {
   const [geometryLearningReports, setGeometryLearningReports] = useState<
     readonly GeometryLearningReport[]
   >([]);
-  const visibleScreen = workspaceDemoMode ? "work" : screen;
+  const visibleScreen = workspaceDemoMode
+    ? "work"
+    : !entryDismissed && screen === "landing" && entryScreen
+      ? entryScreen
+      : screen;
   const mainRef = useRef<HTMLElement>(null);
   const hasMountedScreenRef = useRef(false);
 
@@ -229,10 +261,14 @@ export default function Home() {
         Record<AppScreen, number>
       >)[visibleScreen] ?? -1;
   const showLanding = visibleScreen === "landing" || specialistGeometryMode;
+  const showProgress =
+    specialistGeometryMode ||
+    (!assignedExercise && ["upload", "confirm", "work"].includes(visibleScreen));
 
   const goHome = () => {
     setAssignedExercise(undefined);
     setAssignedFromClass(false);
+    setEntryDismissed(true);
     setScreen("landing");
   };
 
@@ -242,13 +278,23 @@ export default function Home() {
     setScreen("classroom_join");
   };
 
+  const startDemoActivity = () => {
+    setAssignedExercise(createDemoVarignonPublicationV2(language));
+    setAssignedFromClass(false);
+    setScreen("work");
+  };
+
+  const isDirectDemoExercise = assignedExercise?.id.startsWith(
+    "teacher_varignon-demo-v1-",
+  );
+
   return (
     <>
       <a className="skip-link" href="#main-content">
         {text("Skip to your exercise", "Aller directement à ton exercice")}
       </a>
 
-      <header className="site-header">
+      <header className={`site-header${showProgress ? "" : " site-header--simple"}`}>
         <button
           type="button"
           className="brand"
@@ -262,28 +308,27 @@ export default function Home() {
           </span>
           <span>Compass</span>
         </button>
-        <nav
-          className="screen-progress"
-          aria-label={text("Learning progress", "Progression du parcours")}
-        >
-          <ol>
-            {progress.map((label, index) => (
-              <li
-                key={label}
-                data-active={index === activeStep ? "true" : "false"}
-                data-complete={index < activeStep ? "true" : "false"}
-                aria-current={index === activeStep ? "step" : undefined}
-              >
-                <span aria-hidden="true">{index + 1}</span>
-                <span>{label}</span>
-              </li>
-            ))}
-          </ol>
-        </nav>
+        {showProgress ? (
+          <nav
+            className="screen-progress"
+            aria-label={text("Learning progress", "Progression du parcours")}
+          >
+            <ol>
+              {progress.map((label, index) => (
+                <li
+                  key={label}
+                  data-active={index === activeStep ? "true" : "false"}
+                  data-complete={index < activeStep ? "true" : "false"}
+                  aria-current={index === activeStep ? "step" : undefined}
+                >
+                  <span aria-hidden="true">{index + 1}</span>
+                  <span>{label}</span>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        ) : null}
         <div className="header-actions">
-          <p className="header-tagline">
-            {text("Made for curious minds", "Pour les esprits curieux")}
-          </p>
           <button
             type="button"
             className="teacher-access"
@@ -313,24 +358,26 @@ export default function Home() {
         ) : null}
         {showLanding ? (
           <>
-        <section className="hero" id="top" aria-labelledby="page-title">
+        <section className={`hero${specialistGeometryMode ? "" : " hero--demo"}`} id="top" aria-labelledby="page-title">
           <div className="hero-copy">
-            <p className="eyebrow">
-              {text("Your study buddy for every subject", "Ton partenaire dans toutes les matières")}
-            </p>
-            <h1 id="page-title" tabIndex={-1} data-screen-title>
-              {text(
-                "Bring the exercise. Find your own way through it.",
-                "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
-              )}
-            </h1>
-            <p className="lede">
-              {text(
-                "Maths, languages, history or science: Compass guides every step. Automatic checks appear only when a compatible specialist workspace is available.",
-                "Maths, langues, histoire ou sciences : Compass guide chaque étape. Les vérifications automatiques apparaissent seulement lorsqu'un atelier spécialisé compatible existe.",
-              )}
-            </p>
-            <div className="hero-student-paths" aria-label={text("Choose your starting point", "Choisis ton point de départ")}>
+            {specialistGeometryMode ? (
+              <>
+              <p className="eyebrow">
+                {text("Your study buddy for every subject", "Ton partenaire dans toutes les matières")}
+              </p>
+              <h1 id="page-title" tabIndex={-1} data-screen-title>
+                {text(
+                  "Bring the exercise. Find your own way through it.",
+                  "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
+                )}
+              </h1>
+              <p className="lede">
+                {text(
+                  "Maths, languages, history or science: Compass guides every step. Automatic checks appear only when a compatible specialist workspace is available.",
+                  "Maths, langues, histoire ou sciences : Compass guide chaque étape. Les vérifications automatiques apparaissent seulement lorsqu'un atelier spécialisé compatible existe.",
+                )}
+              </p>
+              <div className="hero-student-paths" aria-label={text("Choose your starting point", "Choisis ton point de départ")}>
               <button
                 type="button"
                 className="classroom-join-link"
@@ -361,20 +408,44 @@ export default function Home() {
                 <strong>{text("Teacher exercises", "Exercices du professeur")}</strong>
                 <span>{text("Choose from the shared library", "Choisir dans la bibliothèque partagée")}</span>
               </button>
-            </div>
-            <ul
-              className="hero-reassurance"
-              aria-label={text("What to expect", "Ce qui t'attend")}
-            >
-              <li>{text("Your work stays yours", "Ton travail reste le tien")}</li>
-              <li>{text("Ask for a hint anytime", "Demande un indice à tout moment")}</li>
-              <li>{text("Learn at your pace", "Apprends à ton rythme")}</li>
-            </ul>
+              </div>
+              </>
+            ) : (
+              <>
+                <p className="eyebrow">
+                  {text("An activity from your teacher", "Un exercice de ton professeur")}
+                </p>
+                <h1 id="page-title" tabIndex={-1} data-screen-title>
+                  {text("Build. Observe. Prove.", "Construis. Observe. Prouve.")}
+                </h1>
+                <p className="lede">
+                  {text(
+                    "Explore Varignon’s theorem directly in GeoGebra. Move the figure, test your conjecture and build the proof with Compass.",
+                    "Explore le théorème de Varignon directement dans GeoGebra. Déplace la figure, teste ta conjecture et construis la preuve avec Compass.",
+                  )}
+                </p>
+                <div className="demo-primary-action">
+                  <button type="button" className="demo-start-button" onClick={startDemoActivity}>
+                    <span>
+                      <small>{text("Guided investigation", "Investigation guidée")}</small>
+                      <strong>{text("Start the exercise", "Commencer l’exercice")}</strong>
+                    </span>
+                    <b aria-hidden="true">→</b>
+                  </button>
+                  <p>{text("No account. No class code.", "Sans compte. Sans code de classe.")}</p>
+                </div>
+                <ul className="demo-facts" aria-label={text("Activity details", "Détails de l’activité")}>
+                  <li>{text("9 missions", "9 missions")}</li>
+                  <li>GeoGebra</li>
+                  <li>{text("About 35 minutes", "Environ 35 minutes")}</li>
+                </ul>
+              </>
+            )}
           </div>
           <LearningPlayground french={french} />
         </section>
 
-        <section className="journey" aria-labelledby="journey-title">
+        {specialistGeometryMode ? <section className="journey" aria-labelledby="journey-title">
           <div className="journey-heading">
             <p className="eyebrow">{text("A simple path", "Un parcours simple")}</p>
             <h2 id="journey-title">
@@ -392,7 +463,7 @@ export default function Home() {
               </li>
             ))}
           </ol>
-        </section>
+        </section> : null}
             {specialistGeometryMode ? <TutorWorkspace /> : null}
           </>
         ) : visibleScreen === "teacher" ? (
@@ -430,6 +501,8 @@ export default function Home() {
             returnLabel={
               assignedFromClass
                 ? text("Back to my class", "Retour à ma classe")
+                : isDirectDemoExercise
+                  ? text("Back to the demo", "Retour à la démo")
                 : undefined
             }
             onReport={handleGeometryLearningReport}

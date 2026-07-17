@@ -29,8 +29,7 @@ test("teacher creates a class, learner joins, rotation and removal revoke access
 
   const learnerContext = await browser.newContext();
   const learnerPage = await learnerContext.newPage();
-  await learnerPage.goto("/");
-  await learnerPage.getByRole("button", { name: "Join my class" }).click();
+  await learnerPage.goto("/?entry=classroom");
   await learnerPage.getByLabel("Class code", { exact: true }).fill(firstCode ?? "");
   await learnerPage.getByLabel("Class pseudonym", { exact: true }).fill("Orion");
   const joinResponsePromise = learnerPage.waitForResponse(
@@ -63,13 +62,11 @@ test("teacher creates a class, learner joins, rotation and removal revoke access
   await geometryCard.getByRole("button", { name: "Remove" }).click();
   await expect(page.getByText("Pseudonym removed.")).toBeVisible();
   await learnerPage.reload();
-  await learnerPage.getByRole("button", { name: "Join my class" }).click();
   await expect(learnerPage.getByLabel("Class code", { exact: true })).toBeVisible();
 
   const rejectedContext = await browser.newContext();
   const rejectedPage = await rejectedContext.newPage();
-  await rejectedPage.goto("/");
-  await rejectedPage.getByRole("button", { name: "Join my class" }).click();
+  await rejectedPage.goto("/?entry=classroom");
   await rejectedPage.getByLabel("Class code", { exact: true }).fill(firstCode ?? "");
   await rejectedPage.getByLabel("Class pseudonym", { exact: true }).fill("Nova");
   await rejectedPage.getByRole("button", { name: "Join my class" }).click();
@@ -91,13 +88,14 @@ test("teacher creates a class, learner joins, rotation and removal revoke access
 
 test("student join is keyboard-accessible, bilingual and mobile-safe", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/?entry=classroom");
   await page.getByRole("button", { name: "Passer en français" }).click();
-  await page.getByRole("button", { name: "Rejoindre ma classe" }).click();
 
-  await expect(
-    page.getByRole("heading", { name: "Rejoins ta classe avec son code." }),
-  ).toBeVisible();
+  const joinHeading = page.getByRole("heading", {
+    name: "Rejoins ta classe avec son code.",
+  });
+  await expect(joinHeading).toBeVisible();
+  await joinHeading.focus();
   await page.keyboard.press("Tab");
   await expect(page.getByLabel("Code de classe", { exact: true })).toBeFocused();
   expect(
@@ -228,8 +226,7 @@ async function joinClass(
   code: string,
   pseudonym: string,
 ): Promise<void> {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Join my class" }).click();
+  await page.goto("/?entry=classroom");
   await page.getByLabel("Class code", { exact: true }).fill(code);
   await page.getByLabel("Class pseudonym", { exact: true }).fill(pseudonym);
   await page.getByRole("button", { name: "Join my class" }).click();
@@ -240,7 +237,6 @@ async function reopenClassScreen(
   page: import("@playwright/test").Page,
 ): Promise<void> {
   await page.reload();
-  await page.getByRole("button", { name: "Join my class" }).click();
   await expect(page.getByRole("heading", { name: "You're in." })).toBeVisible();
 }
 

@@ -15,9 +15,9 @@ import {
 } from "@/lib/demo-access/server";
 
 export const metadata: Metadata = {
-  title: "Compass — Understand any exercise",
+  title: "Compass — Explore Varignon in GeoGebra",
   description:
-    "A bilingual tutor that reads any school exercise and helps students reason through it one step at a time.",
+    "A guided bilingual geometry investigation: build, explore and prove Varignon’s theorem directly in GeoGebra.",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

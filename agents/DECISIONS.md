@@ -1171,3 +1171,17 @@
 - Impact : le retour de l'atelier retrouve la session alias et permet de
   relancer sur une baseline sûre. Un rechargement ne prétend pas restaurer la
   progression tant que la seconde sous-tranche C04 n'est pas qualifiée.
+
+## D-085 - La démo hackathon contourne la friction de classe
+
+- Décision : faire de la publication Varignon v2 locale le golden path public.
+  L'accueil expose un seul bouton élève qui ouvre directement le runtime T22;
+  devoir, bibliothèque et jonction par code restent accessibles uniquement aux
+  bancs internes ou aux parcours pilotes.
+- Raison : le jury doit comprendre la proposition Education en quelques
+  secondes. Code, pseudonyme et affectation figée prouvent une architecture de
+  pilote, mais masquent la valeur principale : l'exercice professeur enrichi
+  par GeoGebra et Compass.
+- Impact : la démo n'affaiblit ni le gateway GeoGebra, ni les preuves, ni les
+  routes de classe. Elle supprime seulement leur friction du parcours public et
+  n'effectue aucune écriture serveur avant l'ouverture de l'activité.

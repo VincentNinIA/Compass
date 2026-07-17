@@ -86,17 +86,9 @@ test("T13 opens a GeoGebra-dominant workspace with a compact contextual coach", 
     }),
   );
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/?entry=upload");
 
-  await expect(
-    page.getByRole("heading", {
-      name: "Bring the exercise. Find your own way through it.",
-    }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Show me your exercise" })).toBeHidden();
   await expect(page.locator("#geogebra-spike-title")).toBeHidden();
-
-  await page.getByRole("button", { name: /Add my exercise/ }).click();
   await expect(page.getByRole("heading", { name: "Add your exercise", exact: true })).toBeVisible();
 
   await page.getByLabel("Choose a photo").setInputFiles({
@@ -199,7 +191,7 @@ test("T13 opens a GeoGebra-dominant workspace with a compact contextual coach", 
   await page.getByRole("button", { name: "Retour à l'accueil" }).click();
   await expect(
     page.getByRole("heading", {
-      name: "Apporte l'exercice. Trouve ton chemin pour le comprendre.",
+      name: "Construis. Observe. Prouve.",
     }),
   ).toBeVisible();
 });

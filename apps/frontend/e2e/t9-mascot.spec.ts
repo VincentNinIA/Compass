@@ -119,10 +119,10 @@ test("T9-C03 mascot stays inside 390, 768 and 1440 px viewports", async ({
     await expect(mascot).toHaveCSS("pointer-events", "none");
     await expectNoDocumentOverflow(page);
 
-    const primaryAction = page.getByRole("button", { name: /Add my exercise/ });
+    const primaryAction = page.getByRole("button", { name: /Start the exercise/ });
     await primaryAction.click();
     await expect(
-      page.getByRole("heading", { name: "Add your exercise", exact: true }),
+      page.getByRole("heading", { name: "Varignon — the midpoint quadrilateral" }),
     ).toBeVisible();
 
     await page.screenshot({

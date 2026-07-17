@@ -644,28 +644,24 @@ puis exige trois parcours UI consécutifs sans retry avec Axe incluant l'applet
 et cleanup terminal. Comptes, classes, persistance, notation à enjeu élevé,
 licence commerciale et déploiement restent hors de cette architecture locale.
 
-## Architecture post-harnais — protection T24 implémentée, classe encore cible
+## Architecture post-harnais — démo publique sous quota WAF
 
 T23 ne modifie pas le runtime. Il fixe la cible T24 à T27 afin que la boucle de
 classe étende le harnais existant au lieu de créer une seconde autorité.
 
-T24-C02 ajoute une frontière d'accès devant le runtime sans toucher aux
-autorités pédagogiques T22. Le layout serveur remplace toute la surface par un
-écran d'accès tant que le cookie signé n'est pas valide. La même vérification
-enveloppe le catalogue professeur et, avant lecture du corps, Realtime, analyse
-photo et brouillon professeur. En Production, l'absence de hash ou de secret retourne 503 et ne retombe
-jamais vers un accès public. En amont, une règle Vercel WAF compte atomiquement
-les `POST /api/*` par IP et retourne 429 avant les fonctions après six requêtes
-sur soixante secondes. Le runbook opérationnel est
-`docs/DEMO_ACCESS_RUNBOOK.md`.
+T24-C02 a livré historiquement une session de démo signée et une règle Vercel
+WAF. À la demande du porteur, l'amendement T24-C03 retire la porte de la
+Production : `VERCEL_ENV` n'active plus implicitement la garde et les quatre
+variables `COMPASS_DEMO_*` ne sont plus présentes sur Vercel. L'alias public
+ouvre directement Compass sans cookie de démo.
 
-T24-C03 sert cette architecture depuis le commit
-`5493bd9d9b33dfec17eac7006b07230bfd3959c3`. La Production
-`dpl_GQtBPXN765XSqrPLyJpakyUZsfen` est READY en `iad1`; l'alias stable répond
-dynamiquement avec la porte d'accès et les headers privés. Le parcours public
-publie et termine Varignon, tandis qu'un smoke Realtime texte négocie la palette
-du harnais v2 sans micro ni mutation. Le store reste éphémère : T25 doit fermer
-les contrats de données et d'accès avant toute persistance.
+La couche budgétaire reste active : Vercel WAF compte atomiquement les
+`POST /api/*` par IP et retourne 429 avant les fonctions après six requêtes sur
+soixante secondes. Les cookies professeur et alias de T25 constituent des
+frontières distinctes et ne sont pas retirés. La Production publique
+`dpl_HkMUiXBgafn1JvJWRGAahhwhzwh7` sert le commit
+`519e3cdbcf49d3a936f4b42b0dde998a4dca97c7` en `iad1`. Le runbook opérationnel
+est `docs/DEMO_ACCESS_RUNBOOK.md`.
 
 ```mermaid
 flowchart LR

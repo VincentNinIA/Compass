@@ -1,10 +1,10 @@
-# Contrat Builder — amendement T24-C03 Accès public sans code — active
+# Contrat Builder — amendement T24-C03 Accès public sans code — close `pass`
 
 ## État
 
-- Le porteur demande explicitement le 17 juillet 2026 que l'alias Vercel ouvre
+- Le porteur a demandé explicitement le 17 juillet 2026 que l'alias Vercel ouvre
   Compass directement, sans porte ni code d'accès applicatif.
-- `main` est propre et synchronisée sur `a06ac9e`; T25-C02 reste close. Cette
+- L'amendement est close `pass` sur le commit `519e3cd`; T25-C02 reste close. Cette
   intervention ne rouvre ni la classe, ni les affectations, ni le harnais.
 
 ## Tranche contractualisée
@@ -47,6 +47,22 @@ pnpm --dir apps/frontend build
   professeur/alias de classe gardent leur propre authentification.
 - Le WAF reste publié, le déploiement est READY et l'identité source est
   consignée avant clôture de l'amendement.
+
+### Preuves de clôture
+
+- `readDemoProtectionConfig` n'active plus la garde à partir de
+  `VERCEL_ENV=production`; seul le flag explicite `=1` l'active. Les 876 tests
+  sur 102 fichiers, lint, typecheck, build, test ciblé 9/9 et 102 cartes passent.
+- Les quatre variables `COMPASS_DEMO_*` ont été retirées de Production; seule
+  `OPENAI_API_KEY` reste chiffrée parmi les variables historiques de démo.
+- Le déploiement `dpl_HkMUiXBgafn1JvJWRGAahhwhzwh7` est READY en `iad1` et
+  ses deux métadonnées source valent
+  `519e3cdbcf49d3a936f4b42b0dde998a4dca97c7`.
+- L'alias répond 200 sans cookie, affiche directement Compass, ne contient ni
+  « Access code » ni « Code d'accès », sert le catalogue en 200 et retourne
+  `{status:"disabled"}` sur l'ancienne route de statut démo.
+- Le WAF `rule_compass_demo_post_budget_5Uw2fO` reste activé à 6 POST/60 s/IP,
+  sans changement en attente. Les authentifications T25 restent indépendantes.
 
 ---
 

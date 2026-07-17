@@ -1,0 +1,9 @@
+DROP TABLE compass_session_checkpoints;
+DROP TABLE compass_learning_evidence;
+DROP TABLE compass_assignments;
+DROP TABLE compass_activity_templates;
+DROP TABLE compass_classroom_group_members;
+DROP TABLE compass_classroom_groups;
+DROP TABLE compass_learner_aliases;
+DROP TABLE compass_classrooms;
+DROP TABLE compass_teacher_accounts;

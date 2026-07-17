@@ -700,9 +700,16 @@ flowchart LR
 - `TemplatePreflight` : compilation et exécution isolée sur le même runtime,
   avec cleanup vérifié avant prévisualisation.
 
-Ces frontières restent cibles jusqu'à leurs cartes respectives. T25-C01 doit
-choisir le store et fermer migrations, accès, expiration et suppression avant la
-première écriture persistante.
+Ces frontières restent cibles jusqu'à leurs cartes respectives. T25-C01 a fermé
+le choix du store, les migrations, l'accès, l'expiration et la suppression avant
+la première écriture persistante.
+
+T25-C01 retient PostgreSQL 16 comme autorité persistante cible derrière le port
+serveur `ClassroomStoreV1`. Les contraintes applicatives Zod précèdent le driver;
+les clés étrangères, unicités et cascades constituent la seconde barrière SQL.
+`MemoryClassroomStoreV1` fixe la sémantique en test et `pg-mem` exécute la
+migration up/down sans créer de ressource cloud. Le contrat complet est
+`docs/CLASSROOM_DATA_CONTRACT.md`.
 
 ### Flux de données autorisé
 
@@ -720,8 +727,8 @@ première écriture persistante.
 ### Invariants de migration
 
 - T24-C01 a intégré T22 dans `main` et T24-C02 a fermé l'accès et le budget;
-  T24-C03 a déployé ce candidat protégé; T25-C01 ferme maintenant les données
-  et accès avant toute persistance.
+  T24-C03 a déployé ce candidat protégé; T25-C01 a fermé les données et accès
+  avant toute persistance et T25-C02 peut ouvrir la boucle de classe.
 - Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
   gateway existants.
 - Aucun second template n'est accepté avant le pilote; les neuf missions et les

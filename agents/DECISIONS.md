@@ -1079,3 +1079,17 @@
 - Impact : `5493bd9` réinitialise le fond de la checklist, le gate Varignon
   inclut Axe sous mouvement réduit et la Production finale porte ce même SHA.
   Les findings de release ne sont pas masqués par une preuve antérieure.
+
+## D-079 - La classe pilote cible PostgreSQL derrière un port fermé
+
+- Décision : retenir PostgreSQL 16 comme autorité persistante T25, derrière
+  `ClassroomStoreV1`. Tester d'abord la sémantique avec un store mémoire et les
+  migrations SQL avec `pg-mem`, sans provisionner de base dans T25-C01.
+- Raison : classes, aliases, groupes, affectations et preuves ont des relations,
+  unicités et cascades que la mémoire serverless ne garantit pas. Coupler dès la
+  carte de contrat à un fournisseur cloud mêlerait cependant modèle et
+  exploitation avant la première UI.
+- Impact : Zod et la politique deny-by-default précèdent toute écriture; SQL
+  ajoute clés étrangères et cascades. T25-C02 peut brancher un adapter serveur
+  sans changer les entités, mais doit fournir migration, secret et rollback
+  explicites avant toute donnée réelle.

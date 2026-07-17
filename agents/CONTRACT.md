@@ -1,3 +1,92 @@
+# Contrat Builder — T25-C01 Contrats de classe, accès et rétention — close `pass`
+
+## État
+
+- T25-C01 est close `pass` le 17 juillet 2026 après fermeture et publication de
+  T24-C03 sur `origin/main` au commit documentaire `6b478a5`.
+- Aucune donnée de classe réelle n'est créée et aucune route ou UI n'est ajoutée.
+  Les types, autorisations, migrations et cycles de vie sont fermés avant
+  T25-C02.
+
+## Tranche contractualisée — T25-C01
+
+### Objectif
+
+Définir une frontière persistante minimale et testable pour la classe pilote,
+où professeur et élèves pseudonymes sont isolés et où aucun texte libre, média,
+transcript, note ou état GeoGebra Base64 ne peut être stocké.
+
+### Inclus
+
+- Schémas Zod stricts et versionnés pour identité professeur, classe, groupe,
+  alias, template Varignon approuvé, affectation, faits et checkpoint sûr.
+- Catalogue champ → finalité → rétention, politique d'accès pure et tests
+  négatifs entre deux classes et deux aliases.
+- Port `ClassroomStore`, implémentation mémoire de référence, expiration et
+  suppression en cascade déterministes.
+- Choix PostgreSQL 16 pour l'autorité future, migration SQL up/down et test de
+  round-trip sur un moteur PostgreSQL mémoire, sans provisionner de cloud.
+- Documentation du modèle, de la matrice d'accès et du runbook de suppression.
+
+### Hors périmètre
+
+- Route, UI, cookie professeur, code de jonction utilisable et création réelle
+  de classe, réservés à T25-C02.
+- Affectation UI/runtime, reprise et bilan persistant, réservés à T25-C03 à C05.
+- SSO, données nominatives, analytics, recette adaptative et second template.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# contrats stricts et scan des payloads interdits
+# accès négatifs, expiration et suppression en cascade
+# migrations PostgreSQL up/down exécutées en mémoire
+```
+
+### Définition de fini
+
+- Chaque champ persistant possède une finalité, une autorité et une durée.
+- Un professeur ne traverse pas la frontière de sa classe; un alias ne lit et
+  n'écrit que ses affectations, faits et checkpoints autorisés.
+- Les données interdites échouent au parsing et avant toute méthode de store.
+- Les migrations montent et redescendent sur un store vide; toute descente
+  destructive avec données est refusée par l'application.
+- T25-C02 devient la seule carte Builder ouvrable sans déployer ni modifier la
+  Production T24.
+
+### Preuves de clôture
+
+- Huit entités strictes et versionnées couvrent professeur, classe, groupe,
+  alias pseudonyme, template Varignon, affectation, projection factuelle et
+  checkpoint sémantique. Le catalogue associe chaque champ persistant et ses
+  sous-champs propres à une finalité, une autorité et une rétention.
+- Le scanner refuse identité réelle, texte libre élève, média, transcript,
+  note, prompt système/modèle, XML et Base64 avant le store, tout en conservant
+  les prompts pédagogiques du contrat Varignon. Les checkpoints n'acceptent que
+  A–D, E–H, EF–HE et les statuts de mission allowlistés.
+- `authorizeClassroomAccessV1` part de `deny`; deux professeurs et deux aliases
+  prouvent isolation de classe, cible, fenêtre, ownership des faits/checkpoints
+  et privilèges système séparés pour migration et rétention.
+- Les suppressions professeur, classe et alias ainsi que l'expiration retirent
+  les dépendances et rendent seulement des compteurs fermés. Le retrait d'un
+  alias supprime aussi tout groupe vide et son affectation ciblée.
+- PostgreSQL 16 est la cible derrière `ClassroomStoreV1`; neuf tables, clés
+  étrangères, unicités, fenêtres, index et cascades sont exécutés aller/retour
+  par `pg-mem`. Le downgrade applicatif refuse toute perte de données.
+- Les 22 tests T25-C01 passent; le gate complet rend 862/862 tests sur 96
+  fichiers. Lint, typecheck, build Next.js, `git diff --check` et les 102 cartes
+  documentaires passent. Aucun fournisseur, secret, route, UI ou déploiement
+  Production n'est introduit.
+
+---
+
+# Archive — T24-C03
+
 # Contrat Builder — T24-C03 Déployer et qualifier le candidat T22 — close `pass`
 
 ## État

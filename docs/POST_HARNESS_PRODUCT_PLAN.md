@@ -123,10 +123,12 @@ flowchart LR
 | `ActivityTemplate` | `varignon.v1`, recette, version, paramètres et capacités requises | autre template ou commande GeoGebra arbitraire |
 | `Assignment` | destinataire, contrat exact, dates, politique d'aide | prompt modèle non borné |
 | `LearningEvidence` | faits, missions, aide, timestamps bornés, version | texte libre, audio, image, transcript, Base64 |
-| `SessionCheckpoint` | état sûr chiffré ou référence courte avec expiration | stockage sans limite ou exposition au modèle |
+| `SessionCheckpoint` | état Varignon sémantique borné, hashé et expirant | scène GeoGebra brute, Base64, stockage sans limite ou exposition au modèle |
 
-La tranche T25 doit choisir un stockage serveur adapté, définir les règles
-d'accès, l'expiration et la suppression avant de persister la première donnée.
+T25-C01 retient PostgreSQL 16 derrière `ClassroomStoreV1`, avec une
+implémentation mémoire de référence et des migrations SQL testées sans ressource
+cloud. Les règles d'accès, l'expiration et la suppression sont fermées avant la
+première donnée réelle dans `docs/CLASSROOM_DATA_CONTRACT.md`.
 
 ## Fabrique adaptative
 
@@ -237,8 +239,8 @@ Les XP ne servent pas de métrique de maîtrise et ne sont jamais convertis en n
 
 ## Règle de reprise
 
-Le prochain agent commence uniquement par T25-C01. Il ne construit aucune UI de
-classe et ne démarre pas la génération T26 avant d'avoir fermé schémas, accès,
-store, migrations, rétention et suppression. Le candidat T22 est intégré,
-protégé et qualifié en Production; chaque carte consigne ses preuves avant
-d'ouvrir la suivante.
+T25-C01 est close `pass`. Le prochain agent commence uniquement par T25-C02 et
+branche classes, code rotatif, jonction et roster pseudonyme sur ces contrats;
+il n'ouvre ni affectation T25-C03 ni génération T26. Le candidat T22 reste
+intégré, protégé et qualifié en Production; chaque carte consigne ses preuves
+avant d'ouvrir la suivante.

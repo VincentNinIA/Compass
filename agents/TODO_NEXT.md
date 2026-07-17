@@ -2,11 +2,10 @@
 
 ## Prochaine action
 
-Prendre uniquement T25-C01 : fermer avant toute persistance les schémas de
-classe, pseudonyme, affectation, faits et reprise, la matrice d'accès, le choix
-du store, les migrations, l'expiration et la suppression. T24-C03 est close
-`pass` sur `5493bd9` et la Production READY
-`dpl_GQtBPXN765XSqrPLyJpakyUZsfen` sert le candidat T22 protégé.
+Prendre uniquement T25-C02 : brancher l'identité professeur pilote, la création
+et l'archivage de classe, le code rotatif, la jonction pseudonyme, le roster et
+le retrait d'alias sur les contrats fermés de T25-C01. Ne pas ouvrir encore les
+affectations T25-C03 ni la reprise T25-C04.
 T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
 `candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
 live, golden 3/3 et smoke Realtime credentialed 1/1.
@@ -19,7 +18,7 @@ le PDF Varignon. La séquence décidée est :
 3. T26 — recettes Varignon, profil factuel et variantes approuvées ;
 4. T27 — durcissement, instrumentation, pilote réel et candidat final.
 
-T25-C01 est maintenant la seule carte Builder prête. T24-C04, vidéo, licence et
+T25-C02 est la seule carte Builder prête. T24-C04, vidéo, licence et
 soumission restent des actions distinctes exigeant l'autorité du porteur.
 
 ## Dépendances
@@ -27,9 +26,9 @@ soumission restent des actions distinctes exigeant l'autorité du porteur.
 - T0 et T1 sont closes avec décision `pass`.
 - T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
   ne laisse aucun P1/P2 ouvert.
-- T23-C01, T23-C02 et T24-C01 à T24-C03 sont closes `pass`; T25-C01 est la
-  seule carte Builder prête. T24-C04 reste `backlog` pour le dossier de
-  soumission; T25-C02 à T27-C04 restent derrière leurs dépendances.
+- T23-C01, T23-C02, T24-C01 à T24-C03 et T25-C01 sont closes `pass`; T25-C02
+  est la seule carte Builder prête. T24-C04 reste `backlog` pour le dossier de
+  soumission; T25-C03 à T27-C04 restent derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -169,8 +168,9 @@ bornées après fermeture des contrats de données, accès, rétention et suppre
 T22 est intégré et qualifié dans `origin/main`; la PR #3 est fusionnée par
 `4ea885f` et la qualification est consignée dans `2f582fd`. T24 protège et sert
 désormais ce runtime sur l'alias public depuis `5493bd9` et
-`dpl_GQtBPXN765XSqrPLyJpakyUZsfen`. La prochaine frontière est exclusivement le
-contrat de données et d'accès T25-C01.
+`dpl_GQtBPXN765XSqrPLyJpakyUZsfen`. T25-C01 ferme désormais les contrats de
+données et d'accès; la prochaine frontière est exclusivement la classe et la
+jonction pseudonyme T25-C02.
 
 La protection applicative et le quota WAF sont actifs. Garder néanmoins l'URL
 peu diffusée, surveiller l'usage du projet OpenAI et retirer ou faire tourner la

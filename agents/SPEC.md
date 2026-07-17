@@ -337,8 +337,9 @@ disponible.
 - Nom public : Compass. Les identifiants techniques historiques `GeoTutor` et
   `__GEOTUTOR_*` restent stables tant qu'ils ne sont pas visibles par l'élève.
 - Application web Next.js avec petites routes serveur. L'état T22 reste sans
-  base; T25 introduit un store serveur uniquement après fermeture des contrats,
-  accès, migrations, rétention et suppression.
+  base; T25 retient PostgreSQL 16 derrière un port serveur après fermeture des
+  contrats, accès, migrations, rétention et suppression. Aucun fournisseur
+  cloud n'est provisionné par T25-C01.
 - Le contrat Varignon v1 reste le seul template jusqu'au pilote. T26 ajoute des
   recettes d'étayage, presets et transferts fermés basés sur les faits
   déterministes déjà disponibles.

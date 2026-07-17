@@ -1,3 +1,57 @@
+# Contrat Builder — amendement T24-C03 Accès public sans code — active
+
+## État
+
+- Le porteur demande explicitement le 17 juillet 2026 que l'alias Vercel ouvre
+  Compass directement, sans porte ni code d'accès applicatif.
+- `main` est propre et synchronisée sur `a06ac9e`; T25-C02 reste close. Cette
+  intervention ne rouvre ni la classe, ni les affectations, ni le harnais.
+
+## Tranche contractualisée
+
+### Objectif
+
+Rendre `https://compass-geotutor-demo.vercel.app/` public sans session de démo,
+tout en conservant le quota Vercel WAF et les authentifications propres au
+pilote professeur/élève.
+
+### Inclus
+
+- Ne plus activer la protection de démo du seul fait de `VERCEL_ENV=production`.
+- Retirer de Vercel Production le flag, le hash, le secret et le TTL de démo.
+- Reconstruire, déployer et vérifier racine, catalogue, atelier Varignon et
+  refus propres aux routes de classe sans cookie de démo.
+- Conserver la règle WAF 6 POST/60 s/IP et les secrets OpenAI/classroom.
+
+### Hors périmètre
+
+- Aucun affaiblissement des cookies professeur ou alias T25.
+- Aucun changement de harnais, exercice, store, migration ou dossier Devpost.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# smoke HTTPS public sans cookie ni code, inspection WAF et variables Vercel
+```
+
+### Définition de fini
+
+- La racine publique affiche directement Compass et aucun contrôle « Access
+  code » / « Code d'accès » n'est rendu.
+- Les routes métier ne répondent plus `demo_access_required`; les frontières
+  professeur/alias de classe gardent leur propre authentification.
+- Le WAF reste publié, le déploiement est READY et l'identité source est
+  consignée avant clôture de l'amendement.
+
+---
+
+# Archive — T25-C02
+
 # Contrat Builder — T25-C02 Classes et élèves pseudonymes — close `pass`
 
 ## État

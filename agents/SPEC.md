@@ -182,7 +182,7 @@ disponible.
 | FR-54 | Unifier le harnais public en réutilisant adapter, snapshots, ownership, checkpoints, highlights, preuves, policy et arbitre historiques sans créer un runtime parallèle durable. |
 | FR-55 | Qualifier le nouveau harnais sur trois golden journeys consécutifs, EN/FR, clavier, mouvement réduit, zoom 200 % et viewports 390/768/1440. |
 | FR-56 | Intégrer le candidat T22 dans la branche de référence, déployer son artefact exact et conserver une identité source/build/runtime vérifiable. |
-| FR-57 | Protéger la démonstration publique et limiter les routes coûteuses avant diffusion, sans exposer secret, token ou contenu élève. |
+| FR-57 | Ouvrir la démonstration publique sans code applicatif, limiter les écritures API coûteuses par le WAF et ne jamais exposer secret, token ou contenu élève. |
 | FR-58 | Permettre à un professeur authentifié dans le pilote de créer, archiver et administrer une classe limitée. |
 | FR-59 | Permettre à un élève de rejoindre une classe par code rotatif sous un pseudonyme, sans compte nominatif ni accès au roster. |
 | FR-60 | Affecter une activité versionnée à une classe, un groupe ou un élève pseudonyme avec dates et politique d'aide bornées. |

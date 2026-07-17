@@ -99,9 +99,7 @@ function parseTtl(value: string | undefined): number {
 export function readDemoProtectionConfig(
   environment: Environment = process.env,
 ): DemoProtectionConfig {
-  const required =
-    environment.VERCEL_ENV === "production" ||
-    environment.COMPASS_DEMO_PROTECTION_ENABLED === "1";
+  const required = environment.COMPASS_DEMO_PROTECTION_ENABLED === "1";
   if (!required) return { status: "disabled" };
 
   const accessHash = environment.COMPASS_DEMO_ACCESS_HASH?.trim() ?? "";

@@ -2,7 +2,9 @@
 
 ## Prochaine action
 
-T25-C02 est close `pass` : identité professeur pilote, création/archivage de
+L'amendement T24-C03 demandé par le porteur est actif : retirer la porte et le
+code d'accès de la Production Vercel, conserver le WAF, redéployer puis vérifier
+l'ouverture directe de Compass. T25-C02 reste close `pass` : identité professeur pilote, création/archivage de
 classe, code rotatif, jonction pseudonyme, roster, retrait d'alias et adapter
 PostgreSQL sont livrés sans dépendance à un exercice. La prochaine action du
 porteur est de fournir l'énoncé exact du nouvel exercice. `math.pdf` ne contient

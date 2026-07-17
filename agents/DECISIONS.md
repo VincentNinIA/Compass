@@ -1124,3 +1124,17 @@
   code rotatif afin de conserver l'ownership des classes. Le WAF T24 devra être
   segmenté avant un pilote scolaire multi-élèves, sans que T25-C02 ne mute
   Vercel.
+
+## D-082 - L'alias de démonstration est public sans code applicatif
+
+- Décision : à la demande explicite du porteur, ne plus activer la session de
+  démo en Production et retirer ses variables Vercel. Conserver le quota WAF
+  global sur les `POST /api/*` ainsi que les authentifications professeur et
+  alias propres à la classe pilote.
+- Raison : l'URL destinée au jury et aux testeurs doit ouvrir directement le
+  produit; la porte T24 empêche l'accès attendu. Le WAF continue de borner les
+  écritures et appels coûteux sans ajouter un secret à communiquer.
+- Impact : `VERCEL_ENV=production` n'active plus implicitement la garde; seul un
+  flag explicite `COMPASS_DEMO_PROTECTION_ENABLED=1` peut la réactiver dans un
+  environnement privé. L'alias public ne rend plus la porte, aucun cookie de
+  démo n'est requis et D-077 reste l'historique de la protection initiale.

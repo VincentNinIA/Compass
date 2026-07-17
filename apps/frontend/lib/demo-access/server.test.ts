@@ -33,9 +33,23 @@ beforeAll(async () => {
 });
 
 describe("T24 demo access primitives", () => {
-  it("stays disabled locally but fails closed on an incomplete Production", () => {
+  it("stays disabled unless the protection is explicitly enabled", () => {
     expect(readDemoProtectionConfig({})).toEqual({ status: "disabled" });
     expect(readDemoProtectionConfig({ VERCEL_ENV: "production" })).toEqual({
+      status: "disabled",
+    });
+    expect(
+      readDemoProtectionConfig({
+        VERCEL_ENV: "production",
+        COMPASS_DEMO_PROTECTION_ENABLED: "0",
+      }),
+    ).toEqual({ status: "disabled" });
+    expect(
+      readDemoProtectionConfig({
+        VERCEL_ENV: "production",
+        COMPASS_DEMO_PROTECTION_ENABLED: "1",
+      }),
+    ).toEqual({
       status: "unavailable",
     });
   });
@@ -129,7 +143,10 @@ describe("T24 protected costly routes", () => {
   it("fails closed before model work when Production secrets are absent", async () => {
     const modelHandler = vi.fn(async () => Response.json({ ok: true }));
     const guarded = withDemoAccessProtection(modelHandler, {
-      environment: { VERCEL_ENV: "production" },
+      environment: {
+        VERCEL_ENV: "production",
+        COMPASS_DEMO_PROTECTION_ENABLED: "1",
+      },
       now: () => NOW,
     });
 

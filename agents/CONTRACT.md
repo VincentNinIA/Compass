@@ -1,3 +1,101 @@
+# Contrat Builder — T20-C01 Redéploiement Vercel du candidat T18 — close `pass`
+
+## État
+
+- T20-C01 est close `pass` au 17 juillet 2026 sur autorisation explicite du
+  porteur.
+- T18-C01 et T19-C01 restent closes `pass`; le candidat source à publier est le
+  SHA Git `e1efc28b06fddf54af07a8797f91601357266d52` de la pull request #2.
+
+## Tranche contractualisée — T20-C01
+
+### Objectif
+
+Redéployer le candidat T18 exact dans le projet Vercel isolé
+`compass-geotutor-demo`, qualifier l'alias public puis aligner la documentation
+Devpost sans soumettre la participation OpenAI Build Week.
+
+### Inclus
+
+- Construire et déployer depuis un worktree Git propre au SHA `e1efc28`, sans
+  embarquer les artefacts locaux non commités du workspace principal.
+- Réutiliser uniquement le projet Vercel existant `compass-geotutor-demo`, son
+  preset Next.js et ses variables serveur déjà configurées.
+- Vérifier l'état `READY`, l'alias stable, les headers de sécurité, la page, le
+  catalogue professeur et les parcours publics accueil/professeur/GeoGebra.
+- Contrôler le navigateur aux formats desktop et mobile, sans mutation durable
+  du catalogue ni ouverture automatique du microphone.
+- Retirer de Devpost et des documents la réserve disant que l'alias sert encore
+  T17; conserver les limites mémoire, la PR source et l'absence de soumission.
+- Consigner deployment ID, URL immuable, alias et preuves dans les pilotes.
+
+### Hors périmètre
+
+- Aucun nouveau projet Vercel, domaine, plan payant, merge GitHub, changement de
+  secret, base de données, code d'accès, rate limit ou modification produit.
+- Aucun appel de soumission Devpost, vidéo, feedback, licence ou retours humains.
+- Aucun smoke vocal physique ni dépense modèle nécessaire à la qualification;
+  les routes OpenAI ne sont pas appelées avec une charge réelle.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise réelle.
+
+### Gates requis
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm dlx vercel whoami
+# déploiement Production, inspect READY, HTTP/headers/routes et smoke navigateur
+```
+
+### Définition de fini
+
+- L'alias `https://compass-geotutor-demo.vercel.app/` pointe sur un déploiement
+  Production `READY` construit depuis le SHA T18 convenu.
+- Accueil, espace professeur et démonstration GeoGebra chargent sans erreur
+  applicative bloquante sur desktop et mobile; les routes publiques attendues
+  répondent avec leurs headers fermés.
+- Devpost et les pilotes décrivent T18 comme le candidat live tout en gardant
+  `submitted_at: null` et toutes les limites du prototype.
+
+### Preuves de clôture
+
+- Un worktree détaché propre au SHA
+  `e1efc28b06fddf54af07a8797f91601357266d52` a reçu l'installation pnpm figée.
+  Le candidat passe 70 cartes historiques, lint, typecheck, build et 677/677
+  tests Vitest sur 64 fichiers. Le build expose la page et quatre routes
+  dynamiques attendues.
+- La CLI Vercel 56.3.1 est authentifiée comme `vincent-3604` et liée uniquement
+  à `vincent-nin-ia-s-projects/compass-geotutor-demo`. Le réglage projet est
+  maintenant `framework: nextjs`, `nodeVersion: 22.x`, sans root directory
+  distant imposé.
+- Un premier envoi depuis la racine a échoué avant promotion car Vercel ne
+  trouvait pas Next.js dans le package monorepo. L'envoi depuis
+  `apps/frontend` a produit T18; deux reconstructions Node 22 ont ensuite subi
+  un `fetch failed` fournisseur. La voie précompilée locale a finalement été
+  acceptée côté serveur malgré le même message terminal du client.
+- L'inspection autoritative après ces erreurs montre le déploiement final
+  `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5` en Production `READY`, URL immuable
+  `https://compass-geotutor-demo-dxr8xcxtq-vincent-nin-ia-s-projects.vercel.app`
+  et alias stable `https://compass-geotutor-demo.vercel.app/` attaché.
+- L'alias final répond 200 sur `/`, `/?demo=geogebra`,
+  `/api/teacher/exercises` et l'icône. Les headers conservent HSTS,
+  `microphone=(self), camera=(self)`, `nosniff`, `SAMEORIGIN`; le catalogue
+  répond JSON `private, no-store`.
+- Le smoke Playwright CLI final à 390 × 844 charge GeoGebra, ses six missions et
+  la note de démarche obligatoire avant les 10 XP. L'espace professeur affiche
+  son formulaire et replace le focus/scroll en tête. `scrollWidth` vaut 375 pour
+  390 px et la console rend zéro erreur et zéro warning sur les deux surfaces.
+- Devpost Compass a été mis à jour en version 5 : la phrase T17 obsolète est
+  remplacée par le candidat T18 live au commit `e1efc28`. La page reste
+  `published`, OpenAI Build Week reste `submitted_at: null` et aucun appel de
+  soumission n'a été exécuté.
+
+## Archive — T19-C01
+
 # Contrat Builder — T19-C01 Publication GitHub et fiche Devpost — close `pass`
 
 ## État

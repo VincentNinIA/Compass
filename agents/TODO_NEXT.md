@@ -2,16 +2,15 @@
 
 ## Prochaine action
 
-T19-C01 est close `pass` : le candidat T18 est sur la branche GitHub
-`codex/t18-education-candidate` et la pull request brouillon #2; la fiche projet
-Devpost est publique et documentée, mais OpenAI Build Week reste non soumis
-(`submitted_at: null`).
+T20-C01 est close `pass` : le SHA T18 `e1efc28` est servi par
+`https://compass-geotutor-demo.vercel.app/` via la Production READY
+`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, et Devpost version 5 décrit désormais ce
+candidat live sans soumettre OpenAI Build Week.
 
-Prochaine action sous autorisation distincte : redéployer
-`compass-geotutor-demo`, rejouer le smoke public du candidat T18, puis actualiser
-la fiche. La vidéo, l'identifiant `/feedback`, les retours humains, la licence,
-le choix Education lors de la soumission et la soumission finale restent à
-compléter par le porteur.
+Prochaine action : enregistrer la vidéo finale de moins de trois minutes,
+obtenir l'identifiant `/feedback`, ajouter les retours humains réels, valider la
+licence et choisir Education au moment de la soumission. Ajouter un accès de
+démo et un rate limit avant toute diffusion large de l'URL publique.
 
 ## Dépendances
 
@@ -136,6 +135,12 @@ Compass version 4. La page projet est `published`, conséquence automatique de
 l'enregistrement d'une fiche complète; la participation au hackathon reste non
 soumise et aucun appel de soumission n'a été exécuté.
 
+T20-C01 est close : le candidat exact `e1efc28` passe 677/677 Vitest, lint,
+typecheck et build dans un worktree propre. La Production Vercel finale
+`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5` est READY sous Node 22.x et sert l'alias
+stable. Le smoke public desktop/mobile, les routes et les headers passent; la
+fiche Devpost version 5 reste non soumise.
+
 ## Hors périmètre immédiat
 
 Ne pas modifier les contrats spécialisés T1 à T6. SLA production, analytics
@@ -151,4 +156,4 @@ live actuelles, garder l'URL peu diffusée, surveiller l'usage du projet OpenAI 
 retirer ou faire tourner la clé lorsque la période de démonstration se termine.
 
 La dette du compteur documentaire T17 est résolue : le validateur ne porte plus
-de nombre magique et vérifie désormais les 70 cartes contre le registre roadmap.
+de nombre magique et vérifie désormais les 71 cartes contre le registre roadmap.

@@ -417,8 +417,23 @@ un autre appareil ou onglet n'est pas synchronisé. Le store serveur T16 reste
 une preuve éphémère multi-requête lorsque le processus est partagé.
 
 État : T18-C01 close `pass` au 16 juillet 2026 avec 677/677 Vitest, 36/36
-Playwright hors live, build et validation de 69 cartes. Le candidat reste local
-jusqu'au prochain déploiement explicitement autorisé.
+Playwright hors live, build et validation de 69 cartes. T20 publie ce candidat
+sur l'alias Vercel stable depuis le SHA Git `e1efc28`.
+
+## T20 — Production T18 sur Vercel
+
+Le déploiement part d'un worktree Git propre plutôt que du workspace principal
+contenant des captures générées. La racine de build effective reste
+`apps/frontend`; le projet Vercel isolé conserve le preset Next.js et est aligné
+sur Node 22.x, conformément aux engines du dépôt.
+
+La Production `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5` est READY et sert
+`https://compass-geotutor-demo.vercel.app/`. La page, le mode GeoGebra et le
+catalogue professeur répondent avec les headers sécurité/no-store attendus. Le
+smoke mobile vérifie le formulaire professeur, la note de démarche avant XP,
+les six missions GeoGebra, l'absence de débordement et une console sans erreur.
+Le déploiement ne crée aucune persistance, protection d'accès ou soumission
+Devpost supplémentaire.
 
 ## Frontières cibles
 

@@ -7,6 +7,11 @@ Build Week reste non soumise (`submitted_at: null`). Les retours humains, la
 vidéo finale, la session `/feedback`, la licence, le choix Education et la
 soumission restent à compléter par le porteur.
 
+Le 17 juillet 2026, le candidat T18 du commit `e1efc28` a été qualifié sur
+`https://compass-geotutor-demo.vercel.app/` via la Production Vercel READY
+`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`. La description Devpost version 5 a été
+alignée sur ce candidat live; la participation reste non soumise.
+
 ## Positionnement recommandé
 
 - **Catégorie :** Education
@@ -81,8 +86,8 @@ production persistence.
 7. Ouvrir ensuite `/?demo=geogebra` pour montrer le contraste entre progression
    déclarée et missions vérifiées automatiquement dans GeoGebra.
 
-Avant la démo, redéployer T18 : l'alias actuel correspond au dernier candidat T17
-qualifié tant qu'un nouveau déploiement n'a pas été effectué et contrôlé.
+Avant la démo, ouvrir l'alias T18 et rejouer ce parcours court; ne pas dépendre
+d'une URL immuable Vercel, qui peut rester protégée par le SSO d'équipe.
 
 ## Script vidéo — cible 2 min 45
 
@@ -143,14 +148,14 @@ Image : tests verts puis logo Compass.
 
 | Critère | Preuve à montrer | Réserve honnête |
 |---|---|---|
-| Technological implementation | Trois modèles séparés, WebRTC, Structured Outputs, gateway sémantique, preuves locales, gates | Rejouer le live credentialed et déployer le candidat final |
-| Design | Quatre écrans, studio professeur, mobile 390, clavier, EN/FR, mouvement réduit | Contrôler les captures finales après déploiement |
+| Technological implementation | Trois modèles séparés, WebRTC, Structured Outputs, gateway sémantique, preuves locales, gates | T18 est déployé; rejouer le live credentialed juste avant le jury |
+| Design | Quatre écrans, studio professeur, mobile 390, clavier, EN/FR, mouvement réduit | Smoke final 390/1440 qualifié; enregistrer la vidéo sur le même alias |
 | Potential impact | Boucle professeur-élève-professeur, aide graduée, bilan anonyme, toute matière | Ajouter les retours humains collectés par le porteur; ne pas inventer de traction |
 | Quality of idea | Distinction conversation/instrumentation et terminé/vérifié, frugalité professeur | GeoGebra est aujourd'hui le seul environnement spécialisé instrumenté |
 
 ## Checklist avant soumission
 
-- [ ] Redéployer le worktree T18 et rejouer le parcours jury sur l'URL publique.
+- [x] Redéployer le worktree T18 et rejouer le parcours jury sur l'URL publique.
 - [x] Ajouter l'URL de dépôt à Devpost.
 - [ ] Choisir **Education**.
 - [ ] Enregistrer une vidéo avec voix off, durée strictement inférieure à 3 min,

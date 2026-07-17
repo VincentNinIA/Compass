@@ -1093,3 +1093,34 @@
   ajoute clés étrangères et cascades. T25-C02 peut brancher un adapter serveur
   sans changer les entités, mais doit fournir migration, secret et rollback
   explicites avant toute donnée réelle.
+
+## D-080 - La classe ne dépend d'aucun exercice
+
+- Décision : rendre identité professeur, classe, code rotatif, alias et roster
+  totalement indépendants du contrat pédagogique. T25-C02 ne crée aucun
+  template et ne sélectionne ni Varignon ni un successeur implicite.
+- Raison : le PDF `math.pdf` contient deux pages du même exercice Varignon, pas
+  un exercice suivant. Coupler la classe à un contenu supposé rendrait la
+  jonction et la suppression non réutilisables et contredirait la demande du
+  porteur de travailler ensuite sur un nouvel exercice.
+- Impact : T25-C03 reçoit le prochain énoncé comme nouvelle entrée autoritative,
+  puis décide explicitement s'il réutilise `geometry_investigation.v1` ou exige
+  un contrat versionné distinct. Aucun élargissement du harnais n'est anticipé
+  dans T25-C02.
+
+## D-081 - La boucle classe sépare autorité persistante et sessions pilotes
+
+- Décision : utiliser PostgreSQL 16 comme seule autorité hors tests, sérialiser
+  rotation et jonction sur une ligne de contrôle, et signer deux cookies
+  `HttpOnly` distincts pour professeur et alias. Le code professeur reste
+  séparé de la protection de démo T24; le code de classe clair n'est rendu
+  qu'une fois.
+- Raison : la mémoire serverless ne garantit ni collision atomique ni
+  révocation partagée. Une session unique confondrait l'opérateur de démo, le
+  propriétaire de classe et l'élève, et exposerait une autorité trop large.
+- Impact : base, migrations et secrets sont obligatoires dès activation; tout
+  manque échoue fermé. Le driver mémoire exige un mode de test explicite et est
+  refusé en Production. Un sujet professeur technique stable reste séparé du
+  code rotatif afin de conserver l'ownership des classes. Le WAF T24 devra être
+  segmenté avant un pilote scolaire multi-élèves, sans que T25-C02 ne mute
+  Vercel.

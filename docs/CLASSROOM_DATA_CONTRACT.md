@@ -2,8 +2,9 @@
 
 ## Frontière
 
-T25 persiste uniquement ce qui est nécessaire pour affecter Varignon, reprendre
-un état sûr et rendre un bilan factuel. Le store n'est ni un dossier scolaire,
+T25 persiste uniquement ce qui est nécessaire pour affecter une activité
+approuvée, reprendre un état sûr et rendre un bilan factuel. La classe et ses
+aliases ne dépendent d'aucun exercice. Le store n'est ni un dossier scolaire,
 ni un historique de conversation, ni une base GeoGebra brute.
 
 La première version est `classroom_store.v1`. Les schémas exécutables vivent
@@ -19,11 +20,12 @@ L'autorité persistante cible est PostgreSQL 16, derrière un port
 clés étrangères, unicité et `ON DELETE CASCADE`, tout en restant disponible dans
 un runtime serverless via un fournisseur PostgreSQL managé.
 
-T25-C01 ne provisionne aucun fournisseur et ne place aucune URL de base dans le
-dépôt ou Vercel. `MemoryClassroomStoreV1` est l'implémentation de référence pour
-tester la sémantique d'accès et de cycle de vie. Les migrations SQL
-`0001_classroom_v1.up.sql` et `0001_classroom_v1.down.sql` sont exécutées par les
-tests avec `pg-mem`; T25-C02 branchera ensuite l'adapter serveur réel.
+Le dépôt ne provisionne aucun fournisseur et ne place aucune URL de base dans
+Git ou Vercel. T25-C02 branche `PostgresClassroomPilotStoreV1` sur le port
+serveur. `MemoryClassroomPilotStoreV1` est réservé aux tests explicites et est
+refusé en Vercel Production. Les migrations `0001_classroom_v1` puis
+`0002_classroom_pilot` sont exécutées avec `pg-mem`; le runbook opérateur est
+`docs/CLASSROOM_PILOT_RUNBOOK.md`.
 
 Le catalogue professeur éphémère T22 reste distinct. Une publication n'entre
 dans le store de classe qu'après création explicite d'un `ClassActivityTemplateV1`;
@@ -107,7 +109,7 @@ une note.
 ## Intégrité et migrations
 
 Le schéma applicatif vérifie les références et durées avant le driver. Le schéma
-SQL ajoute clés étrangères, unicité classe/pseudonyme, unicité
+SQL ajoute clés étrangères, unicité classe/pseudonyme insensible à la casse, unicité
 affectation/alias, fenêtres temporelles et cascades. Le hash de contrat doit être
 identique dans template, affectation, faits et checkpoint; la politique d'aide
 de l'affectation doit être celle de la publication approuvée. Les identifiants
@@ -119,6 +121,12 @@ T24 ne persistait aucune donnée de classe. La descente applicative refuse
 `migration_would_drop_classroom_data` dès qu'un enregistrement existe. Le SQL
 `down` est réservé au rollback d'un environnement vide vérifié; il ne constitue
 jamais une commande de purge.
+
+La jonction et la rotation incrémentent sous transaction la ligne singleton de
+`compass_classroom_control`. Elles sérialisent ainsi la recherche de collisions,
+la vérification scrypt et l'écriture. Le code clair n'est renvoyé qu'après
+création ou rotation; l'élève et les lectures ultérieures ne reçoivent jamais
+le hash.
 
 ## Suppression et expiration
 
@@ -141,7 +149,8 @@ compteurs par table. Il ne contient aucun identifiant ou contenu élève.
 
 ## Suite autorisée
 
-T25-C02 peut ajouter l'identité professeur pilote, la création de classe, la
-rotation du code et le roster pseudonyme en réutilisant exactement ces contrats.
-Elle ne peut ni assouplir les schémas, ni exposer `joinCodeHash`, ni connecter un
-store cloud sans migration et secret serveur explicites.
+T25-C02 est close : identité professeur pilote, création/archivage de classe,
+rotation, jonction et roster réutilisent ces contrats sans exposer
+`joinCodeHash`. T25-C03 peut ensuite introduire l'affectation seulement après
+réception de l'énoncé exact du prochain exercice et décision explicite sur son
+contrat pédagogique.

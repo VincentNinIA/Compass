@@ -11,6 +11,7 @@ import { CompassMascot, MascotProvider } from "@/components/compass-mascot";
 import { TeacherExerciseLibrary } from "@/components/teacher-exercise-library";
 import { TeacherWorkspace } from "@/components/teacher-workspace";
 import { GeometryPublishedWorkspace } from "@/components/geometry-published-workspace";
+import { ClassroomJoin } from "@/components/classroom-join";
 import {
   parseTeacherExercisePublication,
   type TeacherExercisePublication,
@@ -21,7 +22,12 @@ import {
   type GeometryLearningSessionReportV1 as GeometryLearningReport,
 } from "@/lib/geometry-investigation/contracts";
 
-type AppScreen = "landing" | "teacher" | "library" | TutorWorkspaceScreen;
+type AppScreen =
+  | "landing"
+  | "teacher"
+  | "library"
+  | "classroom_join"
+  | TutorWorkspaceScreen;
 
 function LearningPlayground({ french }: { french: boolean }) {
   return (
@@ -319,6 +325,15 @@ export default function Home() {
             <div className="hero-student-paths" aria-label={text("Choose your starting point", "Choisis ton point de départ")}>
               <button
                 type="button"
+                className="classroom-join-link"
+                onClick={() => setScreen("classroom_join")}
+              >
+                <small>{text("My teacher sent a code", "Mon professeur m'a donné un code")}</small>
+                <strong>{text("Join my class", "Rejoindre ma classe")}</strong>
+                <span>{text("Use a pseudonym — no email", "Avec un pseudonyme — sans e-mail")}</span>
+              </button>
+              <button
+                type="button"
                 className="primary-link"
                 onClick={() => {
                   setAssignedExercise(undefined);
@@ -380,6 +395,8 @@ export default function Home() {
             learningReports={learningReports}
             geometryLearningReports={geometryLearningReports}
           />
+        ) : visibleScreen === "classroom_join" ? (
+          <ClassroomJoin onBack={goHome} />
         ) : visibleScreen === "library" ? (
           <TeacherExerciseLibrary
             onBack={goHome}

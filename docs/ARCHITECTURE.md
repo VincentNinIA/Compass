@@ -711,6 +711,17 @@ les clés étrangères, unicités et cascades constituent la seconde barrière S
 migration up/down sans créer de ressource cloud. Le contrat complet est
 `docs/CLASSROOM_DATA_CONTRACT.md`.
 
+T25-C02 implémente la première boucle indépendante d'un exercice :
+`PostgresClassroomPilotStoreV1` porte classes et aliases, tandis que
+`ClassroomPilotServiceV1` génère les codes à haute entropie et ne rend leur
+valeur claire qu'à la création ou rotation. Une ligne de contrôle PostgreSQL
+sérialise collision, rotation et jonction; l'unicité de pseudonyme est également
+imposée sans tenir compte de la casse. Deux cookies `HttpOnly` signés séparent
+la session professeur de la session alias. Les routes `/api/classroom/teacher/*`
+et `/api/classroom/join` échouent fermées si secret, migration ou base manquent;
+la mémoire exige un flag de test explicite et reste interdite en Production.
+Le déploiement et les migrations suivent `docs/CLASSROOM_PILOT_RUNBOOK.md`.
+
 ### Flux de données autorisé
 
 1. Le professeur authentifié crée une classe et distribue un code rotatif.
@@ -728,7 +739,7 @@ migration up/down sans créer de ressource cloud. Le contrat complet est
 
 - T24-C01 a intégré T22 dans `main` et T24-C02 a fermé l'accès et le budget;
   T24-C03 a déployé ce candidat protégé; T25-C01 a fermé les données et accès
-  avant toute persistance et T25-C02 peut ouvrir la boucle de classe.
+  avant toute persistance; T25-C02 ferme la boucle classe/jonction sans contenu.
 - Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
   gateway existants.
 - Aucun second template n'est accepté avant le pilote; les neuf missions et les

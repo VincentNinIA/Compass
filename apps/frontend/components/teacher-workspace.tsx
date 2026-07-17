@@ -20,6 +20,7 @@ import type { LearningSessionReportV1 } from "@/lib/learning/session-report";
 import type { GeometryLearningSessionReportV1 } from "@/lib/geometry-investigation/contracts";
 import type { TeacherExercisePublication } from "@/lib/teacher/exercise";
 import { GeometryTeacherStudio } from "./geometry-teacher-studio";
+import { ClassroomTeacherPanel } from "./classroom-teacher-panel";
 import { useLanguage } from "./language-provider";
 
 type DraftMode = "generated" | "upload" | "manual";
@@ -359,6 +360,8 @@ export function TeacherWorkspace({
           </div>
         </li>
       </ol>
+
+      <ClassroomTeacherPanel />
 
       {learningReports.length > 0 ? (
         <section className="teacher-learning-signals" aria-labelledby="teacher-signals-title">

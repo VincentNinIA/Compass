@@ -1,3 +1,78 @@
+# Contrat Builder — T25-C02 Classes et élèves pseudonymes — close `pass`
+
+## État
+
+- T25-C02 est close `pass` le 17 juillet 2026 depuis `origin/main` au commit de
+  base `9e3044a`, après fermeture de T25-C01.
+- Le PDF `math.pdf` a été relu textuellement et visuellement : ses deux pages
+  forment un seul exercice Varignon. Aucun « exercice suivant » n'y est présent.
+- Cette carte construit seulement identité, classe, code et jonction. Elle ne
+  crée, ne sélectionne et n'affecte aucun exercice; T25-C03 attendra l'énoncé
+  exact du prochain exercice fourni par le porteur.
+- L'adapter PostgreSQL et sa migration, les sessions professeur/alias séparées,
+  les routes, les surfaces EN/FR et le runbook opérateur sont livrés. Le gate
+  rend 876/876 Vitest sur 102 fichiers et le golden T25-C02 2/2 sans violation
+  Axe.
+
+## Tranche contractualisée — T25-C02
+
+### Objectif
+
+Donner au professeur du pilote un espace de classe isolé et aux élèves un accès
+pseudonyme par code rotatif, sans dossier scolaire et sans coupler l'identité de
+classe à Varignon ou à un autre contenu pédagogique.
+
+### Inclus
+
+- Authentification professeur limitée par secret pilote séparé du code de démo,
+  cookie signé `HttpOnly` et identité technique stable sans email.
+- Adapter PostgreSQL du port T25-C01, sélection de driver explicite et échec
+  fermé hors test lorsque la base ou les secrets sont absents.
+- Création, lecture et archivage d'une classe; génération et rotation d'un code
+  aléatoire rendu une seule fois, hashé par scrypt et expirant en 24 heures.
+- Jonction atomique par code et pseudonyme, cookie alias signé, collision et
+  code expiré/révoqué sans création partielle ni exposition du roster.
+- Roster réservé au professeur propriétaire, retrait d'alias et cascade T25-C01.
+- Surface professeur et parcours de jonction élève bilingues, clavier et mobile.
+
+### Hors périmètre
+
+- Aucun template, exercice, catalogue, affectation ou aperçu pédagogique; le
+  nouvel exercice commence uniquement dans T25-C03 après réception de sa source.
+- Aucun SSO, email élève, nom légal, date de naissance, import de roster,
+  établissement, parent, messagerie ou analytics.
+- Aucun provisionnement de base, mutation Vercel, déploiement Production,
+  génération IA ou modification du harnais GeoGebra.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend test:e2e:t25
+git diff --check
+# tests négatifs inter-professeurs/inter-aliases et concurrence de jonction
+# scan réponses, cookies, logs et bundles pour hash, code et données nominatives
+```
+
+### Définition de fini
+
+- Le professeur authentifié crée et archive sa classe, voit uniquement son
+  roster et peut retirer un alias avec la cascade fermée de T25-C01.
+- Un code valide crée exactement un alias pseudonyme; collision, expiration,
+  archive, révocation ou concurrence échouent sans écriture partielle.
+- Les réponses ne révèlent ni hash, secret, roster à l'élève, identité réelle
+  ou contenu d'exercice; le code clair n'est rendu qu'à sa création/rotation.
+- Le parcours passe en EN/FR, au clavier et à 390/1440 px; les gates passent et
+  T25-C03 devient la prochaine carte sans présumer du prochain exercice.
+
+---
+
+# Archive — T25-C01
+
 # Contrat Builder — T25-C01 Contrats de classe, accès et rétention — close `pass`
 
 ## État

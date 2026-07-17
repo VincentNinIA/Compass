@@ -2,11 +2,11 @@
 
 ## Prochaine action
 
-T25-C04A est active à la demande du porteur : provisionner PostgreSQL et les
-secrets Production, simplifier l'affectation immédiate, ouvrir depuis `Ma
-classe` le contrat Varignon exact dans GeoGebra, puis créer et qualifier une
-classe `Test Varignon`. Cette sous-tranche ne clôt pas la persistance du
-checkpoint sémantique prévue par T25-C04.
+T25-C04A est close `pass` : PostgreSQL et les secrets Production sont actifs,
+l'affectation immédiate est simplifiée, `Ma classe` ouvre le contrat Varignon
+exact dans GeoGebra et la classe `Test Varignon` est qualifiée sur l'alias
+public. T25-C04 reste `in_progress`; la prochaine sous-tranche doit persister et
+restaurer le checkpoint sémantique allowlisté avant de fermer la carte.
 
 L'amendement T24-C03 demandé par le porteur est close `pass` : la Production
 Vercel ouvre directement Compass sans code, le WAF reste actif et les variables

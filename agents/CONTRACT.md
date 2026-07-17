@@ -1,4 +1,4 @@
-# Contrat Builder — T25-C04A Classe test et ouverture Varignon — `in_progress`
+# Contrat Builder — T25-C04A Classe test et ouverture Varignon — close `pass`
 
 ## État
 
@@ -8,6 +8,8 @@
 - T25-C03 reste close `pass`. Cette sous-tranche ouvre le contrat affecté dans
   le runtime T22 exact et met en service PostgreSQL/secrets; elle ne clôt pas
   encore la reprise persistante complète de T25-C04.
+- C04A est close `pass` sur le commit runtime `000c60f`, la Production
+  `dpl_GRvHJgbYeFKfhYPkRhinRKdPUtXJ` et une classe réelle `Test Varignon`.
 
 ## Objectif
 
@@ -53,11 +55,28 @@ git diff --check
 
 - La Production possède une base migrée et échoue toujours fermée sans ses
   secrets; aucun driver mémoire n'y est activé.
-- Une classe `Test Varignon` et un alias de démonstration reçoivent une
+- Une classe `Test Varignon` et ses aliases de démonstration reçoivent une
   affectation active; le bouton élève ouvre les neuf missions dans le vrai
   atelier GeoGebra.
 - Le contrat ouvert porte le hash exact de l'affectation et le retour conserve
   la session pseudonyme; les tests et smokes ne révèlent aucun secret.
+
+## Preuves de clôture
+
+- La ressource Neon gratuite `neon-blue-book` est liée au projet; les migrations
+  0001, 0002 et 0003 passent sur PostgreSQL et les quatre variables T25 restent
+  chiffrées côté Vercel. Le store mémoire reste absent de Production.
+- Lint, typecheck, build et validation des 102 cartes passent; Vitest rend
+  884/884 sur 104 fichiers et le golden T25 rend 3/3, dont ouverture de
+  l'affectation puis retour à la classe.
+- La Production READY sert l'alias stable et la base contient une classe active,
+  deux aliases de démonstration et deux affectations ouvertes ciblées. Le script
+  opérateur vérifie le contrat v2 sans imprimer les codes et respecte le WAF par
+  un unique retry borné sur 429.
+- Le smoke navigateur public rejoint `Test Varignon`, lit le contrat
+  `83bd51df856f…`, ouvre le vrai applet, affiche les neuf missions et retrouve la
+  session alias via `Retour à ma classe`. Aucun checkpoint persistant n'est
+  revendiqué; C04 reste `in_progress` pour cette seconde sous-tranche.
 
 ---
 

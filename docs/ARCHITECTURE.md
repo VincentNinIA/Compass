@@ -736,6 +736,10 @@ v2 reçue puis ouvre le runtime T22 exact; le retour retrouve la session alias.
 La progression reste encore locale au runtime : la table
 `compass_session_checkpoints` est migrée mais son upsert/restauration n'est pas
 activé avant la seconde sous-tranche C04.
+La première Production de cette frontière est
+`dpl_GRvHJgbYeFKfhYPkRhinRKdPUtXJ`, construite depuis `000c60f`; une classe et
+deux aliases ciblés qualifient l'ouverture sans élargir la sémantique de
+snapshot des destinataires T25-C03.
 
 ### Flux de données autorisé
 

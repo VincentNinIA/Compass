@@ -108,7 +108,9 @@ pnpm --dir apps/frontend classroom:demo:seed
 ```
 
 Le script crée ou réutilise `Test Varignon`, renouvelle son code, recrée
-l'alias `Demo`, affecte le contrat exact et vérifie sa lecture élève. Les codes
+l'alias demandé s'il n'existe pas, affecte le contrat exact et vérifie sa
+lecture élève. Une réponse WAF 429 provoque au plus une attente et un seul retry
+de la requête bloquée. Les codes
 restent uniquement dans `apps/frontend/.env.classroom-demo.local`, ignoré par
 Git et écrit en mode `0600`; aucune valeur secrète n'est imprimée.
 

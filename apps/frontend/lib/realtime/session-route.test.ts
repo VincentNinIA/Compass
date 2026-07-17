@@ -9,6 +9,10 @@ import {
   GEOGEBRA_ASSIST_TOOL_DEFINITIONS,
   GEOGEBRA_ASSIST_TOOL_NAMES,
 } from "@/lib/geogebra/assist-tools";
+import {
+  GEOMETRY_INVESTIGATION_MODEL_ACTIONS_V1,
+  GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
+} from "@/lib/geometry-investigation/actions";
 
 const OFFER = [
   "v=0",
@@ -59,6 +63,7 @@ function request(
     | "general_tutor"
     | "geogebra_tutor"
     | "invalid",
+  harness?: "v1" | "v2" | "invalid",
 ) {
   return new Request("http://localhost/api/realtime/session", {
     method: "POST",
@@ -66,6 +71,7 @@ function request(
       "Content-Type": contentType,
       ...(mode ? { "X-GeoTutor-Capability-Mode": mode } : {}),
       ...(profile ? { "X-GeoTutor-Tutor-Profile": profile } : {}),
+      ...(harness ? { "X-GeoTutor-Geometry-Harness": harness } : {}),
     },
     body,
   });
@@ -217,12 +223,69 @@ describe("POST /api/realtime/session", () => {
     },
   );
 
+  it.each([
+    ["live_voice", OFFER, ANSWER],
+    ["typed_live", DATA_OFFER, DATA_ANSWER],
+  ] as const)(
+    "creates a negotiated %s investigation session with the exact C04 palette",
+    async (mode, offer, answer) => {
+      const fetchImpl = vi.fn(
+        async (_url: string | URL | Request, init?: RequestInit) => {
+          const form = init?.body as FormData;
+          const session = JSON.parse(form.get("session") as string) as {
+            instructions: string;
+            tools: Array<{ name: string; parameters: { additionalProperties: boolean } }>;
+            tool_choice: string;
+            output_modalities?: string[];
+          };
+          expect(session.instructions).toContain("geometry_world.v2");
+          expect(session.instructions).toContain("prior learner attempt");
+          expect(session.instructions).toContain("Never propose or send coordinates");
+          expect(session.tools).toEqual(
+            GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
+          );
+          expect(session.tools.map(({ name }) => name)).toEqual(
+            GEOMETRY_INVESTIGATION_MODEL_ACTIONS_V1,
+          );
+          expect(session.tools.every(({ parameters }) =>
+            parameters.additionalProperties === false,
+          )).toBe(true);
+          expect(session.tool_choice).toBe("auto");
+          if (mode === "typed_live") {
+            expect(session.output_modalities).toEqual(["text"]);
+          }
+          return new Response(answer, { status: 201 });
+        },
+      );
+      const response = await createRealtimeSessionHandler({
+        apiKey: "server-secret",
+        fetchImpl: fetchImpl as typeof fetch,
+      })(request(offer, "application/sdp", mode, "geogebra_tutor", "v2"));
+
+      expect(response.status).toBe(201);
+    },
+  );
+
   it("rejects an unknown tutor profile", async () => {
     const response = await createRealtimeSessionHandler({})(
       request(OFFER, "application/sdp", "live_voice", "invalid"),
     );
     expect(response.status).toBe(400);
     expect(await errorCode(response)).toBe("invalid_tutor_profile");
+  });
+
+  it("rejects an unknown geometry harness before reaching credentials", async () => {
+    const response = await createRealtimeSessionHandler({})(
+      request(
+        OFFER,
+        "application/sdp",
+        "live_voice",
+        "geogebra_tutor",
+        "invalid",
+      ),
+    );
+    expect(response.status).toBe(400);
+    expect(await errorCode(response)).toBe("invalid_geometry_harness");
   });
 
   it("rejects an unknown capability mode before reaching credentials", async () => {

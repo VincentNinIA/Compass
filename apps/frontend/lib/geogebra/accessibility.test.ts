@@ -63,7 +63,9 @@ describe("GeoGebraAccessibilityGuard", () => {
     guard.start();
 
     expect(tool).not.toHaveAttribute("inert");
+    expect(tool).not.toHaveAttribute("aria-hidden");
     guard.stop();
+    expect(tool).toHaveAttribute("aria-hidden", "true");
   });
 
   it("makes the pinned applet scroll panel keyboard reachable and restores it", () => {

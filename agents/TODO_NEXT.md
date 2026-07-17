@@ -2,19 +2,20 @@
 
 ## Prochaine action
 
-T20-C01 est close `pass` : le SHA T18 `e1efc28` est servi par
-`https://compass-geotutor-demo.vercel.app/` via la Production READY
-`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, et Devpost version 6 décrit désormais ce
-candidat live sans soumettre OpenAI Build Week.
+Aucune carte Builder T22 n'est active. T22-C08 et T22 sont closes `pass` après
+contre-audit indépendant : 829/829 tests, 43 Playwright hors live, smoke
+Realtime credentialed 1/1 et golden UI public 3/3 sur la série
+`series_0c8aa73859c9ed347b7b62b0`, le candidat
+`candidate_b3bc38db342b359299dd3400` et une identité `.next` stable.
 
-Prochaine action : enregistrer la vidéo finale de moins de trois minutes,
-obtenir l'identifiant `/feedback`, ajouter les retours humains réels, valider la
-licence et choisir Education au moment de la soumission. Ajouter un accès de
-démo et un rate limit avant toute diffusion large de l'URL publique.
+Vidéo, licence, redéploiement, merge et soumission restent des actions porteur
+distinctes.
 
 ## Dépendances
 
 - T0 et T1 sont closes avec décision `pass`.
+- T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
+  ne laisse aucun P1/P2 ouvert.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -149,6 +150,11 @@ création arbitraire de points et vérification automatique de toutes les matiè
 restent hors périmètre. Authentification, gestion de classes et affectations
 nominatives restent également hors de T16-C01; le catalogue est partagé mais
 éphémère sur un seul processus serveur.
+
+T22 ne doit pas être réalisé en une seule carte : contrats, observation, moteur,
+gateway, preuves, orchestration, parcours et qualification possèdent chacun leur
+frontière. La présence du PRD ne vaut ni implémentation, ni déploiement, ni
+autorisation de fusion de la pull request existante.
 
 Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
 démo et une limitation de débit sur les routes OpenAI. Pour les seules démos

@@ -134,4 +134,38 @@ describe("TeacherWorkspace", () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it("renders a closed geometry report without learner text or identity", () => {
+    render(
+      <LanguageProvider>
+        <TeacherWorkspace
+          onBack={() => undefined}
+          onOpenLibrary={() => undefined}
+          geometryLearningReports={[
+            {
+              schemaVersion: "geometry_learning_session_report.v1",
+              exerciseId: "varignon_en_v1",
+              totalMissions: 9,
+              completedMissions: 9,
+              verifiedMissions: 7,
+              capturedConfigurations: ["convex", "concave", "crossed"],
+              exactMidpoints: 4,
+              verifiedParallelPairs: 6,
+              conjectureCompleted: true,
+              justificationCompleted: true,
+              transferCompleted: true,
+              assistance: { highestLevelUsed: 2, demonstrationsViewed: 0 },
+              exerciseXp: 160,
+              updatedAt: 123,
+            },
+          ]}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByRole("heading", { name: "Varignon session facts" })).toBeInTheDocument();
+    expect(screen.getByText("9/9")).toBeInTheDocument();
+    expect(screen.getByText("6/6")).toBeInTheDocument();
+    expect(screen.getByText("L2")).toBeInTheDocument();
+    expect(screen.getByText("No learner identity, answer text or grade is included.")).toBeInTheDocument();
+  });
 });

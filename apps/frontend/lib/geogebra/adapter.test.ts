@@ -12,6 +12,8 @@ function createHarness() {
   const removeExistingApplet = vi.fn();
   const registerClientListener = vi.fn();
   const unregisterClientListener = vi.fn();
+  const registerAddListener = vi.fn();
+  const unregisterAddListener = vi.fn();
   const api = {
     evalCommand: vi.fn(() => true),
     exists: vi.fn(() => true),
@@ -21,6 +23,8 @@ function createHarness() {
     setLabelVisible: vi.fn(),
     registerClientListener,
     unregisterClientListener,
+    registerAddListener,
+    unregisterAddListener,
   } satisfies GeoGebraApi;
   const adapter = new GeoGebraAdapter({
     loadScript: vi.fn(async () => undefined),
@@ -39,6 +43,8 @@ function createHarness() {
     removeExistingApplet,
     registerClientListener,
     unregisterClientListener,
+    registerAddListener,
+    unregisterAddListener,
     getParameters: () => parameters,
   };
 }
@@ -96,5 +102,32 @@ describe("GeoGebraAdapter", () => {
       error: { code: "stale_epoch" },
     });
     expect(harness.adapter.phase).toBe("disposed");
+  });
+
+  it("suspends and reconciles tracked listeners without losing their identity", async () => {
+    const harness = createHarness();
+    const loading = harness.adapter.load("target");
+    await vi.waitFor(() => expect(harness.getParameters()).toBeDefined());
+    harness.getParameters()?.appletOnLoad(harness.api);
+    await loading;
+    const client: GeoGebraClientListener = vi.fn();
+    const add = vi.fn();
+    harness.adapter.registerClientListener(client);
+    harness.adapter.registerObjectListener("add", add);
+
+    const suspended = harness.adapter.suspendListeners();
+    expect(suspended).toMatchObject({
+      ok: true,
+      value: { listenerCountBefore: 2 },
+    });
+    expect(harness.unregisterClientListener).toHaveBeenCalledWith(client);
+    expect(harness.unregisterAddListener).toHaveBeenCalledWith(add);
+
+    if (!suspended.ok) throw new Error("Expected listener suspension.");
+    expect(suspended.value.resume()).toBe(2);
+    expect(suspended.value.resume()).toBe(2);
+    expect(harness.registerClientListener).toHaveBeenCalledTimes(2);
+    expect(harness.registerAddListener).toHaveBeenCalledTimes(2);
+    expect(harness.adapter.listenerCount).toBe(2);
   });
 });

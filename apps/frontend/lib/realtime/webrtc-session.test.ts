@@ -45,7 +45,11 @@ import {
 import { OperationArbiter } from "@/lib/operations/arbiter";
 import { EvidenceLog } from "@/lib/pedagogy/evidence-log";
 import { GEOGEBRA_ASSIST_TOOL_DEFINITIONS } from "@/lib/geogebra/assist-tools";
+import { GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS } from "@/lib/geometry-investigation/actions";
 import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
+import { GeometryWorldV2 } from "@/lib/geometry-investigation/contracts";
+import { GeometryRealtimePedagogyContextV1 } from "@/lib/geometry-investigation/learning-runtime";
+import { createGeometryWorldDeltaV2 } from "@/lib/geometry-investigation/world";
 
 const OFFER = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
 const ANSWER = "v=0\r\no=- 2 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
@@ -53,6 +57,44 @@ const DATA_OFFER =
   "v=0\r\no=- 3 2 IN IP4 127.0.0.1\r\nm=audio 0 RTP/AVP 111\r\na=inactive\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n";
 const DATA_ANSWER =
   "v=0\r\no=- 4 2 IN IP4 127.0.0.1\r\nm=audio 0 RTP/AVP 111\r\na=inactive\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n";
+
+function geometryWorldV2(
+  revision: number,
+  changeKind: "initial" | "drag_end",
+  x: number,
+) {
+  return GeometryWorldV2.parse({
+    schemaVersion: "geometry_world.v2",
+    activityId: "varignon_fr_v1",
+    epoch: 1,
+    revision,
+    snapshotHash: `world-hash-${revision}`,
+    objectCount: 1,
+    truncated: false,
+    objects: [
+      {
+        name: "E",
+        type: "point",
+        command: "Midpoint(A,B)",
+        parents: ["A", "B"],
+        dependencyStatus: "known",
+        owner: "student",
+        x,
+        y: 0,
+        visible: true,
+      },
+    ],
+    facts: [],
+    change: {
+      kind: changeKind,
+      objectNames: changeKind === "initial" ? [] : ["E"],
+      terminal: true,
+      actor: changeKind === "initial" ? "system" : "learner",
+      occurredAt: revision,
+    },
+  });
+}
+
 const PROACTIVE_SPEAK: PolicyDecision = {
   type: "speak",
   reason: "repeated_block",
@@ -169,6 +211,7 @@ function createHarness(
     concepts: string[];
   },
   geogebraWorldState?: GeoGebraWorldStateV1,
+  geometryHarnessVersion?: "v1" | "v2",
 ) {
   const track = {
     readyState: "live" as MediaStreamTrackState,
@@ -224,6 +267,7 @@ function createHarness(
       tutorProfile,
       exerciseContext,
       geogebraWorldState,
+      geometryHarnessVersion,
     },
   );
 
@@ -627,6 +671,95 @@ describe("RealtimeWebRtcSession", () => {
     ).toHaveLength(2);
   });
 
+  it.each([
+    ["live_voice", ANSWER],
+    ["typed_live", DATA_ANSWER],
+  ] as const)(
+    "verifies the negotiated investigation palette in %s mode",
+    async (transportMode, answer) => {
+      const exerciseContext = {
+        language: "fr" as const,
+        subject: "mathematics" as const,
+        title: "Varignon",
+        statement: "Explorer le quadrilatère des milieux.",
+        tasks: ["Construire les milieux.", "Explorer trois configurations."],
+        concepts: ["milieu", "parallélogramme"],
+      };
+      const harness = createHarness(
+        new Response(answer, { status: 201 }),
+        undefined,
+        undefined,
+        undefined,
+        transportMode,
+        undefined,
+        undefined,
+        "geogebra_tutor",
+        exerciseContext,
+        undefined,
+        "v2",
+      );
+
+      await harness.session.start();
+      harness.peer.channel.open();
+      harness.peer.channel.message(
+        JSON.stringify({
+          type: "session.created",
+          session: {
+            model: "gpt-realtime-2.1",
+            reasoning: { effort: "low" },
+            ...(transportMode === "typed_live"
+              ? { output_modalities: ["text"] }
+              : {
+                  audio: {
+                    input: {
+                      turn_detection: {
+                        type: "server_vad",
+                        create_response: false,
+                        interrupt_response: true,
+                      },
+                    },
+                    output: { voice: "cedar" },
+                  },
+                }),
+            tools: GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
+            tool_choice: "auto",
+          },
+        }),
+      );
+
+      expect(harness.states).toEqual(["connecting", "live"]);
+      expect(harness.fetchImpl).toHaveBeenCalledWith(
+        "/api/realtime/session",
+        expect.objectContaining({
+          headers: {
+            "Content-Type": "application/sdp",
+            "X-GeoTutor-Capability-Mode": transportMode,
+            "X-GeoTutor-Tutor-Profile": "geogebra_tutor",
+            "X-GeoTutor-Geometry-Harness": "v2",
+          },
+        }),
+      );
+      expect(harness.sessionSummaries).toEqual([
+        transportMode === "typed_live"
+          ? {
+              model: "gpt-realtime-2.1",
+              reasoningEffort: "low",
+              outputModalities: ["text"],
+              tools: "geometry_investigation_v1",
+            }
+          : {
+              model: "gpt-realtime-2.1",
+              voice: "cedar",
+              reasoningEffort: "low",
+              turnDetection: "server_vad",
+              createResponse: false,
+              interruptResponse: true,
+              tools: "geometry_investigation_v1",
+            },
+      ]);
+    },
+  );
+
   it("publishes a bounded GeoGebra snapshot and later delta without requesting a response", async () => {
     const context = {
       language: "fr" as const,
@@ -693,6 +826,168 @@ describe("RealtimeWebRtcSession", () => {
     expect(observations[1].item.content[0].text).toContain('"kind":"delta"');
     expect(observations[1].item.content[0].text).toContain('"verifiedTaskIndexes":[0]');
     expect(sent.some((event) => event.type === "response.create")).toBe(false);
+  });
+
+  it("publishes geometry_world.v2 as observation-only snapshot and delta", async () => {
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      { gateway: { execute: vi.fn() }, getContext: () => undefined },
+      undefined,
+      undefined,
+      "typed_live",
+      undefined,
+      undefined,
+      "geogebra_tutor",
+      {
+        language: "fr",
+        subject: "mathematics",
+        title: "Varignon",
+        statement: "Construire les milieux.",
+        tasks: ["Construire E, F, G et H."],
+        concepts: ["milieu"],
+      },
+    );
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: GEOGEBRA_ASSIST_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
+      }),
+    );
+    await vi.waitFor(() => expect(harness.states).toContain("live"));
+
+    const initial = geometryWorldV2(0, "initial", 0);
+    const initialPedagogy = GeometryRealtimePedagogyContextV1.parse({
+      schemaVersion: "geometry_realtime_pedagogy_context.v1",
+      activityId: initial.activityId,
+      epoch: initial.epoch,
+      revision: initial.revision,
+      phase: "constructing",
+      activeMissionId: "V1",
+      attemptCount: 0,
+      explicitHelpRequestCount: 0,
+      missingEvidenceIds: ["rel_midpoint_e"],
+      capturedConfigurations: [],
+      maxHelpLevel: 3,
+    });
+    expect(
+      harness.session.publishGeometryWorldV2(
+        initial,
+        createGeometryWorldDeltaV2(undefined, initial),
+        initialPedagogy,
+      ),
+    ).toBe(true);
+    const moved = geometryWorldV2(1, "drag_end", 2);
+    const movedPedagogy = GeometryRealtimePedagogyContextV1.parse({
+      ...initialPedagogy,
+      revision: moved.revision,
+      phase: "exploring",
+      activeMissionId: "V3",
+      attemptCount: 1,
+      missingEvidenceIds: ["learner_capture_V3"],
+    });
+    expect(
+      harness.session.publishGeometryWorldV2(
+        moved,
+        createGeometryWorldDeltaV2(initial, moved),
+        movedPedagogy,
+      ),
+    ).toBe(true);
+
+    const sent = harness.peer.channel.send.mock.calls.map(([value]) =>
+      JSON.parse(value),
+    );
+    const observations = sent.filter(
+      (event) =>
+        event.type === "conversation.item.create" &&
+        event.item?.id?.startsWith("geometry-world-v2-"),
+    );
+    expect(observations).toHaveLength(2);
+    expect(observations[0].item.content[0].text).toContain('"kind":"snapshot"');
+    expect(observations[0].item.content[0].text).toContain('"parents":["A","B"]');
+    expect(observations[0].item.content[0].text).toContain(
+      '"activeMissionId":"V1"',
+    );
+    expect(observations[1].item.content[0].text).toContain('"kind":"delta"');
+    expect(observations[1].item.content[0].text).toContain('"kind":"drag_end"');
+    expect(observations[1].item.content[0].text).toContain(
+      '"missingEvidenceIds":["learner_capture_V3"]',
+    );
+    expect(sent.some((event) => event.type === "response.create")).toBe(false);
+  });
+
+  it("uses a pending geometry v2 observation as the confirmed tutor context", async () => {
+    const harness = createHarness(
+      new Response(DATA_ANSWER, { status: 201 }),
+      { gateway: { execute: vi.fn() }, getContext: () => undefined },
+      undefined,
+      undefined,
+      "typed_live",
+      undefined,
+      undefined,
+      "geogebra_tutor",
+      undefined,
+      undefined,
+      "v2",
+    );
+    const world = geometryWorldV2(0, "initial", 0);
+    const pedagogy = GeometryRealtimePedagogyContextV1.parse({
+      schemaVersion: "geometry_realtime_pedagogy_context.v1",
+      activityId: world.activityId,
+      epoch: world.epoch,
+      revision: world.revision,
+      phase: "constructing",
+      activeMissionId: "V1",
+      attemptCount: 0,
+      explicitHelpRequestCount: 0,
+      missingEvidenceIds: ["rel_midpoint_e"],
+      capturedConfigurations: [],
+      maxHelpLevel: 3,
+    });
+    expect(
+      harness.session.publishGeometryWorldV2(
+        world,
+        createGeometryWorldDeltaV2(undefined, world),
+        pedagogy,
+      ),
+    ).toBe(false);
+
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          output_modalities: ["text"],
+          tools: GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
+      }),
+    );
+    await vi.waitFor(() => expect(harness.states).toContain("live"));
+    expect(harness.failures).toEqual([]);
+    const sent = harness.peer.channel.send.mock.calls.map(([value]) =>
+      JSON.parse(value),
+    );
+    expect(
+      sent.some(
+        (event) =>
+          event.type === "conversation.item.create" &&
+          event.item?.id?.startsWith("geometry-world-v2-"),
+      ),
+    ).toBe(true);
+    expect(
+      sent.some((event) => event.item?.id === "confirmed-exercise-context-v1"),
+    ).toBe(false);
   });
 
   it("does not become live until session.created matches the server profile", async () => {

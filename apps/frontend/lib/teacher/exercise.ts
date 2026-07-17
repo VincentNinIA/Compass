@@ -4,6 +4,10 @@ import {
   GENERAL_EXERCISE_SUBJECTS_V1,
   GeneralExerciseReadyV1,
 } from "@/lib/exercise/general-exercise-contracts";
+import {
+  TeacherExercisePublicationV2,
+  type TeacherExercisePublicationV2 as TeacherGeometryPublication,
+} from "./geometry-exercise";
 
 export const TEACHER_EXERCISE_SCHEMA_VERSION = "teacher_exercise.v1" as const;
 export const TEACHER_DRAFT_MODEL = "gpt-5.6-luna" as const;
@@ -58,6 +62,21 @@ export const TeacherExercisePublicationV1 = TeacherExerciseDraftV1.extend({
 export type TeacherExercisePublicationV1 = z.infer<
   typeof TeacherExercisePublicationV1
 >;
+
+export const TeacherExercisePublication = z.union([
+  TeacherExercisePublicationV1,
+  TeacherExercisePublicationV2,
+]);
+
+export type TeacherExercisePublication =
+  | TeacherExercisePublicationV1
+  | TeacherGeometryPublication;
+
+export function parseTeacherExercisePublication(
+  input: unknown,
+): TeacherExercisePublication {
+  return TeacherExercisePublication.parse(input);
+}
 
 export type TeacherReviewRole =
   | "didactics"

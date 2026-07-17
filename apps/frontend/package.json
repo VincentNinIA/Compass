@@ -16,6 +16,9 @@
     "test:e2e:t0:live": "set -a; [ ! -f ../../.env ] || . ../../.env; set +a; next build && T0_LIVE=1 playwright test --grep @live",
     "gate:t6:identity": "node scripts/t6-live-gate.mjs --identity",
     "gate:t6:live": "node scripts/t6-live-gate.mjs",
+    "gate:t22:golden": "node scripts/t22-golden-gate.mjs",
+    "gate:t22:live": "set -a; [ ! -f ../../.env ] || . ../../.env; set +a; T22_LIVE=1 playwright test --config playwright.t22-live.config.ts e2e/t22-realtime-live.spec.ts",
+    "test:gate:t22": "vitest run scripts/t22-golden-gate.test.mjs",
     "test:eval:t3": "vitest run --config vitest.eval.config.ts"
   },
   "dependencies": {

@@ -4,16 +4,20 @@
 
 Compass est un tuteur scolaire multimodal et voice-first. Il lit un exercice
 photographié, en restitue fidèlement l'énoncé pour confirmation, puis accompagne
-l'élève pas à pas quelle que soit la matière lisible. Les modules spécialisés,
-comme GeoGebra pour la géométrie, restent optionnels et ne peuvent revendiquer
-une vérification que lorsqu'un contrat déterministe compatible est disponible.
+l'élève pas à pas quelle que soit la matière lisible. Son différenciateur
+Education prioritaire devient l'investigation géométrique dynamique pilotée par
+le professeur : l'élève construit, explore, conjecture et justifie dans
+GeoGebra. Les autres modules spécialisés restent optionnels et ne peuvent
+revendiquer une vérification que lorsqu'un contrat déterministe compatible est
+disponible.
 
 ## Utilisateurs
 
 - Élève : comprendre un exercice sans recevoir immédiatement la solution,
   dans une interface rassurante qui lui indique toujours la prochaine action utile.
 - Enseignant : préparer ou générer des exercices adaptés, transmettre des
-  consignes pédagogiques au coach et les publier dans une bibliothèque simple.
+  consignes pédagogiques au coach, régler l'autonomie et les aides d'une
+  investigation GeoGebra, puis publier après prévisualisation.
 - Jury : observer une boucle multimodale fiable, visible et démontrable de bout en bout.
 
 ## Expérience élève
@@ -63,6 +67,12 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   reste interne; la surface montre seulement les résultats utiles à la relecture.
 - Une publication rejoint un catalogue partagé éphémère. La gestion des
   classes, comptes et affectations nominatives reste hors du prototype.
+- Pour une investigation GeoGebra, le professeur choisit une activité validée,
+  le niveau, les difficultés ciblées et la politique d'aide. Il prévisualise le
+  vrai parcours avant publication; il ne modifie ni les tolérances, ni les
+  permissions, ni les commandes internes.
+- Le premier parcours complet est le théorème de Varignon, avec exploration de
+  quadrilatères convexes, concaves et croisés.
 
 ## Parcours principal
 
@@ -92,7 +102,10 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 10. Si aucun support ne correspond, l'interface reste honnête : elle
    accompagne par la conversation sans prétendre observer ou corriger un outil.
 11. Le parcours historique médiatrice reste un module spécialisé interne et ne
-   constitue plus le défaut de la surface publique.
+    constitue plus le défaut de la surface publique.
+12. Une publication `geometry_investigation.v1` initialise un scaffold approuvé,
+    observe les dépendances, vérifie les relations compatibles, capture plusieurs
+    états expérimentaux et guide séparément conjecture puis démonstration.
 
 ## Exigences fonctionnelles
 
@@ -139,6 +152,20 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 | FR-39 | Demander une trace courte de démarche avant tout crédit XP auto-déclaré, puis une réponse de transfert à la fin de l'exercice, sans noter ni publier les textes saisis. |
 | FR-40 | Pour un exercice professeur, rendre dans le même onglet un bilan anonyme et factuel de session limité aux comptes terminé/vérifié, aux XP et aux statuts de réflexion. |
 | FR-41 | Réinitialiser scroll et focus à chaque écran et garantir qu'à 390 px mascotte, rail de missions et éléments décoratifs ne masquent aucune action principale. |
+| FR-42 | Valider un contrat fermé `geometry_investigation.v1` décrivant scaffold, missions, relations, aides, démonstration et transfert. |
+| FR-43 | Publier un monde GeoGebra v2 borné avec commandes, parents, ownership, événements terminaux, faits, epoch, révision et hash. |
+| FR-44 | Permettre au coach d'activer un outil autorisé, recentrer la vue et mettre temporairement en évidence des objets sans créer de construction. |
+| FR-45 | Initialiser un scaffold approuvé et créer, après consentement, une variation convexe, concave ou croisée choisie par intention sémantique plutôt que coordonnées modèle. |
+| FR-46 | Classer déterministement un quadrilatère ordonné en convexe, concave, croisé ou dégénéré avec tolérance versionnée. |
+| FR-47 | Vérifier par faits déterministes milieu, parallélisme, perpendicularité, égalité de longueurs, appartenance, non-alignement et parallélogramme. |
+| FR-48 | Capturer en mémoire un état expérimental tout-ou-rien avec checkpoint, snapshot, hash, configuration, provenance et evidence IDs. |
+| FR-49 | Restaurer exactement une capture et rejouer une démonstration temporaire avec pause, arrêt et cleanup vérifié. |
+| FR-50 | Appliquer les niveaux d'autorité O0 à O5, budgets, consent tokens, idempotence, annulation et rejet du stale à toutes les actions du harnais. |
+| FR-51 | Piloter missions, tentatives, aides L1 à L4 et progression depuis le contrat d'activité plutôt que depuis un exercice codé en dur. |
+| FR-52 | Livrer Varignon comme parcours golden : quatre milieux exacts, trois configurations capturées, deux parallélismes par état, conjecture, justification et transfert. |
+| FR-53 | Permettre au professeur de configurer, prévisualiser et publier Varignon puis recevoir un bilan factuel sans identité, texte libre ou note. |
+| FR-54 | Unifier le harnais public en réutilisant adapter, snapshots, ownership, checkpoints, highlights, preuves, policy et arbitre historiques sans créer un runtime parallèle durable. |
+| FR-55 | Qualifier le nouveau harnais sur trois golden journeys consécutifs, EN/FR, clavier, mouvement réduit, zoom 200 % et viewports 390/768/1440. |
 
 ## Contraintes
 
@@ -146,6 +173,8 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   ou contradictoire demande une clarification ciblée.
 - L'application, pas le modèle, possède l'autorité de prise de parole proactive.
 - Aucune affirmation géométrique sans preuve déterministe.
+- Une capture dynamique est nommée preuve expérimentale et ne devient jamais
+  automatiquement une démonstration universelle.
 - Aucun outil de commande GeoGebra arbitraire.
 - Les hints sont temporaires ou restaurables; les actions destructives exigent une intention explicite.
 - Les images, checkpoints et journaux restent en mémoire pour le prototype.
@@ -179,6 +208,8 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Persister des données d'élèves ou des médias.
 - Transmettre au professeur le texte libre saisi par l'élève, inférer sa maîtrise
   ou convertir les XP en note.
+- Générer universellement toute activité GeoGebra depuis un brief libre, utiliser
+  le CAS ou la 3D, ou prouver symboliquement tout théorème dans le MVP Varignon.
 
 ## Critères globaux
 
@@ -233,6 +264,26 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Chaque transition `landing/upload/confirm/work/teacher/library` replace le
   viewport en haut et le focus sur le titre; à 390 px la mascotte flottante et
   le rail de missions laissent les appels à l'action lisibles et activables.
+- Pour Varignon, un point libre placé visuellement au milieu ne satisfait pas la
+  mission; les quatre points doivent dépendre exactement de leurs extrémités.
+- Les configurations convexe, concave et croisée sont classées et capturées sur
+  des révisions distinctes, tandis qu'un état dégénéré demande un nouveau drag.
+- Chaque capture Varignon porte deux faits de parallélisme et une provenance
+  élève; une démonstration assistant ne crédite pas une manipulation élève.
+- L'activation de l'outil Milieu et un highlight L3 ne créent aucun objet et
+  restaurent outil, couleurs, épaisseurs et viewport au cleanup.
+- Une restauration de capture réconcilie hash, inventaire, ownership et
+  listeners; tout échec ferme la voie avant publication d'un faux succès.
+- Le bilan professeur indique configurations, milieux, parallélismes, niveau
+  d'aide et statuts de conjecture/justification/transfert, sans texte libre,
+  identité ni note.
+- Une publication `geometry_investigation.v1` ouvre publiquement le harnais v2
+  exact sans flag et fournit au coach seulement le monde borné, la mission, les
+  preuves manquantes et le niveau d'aide autorisé ; l'application seule avance
+  les missions et attribue les XP.
+- Trois parcours Varignon consécutifs sans retry doivent conserver le même
+  candidat/environnement, restaurer hash/inventaire/ownership/listeners, finir
+  sans helper ni ressource, et produire uniquement des manifests fermés.
 
 ## Hypothèses validées
 
@@ -241,5 +292,7 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Nom public : Compass. Les identifiants techniques historiques `GeoTutor` et
   `__GEOTUTOR_*` restent stables tant qu'ils ne sont pas visibles par l'élève.
 - Application web Next.js avec petites routes serveur et sans base de données.
+- Le contrat Varignon v1 constitue le seul template d'investigation exigé par
+  le MVP du nouveau harnais; les exercices généraux conservent leur fallback.
 - Modèles : `gpt-realtime-2.1` pour la voix, `gpt-5.6-terra` pour l'extraction
   d'exercice élève et `gpt-5.6-luna` pour le brouillon professeur frugal.

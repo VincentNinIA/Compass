@@ -38,6 +38,8 @@ import type {
 import type { GeneralExerciseContextV1 } from "@/lib/exercise/general-exercise-contracts";
 import type { ToolRuntime } from "@/lib/tools/runtime";
 import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
+import type { GeometryRealtimePedagogyContextV1 } from "@/lib/geometry-investigation/learning-runtime";
+import type { GeometryWorldCommitV2 } from "@/lib/geometry-investigation/stabilizer";
 import type { EvidenceLog } from "@/lib/pedagogy/evidence-log";
 import type { OperationArbiter } from "@/lib/operations/arbiter";
 import {
@@ -184,6 +186,8 @@ export function RealtimeSpike({
   tutorProfile = "specialized_geometry",
   exerciseContext,
   geogebraWorldState,
+  geometryWorldObservation,
+  onLearnerSpeechStart,
   layout = "card",
 }: {
   toolRuntime?: ToolRuntime;
@@ -198,6 +202,11 @@ export function RealtimeSpike({
   tutorProfile?: RealtimeTutorProfile;
   exerciseContext?: GeneralExerciseContextV1;
   geogebraWorldState?: GeoGebraWorldStateV1;
+  geometryWorldObservation?: Readonly<{
+    commit: GeometryWorldCommitV2;
+    pedagogy?: GeometryRealtimePedagogyContextV1;
+  }>;
+  onLearnerSpeechStart?(): void;
   layout?: "card" | "workspace" | "dock" | "panorama";
 }) {
   const { language, text } = useLanguage();
@@ -218,6 +227,7 @@ export function RealtimeSpike({
   const firstAudioTimerRef = useRef<number | undefined>(undefined);
   const invarianceSummaryRuntimeRef = useRef(invarianceSummaryRuntime);
   const geogebraWorldStateRef = useRef(geogebraWorldState);
+  const geometryWorldObservationRef = useRef(geometryWorldObservation);
   useLayoutEffect(() => {
     invarianceSummaryRuntimeRef.current = invarianceSummaryRuntime;
   }, [invarianceSummaryRuntime]);
@@ -227,6 +237,17 @@ export function RealtimeSpike({
       sessionRef.current?.publishGeoGebraWorldState(geogebraWorldState);
     }
   }, [geogebraWorldState]);
+  useLayoutEffect(() => {
+    geometryWorldObservationRef.current = geometryWorldObservation;
+    if (geometryWorldObservation) {
+      const { commit, pedagogy } = geometryWorldObservation;
+      sessionRef.current?.publishGeometryWorldV2(
+        commit.world,
+        commit.delta,
+        pedagogy,
+      );
+    }
+  }, [geometryWorldObservation]);
   const [state, setState] = useState<RealtimeConnectionState>("idle");
   const [transportIntent, setTransportIntent] = useState<RealtimeSessionMode>();
   const [capabilityMode, setCapabilityMode] = useState(() =>
@@ -451,6 +472,9 @@ export function RealtimeSpike({
         onEvent: (event) => {
           setLastEvent(event.type);
           handleRealtimeMascotEvent(event.type);
+          if (event.type === "input_audio_buffer.speech_started") {
+            onLearnerSpeechStart?.();
+          }
         },
         onSessionSummary: (summary) =>
           setSessionProfile(
@@ -541,8 +565,17 @@ export function RealtimeSpike({
         tutorProfile,
         exerciseContext,
         geogebraWorldState: geogebraWorldStateRef.current,
+        geometryHarnessVersion: geometryWorldObservationRef.current ? "v2" : "v1",
       },
     );
+    const geometryObservation = geometryWorldObservationRef.current;
+    if (geometryObservation) {
+      session.publishGeometryWorldV2(
+        geometryObservation.commit.world,
+        geometryObservation.commit.delta,
+        geometryObservation.pedagogy,
+      );
+    }
     return session;
   }, [
     appendTimeline,
@@ -554,6 +587,7 @@ export function RealtimeSpike({
     promoteConnectedMode,
     toolRuntime,
     operationArbiter,
+    onLearnerSpeechStart,
     latencyMonitor,
     pulseMascot,
     startMascot,
@@ -611,7 +645,11 @@ export function RealtimeSpike({
   };
 
   const start = async (mode: RealtimeSessionMode) => {
-    if (tutorProfile !== "specialized_geometry" && !exerciseContext) {
+    if (
+      tutorProfile !== "specialized_geometry" &&
+      !exerciseContext &&
+      !geometryWorldObservationRef.current
+    ) {
       setError(
         text(
           "Confirm your exercise before opening the coach.",
@@ -836,7 +874,7 @@ export function RealtimeSpike({
     (capabilityMode.kind === "typed_live" || capabilityMode.kind === "live_voice");
   const coachReady =
     tutorProfile === "specialized_geometry" ||
-    (exerciseContext !== undefined &&
+    ((exerciseContext !== undefined || geometryWorldObservation !== undefined) &&
       (tutorProfile !== "geogebra_tutor" || toolRuntime !== undefined));
 
   return (

@@ -10,12 +10,24 @@ export type GeoGebraApi = {
   getBase64?(callback: (base64: string) => void): void;
   getCommandString(label: string, useLocalizedInput?: boolean): string;
   getColor?(label: string): string;
+  getLineThickness?(label: string): number;
+  getMode?(): number;
   getObjectType?(label: string): string;
   getObjectName?(index: number): string;
   getObjectNumber?(): number;
+  getPNGBase64?(
+    exportScale?: number,
+    transparent?: boolean,
+    dpi?: number,
+    greyscale?: boolean,
+  ): string;
   getValue?(label: string): number;
+  getVisible?(label: string): boolean;
   getXcoord?(label: string): number;
   getYcoord?(label: string): number;
+  getViewProperties?(viewId?: number): string | Record<string, unknown>;
+  isIndependent?(label: string): boolean;
+  isMoveable?(label: string): boolean;
   isDefined(label: string): boolean;
   newConstruction?(): void;
   registerAddListener?(listener: GeoGebraObjectListener): void;
@@ -30,6 +42,10 @@ export type GeoGebraApi = {
   setCoords?(label: string, x: number, y: number): void;
   setFixed?(label: string, fixed: boolean, selectionAllowed: boolean): void;
   setLabelVisible(label: string, visible: boolean): void;
+  setLineThickness?(label: string, thickness: number): void;
+  setMode?(mode: number): void;
+  setOnTheFlyPointCreationActive?(active: boolean): void;
+  setVisible?(label: string, visible: boolean): void;
   unregisterClientListener?(listener: GeoGebraClientListener): void;
   unregisterAddListener?(listener: GeoGebraObjectListener): void;
   unregisterRemoveListener?(listener: GeoGebraObjectListener): void;
@@ -68,7 +84,9 @@ export type GeoGebraResult<T> =
 export type SceneObjectOwner =
   | "system"
   | "exercise"
+  | "scaffold"
   | "student"
+  | "assistant"
   | "temporary"
   | "hint";
 export type SceneObjectKind = "point" | "segment" | "line" | "boolean" | "number" | "other";
@@ -181,5 +199,10 @@ declare global {
     __GEOTUTOR_PROGRESS__?: ProgressState;
     __GEOTUTOR_RESET__?: ResetResult;
     __GEOTUTOR_INITIALIZATION__?: InitializationResultV1;
+    __GEOTUTOR_WORLD_V2__?: unknown;
+    __GEOTUTOR_WORLD_V2_HISTORY__?: unknown[];
+    __GEOTUTOR_WORLD_V2_EVENT__?: (event: GeoGebraClientEvent) => void;
+    __GEOTUTOR_ACTIONS_V1__?: unknown;
+    __GEOTUTOR_LEARNING_V1__?: unknown;
   }
 }

@@ -65,8 +65,13 @@ candidat est sur une branche GitHub avec pull request brouillon et la page proje
 Devpost est documentée; la participation reste non soumise. T20-C01 est close
 `pass` : le candidat T18 exact est READY sur l'alias Vercel existant, sous Node
 22.x, et le parcours public desktop/mobile est qualifié.
+T21-C01 et T22-C01 à T22-C08 sont closes `pass` après contre-audit final sans
+P1/P2 ouvert : 829/829 tests, 43 Playwright hors live et le smoke credentialed
+1/1 passent, et le golden public rend 3/3 sans retry sur
+`candidate_b3bc38db342b359299dd3400` et un Chromium empreintés avec identité
+stable.
 
-Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20`.
+Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22`.
 
 ## Vue d'ensemble
 
@@ -93,6 +98,8 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T18 | Rendre le candidat Education jugeable | 1 | Réflexion, bilan anonyme, reflow et gates reproductibles |
 | T19 | Publier le candidat et documenter Devpost | 1 | Branche/PR GitHub et fiche Devpost brouillon synchronisées |
 | T20 | Redéployer le candidat T18 sur Vercel | 1 | Production READY, alias et parcours public qualifiés |
+| T21 | Spécifier le harnais d'investigation GeoGebra | 1 | PRD v2, pilotes et cartes d'implémentation complets |
+| T22 | Implémenter le harnais unifié et Varignon | 8 | Parcours professeur/élève et golden gate 3/3 |
 
 ## Registre des cartes
 
@@ -169,6 +176,15 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | T18-C01 | done | T17-C01 | Boucle anonyme élève-professeur et candidat Devpost démontrable |
 | T19-C01 | done | T18-C01 | Candidat publié sur GitHub et fiche Devpost Education synchronisée |
 | T20-C01 | done | T19-C01 | Candidat T18 déployé sur l'alias Vercel et documentation alignée |
+| T21-C01 | done | T20-C01 | PRD du harnais d'investigation et passation complète |
+| T22-C01 | done | T21-C01 | Contrats v2, fixture Varignon et façade runtime |
+| T22-C02 | done | T22-C01 | Monde v2, dépendances et événements terminaux stabilisés |
+| T22-C03 | done | T22-C02 | Moteur déterministe et classification des quadrilatères |
+| T22-C04 | done | T22-C03 | Actions GeoGebra, permissions et consentement O0-O5 |
+| T22-C05 | done | T22-C04 | Captures, checkpoints, restauration et replay réversible |
+| T22-C06 | done | T22-C05 | Missions et orchestration pédagogique pilotées par activité |
+| T22-C07 | done | T22-C06 | Atelier professeur et parcours Varignon complet |
+| T22-C08 | done | T22-C07 | Harnais public qualifié 3/3 et contre-audit QA PASS |
 
 ## Matrice de traçabilité PRD
 
@@ -215,6 +231,20 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | FR-39 — Learner reflection | T18-C01 | Note de démarche avant XP auto-déclaré et question de transfert locale |
 | FR-40 — Anonymous teacher feedback | T18-C01 | Bilan fermé de session sans identité, texte libre, note ou persistance |
 | FR-41 — Screen and overlay safety | T18-C01 | Scroll/focus remis en tête et actions non masquées à 390 px |
+| FR-42 — Geometry investigation contract | T22-C01 | Contrat v1 strict, fixture Varignon et invariants croisés |
+| FR-43 — Geometry world v2 | T22-C02 | Parents, ownership, événements terminaux, epoch, révision et hash |
+| FR-44 — Reversible UI guidance | T22-C04 | Outil actif, focus et highlight sans construction ni style résiduel |
+| FR-45 — Scaffold and semantic variation | T22-C01, T22-C04 | Initialisation approuvée et variation par cible sous consentement |
+| FR-46 — Quadrilateral classification | T22-C03 | Convexe, concave, croisé et dégénéré sous tolérance versionnée |
+| FR-47 — Geometry relation engine | T22-C03 | Faits déterministes pour huit relations MVP |
+| FR-48 — Experimental evidence capture | T22-C05 | Capture tout-ou-rien avec provenance, checkpoint, hash et preuves |
+| FR-49 — Restore and replay | T22-C05 | Restauration exacte et démonstration temporaire nettoyée |
+| FR-50 — Authority and consent | T22-C04 | Niveaux O0-O5, budgets, tokens, stale et annulation |
+| FR-51 — Activity-driven pedagogy | T22-C06 | Missions, aides et progression dérivées du contrat |
+| FR-52 — Varignon golden activity | T22-C03, T22-C06, T22-C07 | Milieux, trois configurations, parallélismes, conjecture et preuve guidée |
+| FR-53 — Teacher geometry workflow | T22-C07 | Configuration, prévisualisation, publication et bilan factuel |
+| FR-54 — Unified public harness | T22-C01, T22-C08 | Façade commune réutilisant les autorités historiques |
+| FR-55 — Harness qualification | T22-C08 | EN/FR, a11y, viewports et trois golden journeys consécutifs |
 
 ## Matrice des critères d'acceptation du PRD
 
@@ -236,6 +266,14 @@ Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 �
 | Publication professeur | T16-C01 | Brouillon relu, quatre contrôles locaux, HTTP 201 et visibilité multi-onglet |
 | API de brouillon indisponible | T16-C01 | Fallback manuel à zéro appel, sans masquer la nature éphémère du catalogue |
 | Exercice professeur lancé | T16-C01 | Missions ouvertes sans nouvelle analyse et consignes transmises comme données non fiables |
+| Faux milieu visuellement correct | T22-C02, T22-C03 | Dépendance absente, mission non vérifiée et aucun faux evidence ID |
+| Outil Milieu activé | T22-C04 | Mode sélectionné et ordre de clic annoncé sans objet créé |
+| Trois formes du quadrilatère | T22-C03, T22-C05, T22-C06 | Trois classifications et captures élève distinctes, dégénéré refusé |
+| Varignon vérifié expérimentalement | T22-C03, T22-C06 | Deux parallélismes par capture, faits courants et progression locale |
+| Restore d'une capture | T22-C05 | Hash, inventaire, ownership et listeners identiques au checkpoint |
+| Démonstration interrompue | T22-C04, T22-C05, T22-C06 | Scène temporaire nettoyée et aucune mission élève créditée |
+| Publication Varignon | T22-C07 | Contrat exact ouvert par l'élève et bilan sans identité, texte ou note |
+| Qualification du harnais | T22-C08 | Trois runs sans retry sur le même candidat et cleanup terminal |
 
 Chaque condition est déclinée en Given/When/Then dans les cartes concernées. La fermeture globale exige en plus le gate T6-C07.
 

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "geotutor_geometry_realtime_smoke.v1",
+  "result": "pass",
+  "harness": "v2",
+  "mode": "typed_live",
+  "exactToolPalette": true,
+  "boundedWorldPublished": true,
+  "pedagogyPublished": true,
+  "inspectionCompleted": true,
+  "geometryUnchanged": true,
+  "microphoneCalls": 0,
+  "audioEvents": 0,
+  "resourcesClosed": true
+}

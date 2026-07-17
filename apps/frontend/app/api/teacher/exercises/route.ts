@@ -1,12 +1,18 @@
 import { z } from "zod";
 
 import {
+  TeacherExerciseDraftV1,
   parseTeacherExerciseDraftV1,
   reviewTeacherExerciseDraft,
 } from "@/lib/teacher/exercise";
 import {
+  TeacherExerciseDraftV2,
+  reviewTeacherGeometryDraftV2,
+} from "@/lib/teacher/geometry-exercise";
+import {
   listTeacherExercises,
   publishTeacherExercise,
+  publishTeacherGeometryExercise,
   TEACHER_EXERCISE_STORE_LIMIT,
 } from "@/lib/teacher/store";
 
@@ -40,7 +46,26 @@ export async function POST(request: Request): Promise<Response> {
   }
   try {
     const body = PublishRequest.parse(JSON.parse(text));
-    const draft = parseTeacherExerciseDraftV1(body.draft);
+    const geometryDraft = TeacherExerciseDraftV2.safeParse(body.draft);
+    if (geometryDraft.success) {
+      const review = reviewTeacherGeometryDraftV2(geometryDraft.data);
+      if (!review.publishable) {
+        return response(
+          { error: { code: "draft_not_publishable", review } },
+          422,
+        );
+      }
+      return response(
+        {
+          publication: publishTeacherGeometryExercise(geometryDraft.data),
+          review,
+        },
+        201,
+      );
+    }
+    const generalDraft = TeacherExerciseDraftV1.safeParse(body.draft);
+    if (!generalDraft.success) throw new Error("invalid_teacher_draft");
+    const draft = parseTeacherExerciseDraftV1(generalDraft.data);
     const review = reviewTeacherExerciseDraft(draft);
     if (!review.publishable) {
       return response(

@@ -1,5 +1,10 @@
 # Compass
 
+Compass is a real-time AI learning tutor. For compatible geometry activities,
+it observes students' GeoGebra constructions, checks supported relations
+deterministically, and provides timely voice or visual guidance through a
+closed set of semantic actions.
+
 Compass est un prototype de tuteur scolaire bilingue qui transforme un exercice
 pris en photo ou préparé par un professeur en parcours guidé. L'élève travaille
 mission par mission avec un coach vocal ou texte; les mathématiques compatibles

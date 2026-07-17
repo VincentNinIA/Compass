@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 type Configuration = "convex" | "concave" | "crossed";
@@ -212,6 +213,7 @@ test("T22-C07 publishes the exact Varignon contract, completes it in a student t
 test("T22-C07 keeps the geometry editor keyboard-accessible, French and reflowed", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await page.getByRole("button", { name: "Passer en français" }).click();
@@ -233,6 +235,11 @@ test("T22-C07 keeps the geometry editor keyboard-accessible, French and reflowed
   await expect(
     page.getByRole("button", { name: "Partager l’investigation" }),
   ).toBeDisabled();
+  const axeResult = await new AxeBuilder({ page })
+    .include(".geometry-teacher-studio")
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(axeResult.violations).toEqual([]);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,

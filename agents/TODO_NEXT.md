@@ -2,8 +2,10 @@
 
 ## Prochaine action
 
-Prendre uniquement T24-C03 : déployer l'artefact T22 exact avec la protection
-T24-C02, puis qualifier le parcours public autorisé et les refus anonymes.
+T24-C03 est active : `95e9933` est READY mais son audit public a détecté une
+collision de fond sur la checklist professeur. Committer la correction WCAG,
+redéployer ce descendant depuis un worktree propre, puis requalifier sans retry
+les refus anonymes et le parcours professeur–élève Varignon desktop/mobile.
 T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
 `candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
 live, golden 3/3 et smoke Realtime credentialed 1/1.

@@ -1,3 +1,69 @@
+# Contrat Builder — T24-C03 Déployer et qualifier le candidat T22 — active
+
+## État
+
+- T24-C03 est ouverte le 17 juillet 2026 après fermeture et publication de
+  T24-C02 sur `origin/main` au commit `95e9933`.
+- Le premier déploiement de `95e9933` est READY et fonctionnel, mais son audit
+  WCAG public a trouvé une collision de fond sur la checklist professeur. Il
+  n'est pas qualifié; le candidat corrigé doit être committé, reconstruit depuis
+  un worktree propre puis redéployé avant la clôture.
+
+## Tranche contractualisée — T24-C03
+
+### Objectif
+
+Déployer le candidat T22 protégé exact, prouver que l'alias stable sert cette
+identité et qualifier publiquement les refus anonymes ainsi que le parcours
+Varignon autorisé sur desktop et mobile.
+
+### Inclus
+
+- Construire et déployer le descendant corrigé de `95e9933` depuis un worktree
+  Git détaché et propre sur le projet Vercel existant `compass-geotutor-demo`.
+- Relever commit, build, déploiement immuable, runtime, alias et headers sans
+  consigner de variable secrète ni de cookie.
+- Qualifier sans retry l'accès anonyme, la connexion autorisée, la publication
+  professeur Varignon, l'ouverture élève et l'atelier GeoGebra.
+- Vérifier desktop, mobile, console, responsive, routes dynamiques, refus API,
+  WAF publié, absence de fuite et procédure de rollback vers T18.
+
+### Hors périmètre
+
+- Comptes, classes, affectations et persistance T25; recettes adaptatives T26.
+- Modification opportuniste du runtime T22 ou des protections T24-C02.
+- Vidéo, fiche Devpost et soumission hackathon, réservées à T24-C04 ou au
+  porteur.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm test:docs:t0
+# build/déploiement Vercel depuis un worktree propre sur le SHA corrigé
+# smokes HTTPS anonymes et autorisés desktop/mobile sans retry
+# inspection identité, headers, WAF et scan réponses/bundles/secrets
+```
+
+### Définition de fini
+
+- L'alias stable sert un déploiement READY rattaché au commit source attendu et
+  le candidat est reproductible depuis les seuls fichiers suivis.
+- Un visiteur anonyme voit la porte d'accès et reçoit 401 sur les API protégées;
+  une session autorisée atteint le parcours professeur–élève Varignon sans
+  erreur console ni débordement.
+- Les protections Vercel restent publiées, aucun secret n'est exposé et le
+  rollback documenté désigne un déploiement T18 connu.
+- Les preuves sont closes dans les pilotes et T25-C01 devient la seule carte
+  Builder ouvrable; T24-C04 reste une action de dossier distincte.
+
+---
+
+# Archive — T24-C02
+
 # Contrat Builder — T24-C02 Protéger la démo et limiter les routes coûteuses — close `pass`
 
 ## État

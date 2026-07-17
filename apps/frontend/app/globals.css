@@ -6140,6 +6140,7 @@ button.mission-complete-button:focus-visible {
   grid-template-columns: 1fr;
   gap: 0;
   border-top: 1px solid var(--line);
+  background: transparent;
   list-style: none;
 }
 

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "geotutor_geometry_golden_run.v1",
   "runIndex": 2,
-  "seriesId": "series_0c8aa73859c9ed347b7b62b0",
-  "candidateId": "candidate_b3bc38db342b359299dd3400",
+  "seriesId": "series_2e1a1c09eb51e5eb70c8e106",
+  "candidateId": "candidate_e6b5349451db363138d6d24b",
   "environmentId": "environment_1cb73222a3ee6a86fddc5fe0",
-  "publicationId": "teacher_419bffba-11c0-43f3-80ec-de68abd66c5e",
+  "publicationId": "teacher_1160de42-8e0c-4063-90d7-5bb2d8713255",
   "result": "pass",
-  "durationMs": 10020,
+  "durationMs": 10088,
   "steps": {
     "publication": "exact_contract",
     "scaffoldObjects": 8,
@@ -105,7 +105,7 @@
   },
   "resources": {
     "captureCount": 3,
-    "evidenceBytes": 53308,
+    "evidenceBytes": 53300,
     "evidenceMaxBytes": 12582912,
     "helpersRemaining": 0,
     "cleanupClosed": true,

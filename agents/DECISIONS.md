@@ -977,11 +977,13 @@
   déployer T22 avant d'ajouter la boucle classe; prouver cette boucle avant la
   génération adaptative; piloter seulement après qualification de la matrice
   Varignon.
-- Raison : le harnais est techniquement qualifié mais n'est ni intégré à `main`
-  ni servi par la production T18. Commencer simultanément stockage, génération
-  et pilote masquerait l'identité du candidat et multiplierait les causes d'échec.
-- Impact : le prochain agent prend uniquement T24-C01. Chaque tranche possède
-  son candidat, ses migrations éventuelles et son golden avant la suivante.
+- Raison : au moment de la décision, le harnais était techniquement qualifié
+  mais ni intégré à `main` ni servi par la production T18. Commencer
+  simultanément stockage, génération et pilote aurait masqué l'identité du
+  candidat et multiplié les causes d'échec.
+- Impact : T24-C01 a intégré et requalifié le candidat. Le prochain agent prend
+  uniquement T24-C02; chaque tranche possède son candidat, ses migrations
+  éventuelles et son golden avant la suivante.
 
 ## D-072 - Le pilote utilise une identité professeur et des élèves pseudonymes
 

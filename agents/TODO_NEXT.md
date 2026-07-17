@@ -2,9 +2,10 @@
 
 ## Prochaine action
 
-T24-C01 est active : intégrer le candidat T22 `0c8e3f4` dans `main`,
-résoudre les divergences sans perdre les changements du porteur, puis
-reconstruire et figer une identité source/build/runtime propre.
+Prendre uniquement T24-C02 : protéger l'accès à la démo et limiter les routes
+OpenAI coûteuses. T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
+`candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
+live, golden 3/3 et smoke Realtime credentialed 1/1.
 
 T23-C01 et T23-C02 sont closes `pass` après audit, replanning et recentrage sur
 le PDF Varignon. La séquence décidée est :
@@ -23,8 +24,8 @@ porteur.
 - T0 et T1 sont closes avec décision `pass`.
 - T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
   ne laisse aucun P1/P2 ouvert.
-- T23-C01 et T23-C02 sont closes `pass`; T24-C01 est la seule carte Builder
-  ouvrable. T24-C02 à T27-C04 restent `backlog` derrière leurs dépendances.
+- T23-C01, T23-C02 et T24-C01 sont closes `pass`; T24-C02 est la seule carte
+  Builder ouvrable. T24-C03 à T27-C04 restent `backlog` derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -161,9 +162,9 @@ restent hors périmètre. Le LMS complet, le SSO établissement et les comptes
 identité professeur limitée, des classes à pseudonymes et des affectations
 bornées après fermeture des contrats de données, accès, rétention et suppression.
 
-T22 est implémenté et qualifié sur sa branche candidate, mais sa présence dans
-un PR ne vaut ni intégration à `main`, ni déploiement. T24-C01 doit conserver
-l'historique, résoudre les divergences et rejouer les gates avant toute release.
+T22 est intégré et qualifié dans `main` local par le merge `4ea885f`; la
+production publique reste néanmoins sur T18. T24-C02 doit protéger la démo avant
+que T24-C03 ne déploie le candidat T22.
 
 Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
 démo et une limitation de débit sur les routes OpenAI. Pour les seules démos

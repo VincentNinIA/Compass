@@ -701,7 +701,8 @@ première écriture persistante.
 
 ### Invariants de migration
 
-- T24 intègre et déploie T22 avant tout changement de données.
+- T24-C01 a intégré T22 dans `main`; T24-C02 et T24-C03 doivent le protéger puis
+  le déployer avant tout changement de données.
 - Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
   gateway existants.
 - Aucun second template n'est accepté avant le pilote; les neuf missions et les

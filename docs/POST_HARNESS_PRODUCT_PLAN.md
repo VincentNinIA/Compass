@@ -237,7 +237,7 @@ Les XP ne servent pas de métrique de maîtrise et ne sont jamais convertis en n
 
 ## Règle de reprise
 
-Le prochain agent commence uniquement par T24-C01. Il ne démarre ni la base de
-données T25, ni la génération T26 tant que le candidat T22 n'est pas intégré,
-figé et qualifié. Chaque carte met à jour le contrat Builder et consigne ses
-preuves avant d'ouvrir la suivante.
+Le prochain agent commence uniquement par T24-C02. Il ne démarre ni la base de
+données T25, ni la génération T26 tant que le candidat T22 intégré n'est pas
+protégé puis déployé et qualifié par T24-C03. Chaque carte met à jour le contrat
+Builder et consigne ses preuves avant d'ouvrir la suivante.

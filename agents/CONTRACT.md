@@ -1,14 +1,13 @@
-# Contrat Builder — T24-C01 Intégrer et figer le candidat T22 — `active`
+# Contrat Builder — T24-C01 Intégrer et figer le candidat T22 — close `pass`
 
 ## État
 
-- T23-C01 et T23-C02 sont closes `pass`.
-- `main` pointe localement sur `be8dcf3`, un commit après `origin/main`, tandis
-  que le harnais qualifié pointe sur `0c8e3f4` depuis le même ancêtre
-  `9e50e8a`.
-- Le cadrage post-harnais est présent dans le worktree mais doit être sauvegardé
-  séparément avant la fusion afin de ne perdre ni le blueprint Varignon ni les
-  preuves T22.
+- T24-C01 est close `pass` le 17 juillet 2026.
+- Le cadrage post-harnais est figé par `825b193`; le merge `4ea885f` possède
+  `825b193` et `0c8e3f4` comme parents et intègre réellement le harnais dans
+  `main`.
+- Les sept conflits étaient exclusivement documentaires; les versions enrichies
+  T23/T24 ont été conservées et aucun fichier runtime n'a nécessité de remédiation.
 
 ## Tranche contractualisée — T24-C01
 
@@ -61,11 +60,21 @@ disponible; son absence ne doit pas être masquée.
   clôture.
 - L'arbre est propre et `TODO_NEXT.md` pointe ensuite uniquement vers T24-C02.
 
-### Preuves à consigner
+### Preuves de clôture
 
-- Hash du commit documentaire et du commit de merge.
-- Résultats exacts de chaque gate, candidat `.next` et version Chromium.
-- État final de `main` face à `origin/main` et à l'ancienne branche T22.
+- Commit documentaire : `825b19310ef4804059786f253d63c10d435c991e`.
+- Commit de merge : `4ea885f7d976c24efc866df3d8c363bb1ee094ab`; `0c8e3f4`
+  est vérifié comme ancêtre.
+- Vitest : 829/829 sur 91 fichiers; lint, typecheck et build : pass.
+- Playwright hors live : 43 pass et 4 skips attendus sur 47, sans échec.
+- Gate unitaire T22 : 2/2; documentation : 102 cartes; `git diff --check` : pass.
+- Golden dédié : 3/3 sans retry, série
+  `series_2e1a1c09eb51e5eb70c8e106`, candidat
+  `candidate_e6b5349451db363138d6d24b`, build
+  `tc1O0H5GF82xTHmIkn5tw`, environnement
+  `environment_1cb73222a3ee6a86fddc5fe0` et Chrome for Testing 149.0.7827.55.
+- Smoke Realtime credentialed : 1/1; négociation v2, lecture du monde publié et
+  fermeture propre.
 
 ## Archive — T23-C02
 

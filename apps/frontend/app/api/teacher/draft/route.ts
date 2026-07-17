@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 
+import { withDemoAccessProtection } from "@/lib/demo-access/guard";
 import { createTeacherDraftHandler } from "@/lib/teacher/draft-service";
 import {
   TEACHER_DRAFT_MODEL,
@@ -52,6 +53,8 @@ function createHandler() {
   });
 }
 
-export async function POST(request: Request): Promise<Response> {
+async function createDraft(request: Request): Promise<Response> {
   return createHandler()(request);
 }
+
+export const POST = withDemoAccessProtection(createDraft);

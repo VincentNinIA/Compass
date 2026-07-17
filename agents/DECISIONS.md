@@ -981,8 +981,8 @@
   mais ni intégré à `main` ni servi par la production T18. Commencer
   simultanément stockage, génération et pilote aurait masqué l'identité du
   candidat et multiplié les causes d'échec.
-- Impact : T24-C01 a intégré et requalifié le candidat. Le prochain agent prend
-  uniquement T24-C02; chaque tranche possède son candidat, ses migrations
+- Impact : T24-C01 a intégré et requalifié le candidat; T24-C02 a fermé l'accès
+  et le budget. Le prochain agent prend uniquement T24-C03; chaque tranche possède son candidat, ses migrations
   éventuelles et son golden avant la suivante.
 
 ## D-072 - Le pilote utilise une identité professeur et des élèves pseudonymes
@@ -1050,3 +1050,18 @@
   Les recettes `guided`, `standard` et `challenge` peuvent ajuster aide, preset,
   formulation et transfert `rectangle`, `rhombus` ou `square`. Tout second
   template est reporté après le retour du pilote T27.
+
+## D-077 - La démo cumule session applicative et quota WAF
+
+- Décision : exiger en Production une session courte signée, liée au hash du
+  code d'accès, devant l'interface et les trois routes OpenAI. Appliquer en plus
+  un rate limit Vercel WAF par IP à tous les `POST /api/*`, avec un compteur
+  fixe porté par l'infrastructure avant les fonctions.
+- Raison : un cookie seul arrête l'anonyme mais pas un code divulgué; un compteur
+  mémoire serverless n'est ni atomique ni commun aux instances. Les deux couches
+  séparent autorisation et budget, tout en laissant le développement local et
+  les tests historiques sans code par défaut.
+- Impact : une Production mal configurée échoue fermée, 401 précède parsing et
+  OpenAI, 429 est émis par Vercel après 6 requêtes en 60 secondes, et rotation du
+  hash ou du secret révoque toutes les sessions après redéploiement. Le code en
+  clair reste uniquement dans une copie opérateur locale ignorée par Git.

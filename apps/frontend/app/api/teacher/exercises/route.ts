@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { withDemoAccessProtection } from "@/lib/demo-access/guard";
 import {
   TeacherExerciseDraftV1,
   parseTeacherExerciseDraftV1,
@@ -31,7 +32,7 @@ function response(body: unknown, status = 200): Response {
   });
 }
 
-export async function GET(): Promise<Response> {
+async function listExercises(): Promise<Response> {
   return response({
     exercises: listTeacherExercises(),
     persistence: "server_memory",
@@ -39,7 +40,7 @@ export async function GET(): Promise<Response> {
   });
 }
 
-export async function POST(request: Request): Promise<Response> {
+async function publishExercise(request: Request): Promise<Response> {
   const text = await request.text();
   if (Buffer.byteLength(text) > MAX_PUBLISH_BYTES) {
     return response({ error: { code: "publish_too_large" } }, 413);
@@ -78,3 +79,12 @@ export async function POST(request: Request): Promise<Response> {
     return response({ error: { code: "invalid_publish_request" } }, 400);
   }
 }
+
+const protectedListExercises = withDemoAccessProtection(listExercises);
+
+export function GET(
+  request = new Request("http://localhost/api/teacher/exercises"),
+): Promise<Response> {
+  return protectedListExercises(request);
+}
+export const POST = withDemoAccessProtection(publishExercise);

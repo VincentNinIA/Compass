@@ -644,10 +644,20 @@ puis exige trois parcours UI consécutifs sans retry avec Axe incluant l'applet
 et cleanup terminal. Comptes, classes, persistance, notation à enjeu élevé,
 licence commerciale et déploiement restent hors de cette architecture locale.
 
-## Architecture post-harnais cible — non implémentée
+## Architecture post-harnais — protection T24 implémentée, classe encore cible
 
 T23 ne modifie pas le runtime. Il fixe la cible T24 à T27 afin que la boucle de
 classe étende le harnais existant au lieu de créer une seconde autorité.
+
+T24-C02 ajoute une frontière d'accès devant le runtime sans toucher aux
+autorités pédagogiques T22. Le layout serveur remplace toute la surface par un
+écran d'accès tant que le cookie signé n'est pas valide. La même vérification
+enveloppe le catalogue professeur et, avant lecture du corps, Realtime, analyse
+photo et brouillon professeur. En Production, l'absence de hash ou de secret retourne 503 et ne retombe
+jamais vers un accès public. En amont, une règle Vercel WAF compte atomiquement
+les `POST /api/*` par IP et retourne 429 avant les fonctions après six requêtes
+sur soixante secondes. Le runbook opérationnel est
+`docs/DEMO_ACCESS_RUNBOOK.md`.
 
 ```mermaid
 flowchart LR
@@ -701,8 +711,8 @@ première écriture persistante.
 
 ### Invariants de migration
 
-- T24-C01 a intégré T22 dans `main`; T24-C02 et T24-C03 doivent le protéger puis
-  le déployer avant tout changement de données.
+- T24-C01 a intégré T22 dans `main` et T24-C02 a fermé l'accès et le budget;
+  T24-C03 doit déployer ce candidat protégé avant tout changement de données.
 - Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
   gateway existants.
 - Aucun second template n'est accepté avant le pilote; les neuf missions et les

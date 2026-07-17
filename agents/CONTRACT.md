@@ -1,3 +1,95 @@
+# Contrat Builder — T24-C02 Protéger la démo et limiter les routes coûteuses — close `pass`
+
+## État
+
+- T24-C02 est close `pass` le 17 juillet 2026 après fermeture et publication de
+  T24-C01 sur `origin/main`.
+- La Production publique sert encore T18. Elle ne doit recevoir le candidat T22
+  qu'après preuve de la protection applicative et du quota Vercel global.
+
+## Tranche contractualisée — T24-C02
+
+### Objectif
+
+Permettre une diffusion contrôlée de Compass sans laisser un visiteur anonyme
+déclencher un appel OpenAI ni confier le quota à la mémoire volatile d'une
+fonction serverless.
+
+### Inclus
+
+- Accès de démonstration par code vérifié côté serveur, cookie signé `HttpOnly`,
+  expiration, déconnexion et invalidation globale par rotation.
+- Échec fermé en Production lorsque la configuration de protection manque.
+- Garde commune exécutée avant lecture du corps sur Realtime, analyse photo et
+  brouillon professeur, avec réponses 401/503 sans donnée sensible.
+- Rate limit Vercel WAF atomique par source sur les `POST /api/*`, réponse 429,
+  preuve concurrente et procédure de rollback/révocation.
+- Tests unitaires, test navigateur, scan secrets, lint, typecheck, build et
+  suite frontend existante.
+
+### Hors périmètre
+
+- Comptes professeur définitifs, SSO, roster élève, base persistante et rôles
+  établissement, réservés à T25 et au-delà.
+- Déploiement Production du candidat T22 et qualification de l'alias, réservés
+  à T24-C03.
+- Vidéo, Devpost, licence et soumission, réservés à T24-C04 ou au porteur.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+# tests dédiés accès refusé/autorisé/expiré/révoqué et zéro appel modèle
+# inspection Vercel WAF et rafale concurrente produisant des 429
+# scan des bundles, réponses et sorties de test pour secrets/tokens/payloads
+```
+
+### Définition de fini
+
+- Un visiteur sans session obtient 401 avant tout parsing et tout appel modèle.
+- Une session valide expire et devient invalide après rotation ou déconnexion.
+- Le quota publié est global au projet Vercel, une rafale concurrente prouve le
+  429 et aucun compteur mémoire n'est présenté comme autorité.
+- Les sorties client et les logs ne contiennent ni secret, ni cookie, ni contenu
+  d'exercice; T24-C03 devient la seule carte ouvrable.
+
+### Preuves de clôture
+
+- Le layout serveur exige le cookie `compass_demo_session`; le catalogue
+  professeur, Realtime, analyse photo et brouillon professeur partagent la même
+  garde. Sans session, les handlers coûteux ne sont pas invoqués et répondent
+  401 avant lecture du corps. Une configuration Production incomplète répond
+  503 sans fallback ouvert.
+- Le code est dérivé par scrypt; la session HMAC est `HttpOnly`,
+  `SameSite=Strict`, `Secure` en Production, bornée à quatre heures et liée à
+  l'empreinte du hash. Déconnexion, expiration et rotation hash/signature sont
+  testées. Le matériel opérateur est ignoré par Git et conservé en mode `0600`.
+- Vercel porte quatre variables T24 chiffrées pour Production. La règle WAF
+  `rule_compass_demo_post_budget_5Uw2fO` est publiée, sans draft, en fenêtre fixe
+  6/60 s par IP sur les `POST /api/*`.
+- Une rafale concurrente de douze POST sur `/api/__t24_rate_probe__` rend six
+  404 puis six 429. Le 429 est un JSON `private, no-store`; le chemin n'existe
+  pas et ne peut donc ni lire un exercice ni appeler OpenAI.
+- `pnpm test:docs:t0` rend 102 cartes; lint, typecheck et build passent;
+  Vitest rend 840/840 sur 93 fichiers; le Playwright T24 protégé rend 1/1. Le
+  premier lot historique a rencontré une course de focus GeoGebra, repassée
+  immédiatement 1/1 en isolation; le rejeu complet final rend 43/43 avec quatre
+  skips credentialed attendus.
+- Le scan compare directement code local, hash et secret aux fichiers suivis et
+  à `.next`; aucun n'est présent. Les chunks client ne contiennent ni variable
+  secrète de démo ni payload de refus. Le runbook de rotation, rollback et
+  inspection est `docs/DEMO_ACCESS_RUNBOOK.md`.
+- La règle WAF protège déjà l'alias T18. Aucun déploiement T22 n'a été exécuté;
+  T24-C03 devient la seule prochaine carte.
+
+---
+
+# Archive — T24-C01
+
 # Contrat Builder — T24-C01 Intégrer et figer le candidat T22 — close `pass`
 
 ## État

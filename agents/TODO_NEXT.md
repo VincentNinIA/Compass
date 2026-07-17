@@ -2,8 +2,9 @@
 
 ## Prochaine action
 
-Prendre uniquement T24-C02 : protéger l'accès à la démo et limiter les routes
-OpenAI coûteuses. T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
+Prendre uniquement T24-C03 : déployer l'artefact T22 exact avec la protection
+T24-C02, puis qualifier le parcours public autorisé et les refus anonymes.
+T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
 `candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
 live, golden 3/3 et smoke Realtime credentialed 1/1.
 
@@ -24,8 +25,8 @@ porteur.
 - T0 et T1 sont closes avec décision `pass`.
 - T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
   ne laisse aucun P1/P2 ouvert.
-- T23-C01, T23-C02 et T24-C01 sont closes `pass`; T24-C02 est la seule carte
-  Builder ouvrable. T24-C03 à T27-C04 restent `backlog` derrière leurs dépendances.
+- T23-C01, T23-C02, T24-C01 et T24-C02 sont closes `pass`; T24-C03 est la seule
+  carte Builder ouvrable. T24-C04 à T27-C04 restent `backlog` derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -163,9 +164,10 @@ identité professeur limitée, des classes à pseudonymes et des affectations
 bornées après fermeture des contrats de données, accès, rétention et suppression.
 
 T22 est intégré et qualifié dans `origin/main`; la PR #3 est fusionnée par
-`4ea885f` et la qualification est consignée dans `2f582fd`. La production
-publique reste néanmoins sur T18. T24-C02 doit protéger la démo avant que
-T24-C03 ne déploie le candidat T22.
+`4ea885f` et la qualification est consignée dans `2f582fd`. T24-C02 protège
+désormais l'application et le projet Vercel, mais la production publique reste
+sur T18. T24-C03 doit déployer le candidat T22 avec les variables chiffrées et
+requalifier l'alias protégé.
 
 Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
 démo et une limitation de débit sur les routes OpenAI. Pour les seules démos

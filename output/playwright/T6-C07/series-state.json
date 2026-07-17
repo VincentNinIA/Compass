@@ -1,0 +1,65 @@
+{
+  "version": "geotutor_live_series.v1",
+  "seriesId": "series_f4ec3e800c0c0dfa76455a24",
+  "candidate": {
+    "id": "candidate_e9d7884f850fb105e3cc290c",
+    "head": "9692a31f0a397b3936667ed3685145c6a66a6b83",
+    "sourceSha256": "71820d78ab32b0f45ea5ce936e1e3dab1030b3d46ace637ab49dcbe429890bbc",
+    "sourceFileCount": 153,
+    "dirty": true
+  },
+  "environment": {
+    "id": "environment_0f52328722a31843a91e9d4b",
+    "platform": "darwin",
+    "release": "25.5.0",
+    "architecture": "arm64",
+    "node": "v22.17.1",
+    "pnpm": "10.6.3",
+    "playwright": "Version 1.61.1",
+    "chromium": "149.0.7827.55",
+    "httpsOrigin": "https://127.0.0.1:3443",
+    "tls": "TLSv1.2+ self-signed local qualification certificate",
+    "certificateSha256": "2a41316917e9acb83d3d33c72f997a1b95c85e3d372b430cea8a8436f6487a6e",
+    "fixtureSha256": "9fd3155009f1e2f6b8bab2cbf946b7c6b901ca52a35851c5210dff0f3b5aa0ef",
+    "credentialConfigured": true,
+    "credentialScope": "single inherited runner process",
+    "microphone": "synthetic browser MediaStream audio track",
+    "geogebraVersion": "5.4.920.0",
+    "exerciseModel": "gpt-5.6-terra",
+    "realtimeModel": "gpt-realtime-2.1",
+    "serverRuntime": "Next.js production server over HTTPS"
+  },
+  "required": 3,
+  "consecutiveSuccesses": 3,
+  "result": "pass",
+  "reason": "complete_run",
+  "manifests": [
+    {
+      "runIndex": 1,
+      "file": "output/playwright/T6-C07/run-1.json",
+      "runnerStatus": 0,
+      "candidateStable": true,
+      "environmentStable": true,
+      "identityStable": true,
+      "validation": "complete"
+    },
+    {
+      "runIndex": 2,
+      "file": "output/playwright/T6-C07/run-2.json",
+      "runnerStatus": 0,
+      "candidateStable": true,
+      "environmentStable": true,
+      "identityStable": true,
+      "validation": "complete"
+    },
+    {
+      "runIndex": 3,
+      "file": "output/playwright/T6-C07/run-3.json",
+      "runnerStatus": 0,
+      "candidateStable": true,
+      "environmentStable": true,
+      "identityStable": true,
+      "validation": "complete"
+    }
+  ]
+}

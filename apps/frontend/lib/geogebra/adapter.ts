@@ -239,6 +239,37 @@ export class GeoGebraAdapter {
     });
   }
 
+  suspendListeners(): GeoGebraResult<{
+    listenerCountBefore: number;
+    resume(): number;
+  }> {
+    const listenerCountBefore = this.listenerCount;
+    const suspended = this.withApi((api) => {
+      for (const listener of this.listeners) {
+        api.unregisterClientListener?.(listener);
+      }
+      for (const [kind, listeners] of this.objectListeners) {
+        const unregister = objectListenerMethod(api, "unregister", kind);
+        for (const listener of listeners) unregister?.(listener);
+      }
+    });
+    if (!suspended.ok) return suspended;
+    let resumed = false;
+    return {
+      ok: true,
+      value: {
+        listenerCountBefore,
+        resume: () => {
+          if (!resumed) {
+            resumed = true;
+            this.reconcileClientListeners();
+          }
+          return this.listenerCount;
+        },
+      },
+    };
+  }
+
   dispose(): GeoGebraResult<void> {
     if (this.phaseValue === "disposed") {
       return { ok: true, value: undefined };

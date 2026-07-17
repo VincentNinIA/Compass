@@ -138,16 +138,20 @@ test("T6-C01 real applet serializes double reset and cancels an active invarianc
   await expect(
     experiment.getByRole("button", { name: "Run experiment" }),
   ).toBeEnabled();
-  await experiment.getByRole("button", { name: "Run experiment" }).click();
-  await expect(
-    experiment.getByRole("button", { name: "Cancel experiment" }),
-  ).toBeVisible();
-
-  const reset = page.getByRole("button", { name: "Reset construction" });
-  await reset.evaluate((button) => {
-    (button as HTMLButtonElement).click();
-    (button as HTMLButtonElement).click();
-  });
+  await experiment
+    .getByRole("button", { name: "Run experiment" })
+    .evaluate(async (button) => {
+      const reset = [...document.querySelectorAll("button")].find(
+        (candidate) => candidate.textContent?.trim() === "Reset construction",
+      );
+      if (!(reset instanceof HTMLButtonElement)) {
+        throw new Error("Reset construction button is unavailable.");
+      }
+      (button as HTMLButtonElement).click();
+      await new Promise((resolve) => window.setTimeout(resolve, 25));
+      reset.click();
+      reset.click();
+    });
   await page.waitForFunction(
     () =>
       (window as Window & { __GEOTUTOR_RESET__?: { ok?: boolean } })

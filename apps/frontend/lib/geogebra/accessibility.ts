@@ -1,5 +1,6 @@
 export class GeoGebraAccessibilityGuard {
   private readonly previousInert = new Map<HTMLElement, boolean>();
+  private readonly revealedAriaHidden = new Set<HTMLElement>();
   private readonly scrollableAttributes = new Map<
     HTMLElement,
     { ariaLabel: string | null; role: string | null; tabIndex: string | null }
@@ -26,6 +27,10 @@ export class GeoGebraAccessibilityGuard {
   stop() {
     this.observer?.disconnect();
     this.observer = undefined;
+    for (const element of this.revealedAriaHidden) {
+      if (element.isConnected) element.setAttribute("aria-hidden", "true");
+    }
+    this.revealedAriaHidden.clear();
     for (const [element, inert] of this.previousInert) {
       if (element.isConnected) this.restoreInert(element, inert);
     }
@@ -52,11 +57,27 @@ export class GeoGebraAccessibilityGuard {
   }
 
   sync() {
+    for (const element of this.revealedAriaHidden) {
+      if (!element.isConnected) {
+        this.revealedAriaHidden.delete(element);
+        continue;
+      }
+      if (this.isActuallyHidden(element)) {
+        element.setAttribute("aria-hidden", "true");
+        this.revealedAriaHidden.delete(element);
+      }
+    }
+    const ariaHidden = [
+      ...this.root.querySelectorAll<HTMLElement>('[aria-hidden="true"]'),
+    ];
     const hidden = new Set(
-      [...this.root.querySelectorAll<HTMLElement>('[aria-hidden="true"]')].filter(
-        (element) => this.isActuallyHidden(element),
-      ),
+      ariaHidden.filter((element) => this.isActuallyHidden(element)),
     );
+    for (const element of ariaHidden) {
+      if (hidden.has(element) || !this.containsFocusableControl(element)) continue;
+      element.removeAttribute("aria-hidden");
+      this.revealedAriaHidden.add(element);
+    }
     for (const element of hidden) {
       if (!this.previousInert.has(element)) {
         this.previousInert.set(element, element.hasAttribute("inert"));
@@ -140,6 +161,17 @@ export class GeoGebraAccessibilityGuard {
       return true;
     }
     return element.getClientRects().length === 0 && element.offsetParent === null;
+  }
+
+  private containsFocusableControl(element: HTMLElement) {
+    return (
+      element.matches("button, a[href], input, select, textarea, [tabindex]") ||
+      Boolean(
+        element.querySelector(
+          "button, a[href], input, select, textarea, [tabindex]",
+        ),
+      )
+    );
   }
 
   private restoreInert(element: HTMLElement, inert: boolean) {

@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
-  TeacherExercisePublicationV1,
-  type TeacherExercisePublicationV1 as TeacherExercisePublication,
+  parseTeacherExercisePublication,
+  type TeacherExercisePublication,
 } from "@/lib/teacher/exercise";
+import type { TeacherExercisePublicationV2 } from "@/lib/teacher/geometry-exercise";
 import { useLanguage } from "./language-provider";
 
 const LIBRARY_SUBJECT_LABELS_FR: Record<string, string> = {
@@ -35,7 +36,7 @@ async function readTeacherExercises(): Promise<TeacherExercisePublication[]> {
   const payload = (await response.json()) as { exercises?: unknown[] };
   if (!response.ok || !Array.isArray(payload.exercises)) throw new Error();
   return payload.exercises.map((exercise) =>
-    TeacherExercisePublicationV1.parse(exercise),
+    parseTeacherExercisePublication(exercise),
   );
 }
 
@@ -137,13 +138,13 @@ export function TeacherExerciseLibrary({
               <div className="teacher-exercise-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>
               <div className="teacher-exercise-copy">
                 <div className="teacher-exercise-meta">
-                  <span>{french ? LIBRARY_SUBJECT_LABELS_FR[exercise.exercise.subject] ?? exercise.exercise.subject : exercise.exercise.subject.replaceAll("_", " ")}</span>
-                  <span>{french ? LIBRARY_LEVEL_LABELS_FR[exercise.level] ?? exercise.level : exercise.level.replaceAll("_", " ")}</span>
+                  <span>{publicationSubject(exercise, french)}</span>
+                  <span>{publicationLevel(exercise, french)}</span>
                   <span>{exercise.estimatedMinutes} min</span>
                 </div>
-                <h2>{exercise.exercise.title}</h2>
-                <p>{exercise.guidance.learningObjective}</p>
-                <small>{exercise.exercise.tasks.length} {text("missions", "missions")}</small>
+                <h2>{publicationTitle(exercise)}</h2>
+                <p>{publicationObjective(exercise)}</p>
+                <small>{publicationMissionCount(exercise)} {text("missions", "missions")}</small>
               </div>
               <button type="button" onClick={() => onStart(exercise)}>
                 {text("Start this exercise", "Commencer cet exercice")}
@@ -154,6 +155,55 @@ export function TeacherExerciseLibrary({
       )}
     </section>
   );
+}
+
+function isGeometryPublication(
+  exercise: TeacherExercisePublication,
+): exercise is TeacherExercisePublicationV2 {
+  return exercise.schemaVersion === "teacher_exercise_publication.v2";
+}
+
+function publicationSubject(
+  exercise: TeacherExercisePublication,
+  french: boolean,
+): string {
+  if (isGeometryPublication(exercise)) {
+    return french ? "géométrie dynamique" : "dynamic geometry";
+  }
+  const subject = exercise.exercise.subject;
+  return french
+    ? LIBRARY_SUBJECT_LABELS_FR[subject] ?? subject
+    : subject.replaceAll("_", " ");
+}
+
+function publicationLevel(
+  exercise: TeacherExercisePublication,
+  french: boolean,
+): string {
+  if (isGeometryPublication(exercise)) {
+    return exercise.content.exercise.level;
+  }
+  return french
+    ? LIBRARY_LEVEL_LABELS_FR[exercise.level] ?? exercise.level
+    : exercise.level.replaceAll("_", " ");
+}
+
+function publicationTitle(exercise: TeacherExercisePublication): string {
+  return isGeometryPublication(exercise)
+    ? exercise.content.exercise.title
+    : exercise.exercise.title ?? exercise.theme;
+}
+
+function publicationObjective(exercise: TeacherExercisePublication): string {
+  return isGeometryPublication(exercise)
+    ? exercise.content.exercise.objective
+    : exercise.guidance.learningObjective;
+}
+
+function publicationMissionCount(exercise: TeacherExercisePublication): number {
+  return isGeometryPublication(exercise)
+    ? exercise.content.exercise.missions.length
+    : exercise.exercise.tasks.length;
 }
 
 function mergeExercises(

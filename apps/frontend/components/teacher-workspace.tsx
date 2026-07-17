@@ -17,6 +17,9 @@ import {
   type TeacherReviewCheck,
 } from "@/lib/teacher/exercise";
 import type { LearningSessionReportV1 } from "@/lib/learning/session-report";
+import type { GeometryLearningSessionReportV1 } from "@/lib/geometry-investigation/contracts";
+import type { TeacherExercisePublication } from "@/lib/teacher/exercise";
+import { GeometryTeacherStudio } from "./geometry-teacher-studio";
 import { useLanguage } from "./language-provider";
 
 type DraftMode = "generated" | "upload" | "manual";
@@ -115,11 +118,13 @@ export function TeacherWorkspace({
   onOpenLibrary,
   onPublished,
   learningReports = [],
+  geometryLearningReports = [],
 }: {
   onBack(): void;
   onOpenLibrary(): void;
-  onPublished?(publication: TeacherExercisePublicationV1): void;
+  onPublished?(publication: TeacherExercisePublication): void;
   learningReports?: readonly LearningSessionReportV1[];
+  geometryLearningReports?: readonly GeometryLearningSessionReportV1[];
 }) {
   const { language, text } = useLanguage();
   const french = language === "fr";
@@ -409,6 +414,49 @@ export function TeacherWorkspace({
           </ol>
         </section>
       ) : null}
+
+      {geometryLearningReports.length > 0 ? (
+        <section
+          className="teacher-learning-signals teacher-geometry-signals"
+          aria-labelledby="teacher-geometry-signals-title"
+        >
+          <header>
+            <div>
+              <p className="eyebrow">{text("Geometry evidence", "Preuves géométriques")}</p>
+              <h2 id="teacher-geometry-signals-title">
+                {text("Varignon session facts", "Bilan factuel Varignon")}
+              </h2>
+            </div>
+            <p>
+              {text(
+                "No learner identity, answer text or grade is included.",
+                "Aucune identité, aucun texte de réponse et aucune note ne sont inclus.",
+              )}
+            </p>
+          </header>
+          <ol>
+            {geometryLearningReports.map((report) => (
+              <li key={`${report.exerciseId}-${report.updatedAt}`}>
+                <div>
+                  <span>{text("Dynamic geometry", "Géométrie dynamique")}</span>
+                  <strong>Varignon</strong>
+                </div>
+                <dl>
+                  <div><dt>{text("Missions", "Missions")}</dt><dd>{report.completedMissions}/{report.totalMissions}</dd></div>
+                  <div><dt>{text("Verified", "Vérifiées")}</dt><dd>{report.verifiedMissions}</dd></div>
+                  <div><dt>{text("Configurations", "Configurations")}</dt><dd>{report.capturedConfigurations.length}/3</dd></div>
+                  <div><dt>{text("Midpoints", "Milieux")}</dt><dd>{report.exactMidpoints}/4</dd></div>
+                  <div><dt>{text("Parallel facts", "Parallélismes")}</dt><dd>{report.verifiedParallelPairs}/6</dd></div>
+                  <div><dt>{text("Highest help", "Aide maximale")}</dt><dd>L{report.assistance.highestLevelUsed}</dd></div>
+                  <div><dt>XP</dt><dd>{report.exerciseXp}</dd></div>
+                </dl>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
+      <GeometryTeacherStudio onPublished={onPublished} />
 
       <div className="teacher-layout">
         <form className="teacher-brief" onSubmit={handleDraft}>

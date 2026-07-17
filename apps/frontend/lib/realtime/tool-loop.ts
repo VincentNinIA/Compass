@@ -215,6 +215,7 @@ export class RealtimeToolLoop {
     for (const controllers of this.abortControllers.values()) {
       for (const controller of controllers) controller.abort();
     }
+    this.dependencies.gateway.cancelEffects?.("student_action");
   }
 
   hasInFlight(): boolean {

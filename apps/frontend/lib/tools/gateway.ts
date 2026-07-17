@@ -35,14 +35,29 @@ export type ToolHandlerResult = {
 export type GatewayErrorCode =
   | "unknown_tool"
   | "invalid_arguments"
+  | "invalid_authority"
+  | "action_not_allowed"
+  | "attempt_required"
+  | "consent_required"
+  | "consent_invalid"
   | "invalid_phase"
   | "stale_revision"
   | "rejected_stale"
   | "budget_exceeded"
   | "object_missing"
+  | "workspace_unavailable"
+  | "invalid_polygon"
+  | "indeterminate"
+  | "snapshot_unstable"
+  | "checkpoint_unavailable"
+  | "capture_limit"
+  | "capture_conflict"
+  | "quota_exceeded"
+  | "restore_failed"
   | "plan_unconfirmed"
   | "highlight_active"
   | "rollback_failed"
+  | "mutation_frozen"
   | "cancelled"
   | "execution_failed";
 
@@ -64,6 +79,7 @@ export type GatewayEnvelope =
 
 export type ToolGatewayExecutor = {
   execute(call: GatewayCall, context: GatewayContext): Promise<GatewayEnvelope>;
+  cancelEffects?(reason: "student_action" | "student_speech" | "timeout" | "session_stop"): void;
 };
 
 export type ToolHandlers = {

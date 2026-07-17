@@ -3,6 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { LanguageProvider } from "./language-provider";
 import { TeacherExerciseLibrary } from "./teacher-exercise-library";
+import {
+  TeacherExercisePublicationV2,
+  createTeacherGeometryDraftV2,
+} from "@/lib/teacher/geometry-exercise";
 
 afterEach(() => {
   cleanup();
@@ -87,5 +91,33 @@ describe("TeacherExerciseLibrary", () => {
     expect(onStart).toHaveBeenCalledWith(
       expect.objectContaining({ id: "teacher_local-001" }),
     );
+  });
+
+  it("renders and starts a published geometry investigation", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({ exercises: [] })));
+    const onStart = vi.fn();
+    const publication = TeacherExercisePublicationV2.parse({
+      ...createTeacherGeometryDraftV2("fr"),
+      schemaVersion: "teacher_exercise_publication.v2",
+      id: "teacher_geometry-001",
+      publishedAt: 123,
+    });
+    render(
+      <LanguageProvider>
+        <TeacherExerciseLibrary
+          onBack={() => undefined}
+          onStart={onStart}
+          initialExercises={[publication]}
+        />
+      </LanguageProvider>,
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: "Varignon — le quadrilatère des milieux",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("9 missions")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start this exercise" }));
+    expect(onStart).toHaveBeenCalledWith(publication);
   });
 });

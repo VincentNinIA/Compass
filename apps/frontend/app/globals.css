@@ -4032,6 +4032,660 @@ button.mission-complete-button:focus-visible {
   overflow: hidden;
 }
 
+.geogebra-scratchpad-canvas[data-checkpoint-restoring="true"] {
+  pointer-events: none;
+}
+
+.geogebra-checkpoint-barrier {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: rgb(255 250 244 / 72%);
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: progress;
+  backdrop-filter: blur(2px);
+}
+
+.geogebra-scratchpad-canvas .tabButton {
+  opacity: 1 !important;
+}
+
+.geogebra-scratchpad-canvas .tabButton .gwt-Label {
+  color: #414448 !important;
+  opacity: 1 !important;
+}
+
+.geometry-evidence-gallery {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgb(25 34 29 / 14%);
+  border-radius: 16px 16px 6px 16px;
+  background: #f7f3eb;
+}
+
+.geometry-evidence-gallery__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.geometry-evidence-gallery__heading h3 {
+  margin: 2px 0 0;
+  font-family: var(--display-font);
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  letter-spacing: -0.035em;
+}
+
+.geometry-evidence-gallery__heading > strong {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ink);
+  font-size: 0.75rem;
+}
+
+.geometry-evidence-gallery__empty,
+.geometry-evidence-gallery__demo p {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.geometry-evidence-gallery__list {
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+}
+
+.geometry-evidence-gallery__list > li {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid rgb(25 34 29 / 12%);
+  border-top: 4px solid var(--accent);
+  border-radius: 10px 10px 4px 10px;
+  background: #fffdf8;
+}
+
+.geometry-evidence-gallery__list > li[data-configuration="concave"] {
+  border-top-color: #c47a2c;
+}
+
+.geometry-evidence-gallery__list > li[data-configuration="crossed"] {
+  border-top-color: #8056a5;
+}
+
+.geometry-evidence-gallery__list li > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.geometry-evidence-gallery__list span,
+.geometry-evidence-gallery__list small {
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.geometry-evidence-gallery button {
+  width: fit-content;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 8px 8px 3px 8px;
+  color: var(--ink);
+  background: #fffdf8;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.geometry-evidence-gallery button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.geometry-evidence-gallery button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.geometry-evidence-gallery__confirmation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.geometry-evidence-gallery__confirmation > span {
+  flex-basis: 100%;
+  color: var(--ink);
+}
+
+.geometry-evidence-gallery__demo {
+  margin-top: 14px;
+  padding-top: 12px;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgb(25 34 29 / 12%);
+}
+
+.geometry-evidence-gallery__demo p {
+  margin: 0;
+}
+
+.geometry-evidence-gallery__demo [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.geometry-evidence-gallery__demo [role="status"] {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.geometry-investigation-panel {
+  margin-top: 14px;
+  padding: 18px;
+  border: 1px solid rgb(25 34 29 / 14%);
+  border-radius: 18px 18px 7px 18px;
+  background: #fffdf8;
+}
+
+.geometry-investigation-panel__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.geometry-investigation-panel__heading h3 {
+  margin: 2px 0 0;
+  font-family: var(--display-font);
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  letter-spacing: -0.04em;
+}
+
+.geometry-investigation-panel__heading output {
+  min-width: 64px;
+  padding: 7px 10px;
+  display: grid;
+  justify-items: end;
+  border-radius: 12px 12px 4px 12px;
+  color: #fff;
+  background: var(--ink);
+}
+
+.geometry-investigation-panel__heading output strong {
+  font-size: 1.25rem;
+}
+
+.geometry-investigation-panel__heading output span {
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.geometry-investigation-panel__objective {
+  max-width: 72ch;
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.geometry-investigation-panel__capture {
+  display: grid;
+  gap: 8px;
+}
+
+.geometry-investigation-panel__capture button {
+  width: fit-content;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 10px 10px 4px 10px;
+  color: #fff;
+  background: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.geometry-investigation-panel__capture button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.geometry-investigation-panel__capture [role="alert"] {
+  margin: 0;
+  color: #9d321e;
+  font-size: 0.76rem;
+}
+
+.geometry-teacher-studio {
+  width: min(100%, 1220px);
+  margin: 0 auto 28px;
+  padding: clamp(18px, 3vw, 34px);
+  display: grid;
+  gap: 20px;
+  border: 1px solid rgb(25 34 29 / 14%);
+  border-radius: 24px 24px 8px 24px;
+  background: #fffdf8;
+}
+
+.geometry-teacher-studio--intro {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  background: #eef5e9;
+}
+
+.geometry-teacher-studio h2 {
+  margin: 4px 0 8px;
+  font-family: var(--display-font);
+  font-size: clamp(1.6rem, 3vw, 2.7rem);
+  letter-spacing: -0.045em;
+}
+
+.geometry-teacher-studio p {
+  max-width: 72ch;
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.geometry-teacher-studio--intro > button,
+.geometry-teacher-studio__actions button,
+.geometry-teacher-preview button,
+.geometry-teacher-studio__published a {
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 11px 11px 4px 11px;
+  color: var(--ink);
+  background: #fffdf8;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.geometry-teacher-studio--intro > button,
+.geometry-teacher-studio__actions button:last-child,
+.geometry-teacher-studio__published a {
+  color: #fff;
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.geometry-teacher-studio button:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.geometry-teacher-studio > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.geometry-teacher-studio > header > span {
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.geometry-teacher-studio__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.geometry-teacher-studio__fields > label,
+.geometry-teacher-studio__fields > fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 13px;
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgb(25 34 29 / 12%);
+  border-radius: 12px 12px 5px 12px;
+  background: #f8f5ee;
+}
+
+.geometry-teacher-studio__fields span,
+.geometry-teacher-studio__fields legend {
+  color: var(--ink);
+  font-size: 0.73rem;
+  font-weight: 850;
+}
+
+.geometry-teacher-studio__fields input:not([type="checkbox"]),
+.geometry-teacher-studio__fields textarea,
+.geometry-teacher-studio__fields select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.geometry-teacher-studio__fields textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.geometry-teacher-studio__fields fieldset > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.geometry-teacher-studio__wide {
+  grid-column: 1 / -1;
+}
+
+.geometry-teacher-studio__actions,
+.geometry-teacher-preview header,
+.geometry-teacher-preview header > div,
+.geometry-teacher-studio__published {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.geometry-teacher-studio__blocked {
+  padding: 10px 12px;
+  border-left: 4px solid #b9432e;
+  color: #842c1e !important;
+  background: #fff0eb;
+}
+
+.geometry-teacher-preview {
+  padding: 14px;
+  border: 2px solid #4c7a52;
+  border-radius: 16px 16px 5px 16px;
+  background: #f2f7ef;
+}
+
+.geometry-teacher-preview > header {
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.geometry-teacher-studio__published {
+  justify-content: space-between;
+  padding: 14px;
+  border-radius: 12px;
+  background: #e8f3e7;
+}
+
+.geometry-published-workspace {
+  width: min(100% - 24px, 1500px);
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.geometry-published-workspace > header {
+  max-width: 900px;
+  margin: 22px 0;
+}
+
+.geometry-published-workspace > header h1 {
+  margin: 5px 0 10px;
+  font-family: var(--display-font);
+  font-size: clamp(2.2rem, 6vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.geometry-published-workspace > header p:last-child {
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .geometry-teacher-studio--intro,
+  .geometry-teacher-studio__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .geometry-teacher-studio__wide {
+    grid-column: auto;
+  }
+
+  .geometry-teacher-studio > header,
+  .geometry-teacher-preview > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .geometry-teacher-studio--intro > button {
+    width: 100%;
+  }
+}
+
+.geometry-investigation-panel__missions {
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(9, minmax(92px, 1fr));
+  gap: 6px;
+  list-style: none;
+  overflow-x: auto;
+}
+
+.geometry-investigation-panel__missions li {
+  min-width: 92px;
+  min-height: 66px;
+  padding: 8px;
+  display: flex;
+  align-items: start;
+  gap: 7px;
+  border: 1px solid rgb(25 34 29 / 10%);
+  border-radius: 9px 9px 3px 9px;
+  color: var(--ink-soft);
+  background: #f7f3eb;
+}
+
+.geometry-investigation-panel__missions li > span {
+  flex: 0 0 auto;
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(25 34 29 / 10%);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.geometry-investigation-panel__missions li > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.geometry-investigation-panel__missions strong,
+.geometry-investigation-panel__missions small {
+  overflow: hidden;
+  font-size: 0.66rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+}
+
+.geometry-investigation-panel__missions li[data-mission-status="active"] {
+  color: var(--ink);
+  border-color: var(--accent);
+  background: #f1f8f1;
+}
+
+.geometry-investigation-panel__missions li[data-mission-status="verified"] {
+  color: #244c32;
+  background: #e9f4ea;
+}
+
+.geometry-investigation-panel__missions li[data-mission-status="completed"] {
+  color: #694b20;
+  background: #f7eddc;
+}
+
+.geometry-investigation-panel__active,
+.geometry-investigation-panel__complete {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgb(25 34 29 / 12%);
+  border-radius: 12px 12px 4px 12px;
+  background: #f7f3eb;
+}
+
+.geometry-investigation-panel__active h4 {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+}
+
+.geometry-investigation-panel__active > p:not(.section-index),
+.geometry-investigation-panel__complete p {
+  margin: 6px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.geometry-investigation-panel__active label {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.geometry-investigation-panel__active textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 10px;
+  resize: vertical;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 9px 9px 3px 9px;
+  color: var(--ink);
+  background: #fffdf8;
+  font: inherit;
+  font-weight: 400;
+}
+
+.geometry-investigation-panel button {
+  width: fit-content;
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid rgb(25 34 29 / 18%);
+  border-radius: 8px 8px 3px 8px;
+  color: var(--ink);
+  background: #fffdf8;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.geometry-investigation-panel button:focus-visible,
+.geometry-investigation-panel textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.geometry-investigation-panel button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.geometry-investigation-panel__help {
+  margin-top: 12px;
+}
+
+.geometry-investigation-panel__steps {
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  list-style: none;
+}
+
+.geometry-investigation-panel__steps li {
+  padding: 10px;
+  border-left: 3px solid var(--accent);
+  background: #fffdf8;
+}
+
+.geometry-investigation-panel__steps p {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.geometry-investigation-panel__steps li[data-step-completed="true"] {
+  border-left-color: #3f7a50;
+  background: #e9f4ea;
+}
+
+.geometry-investigation-panel__hint {
+  margin-top: 10px;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 8px;
+  border: 1px solid rgb(63 122 80 / 28%);
+  border-radius: 10px 10px 3px 10px;
+  background: #e9f4ea;
+}
+
+.geometry-investigation-panel__hint > span {
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #fff;
+  background: #3f7a50;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.geometry-investigation-panel__hint p,
+.geometry-investigation-panel__hint small {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.geometry-investigation-panel__hint small {
+  grid-column: 2;
+  color: var(--ink-soft);
+}
+
 .scratchpad-loading,
 .scratchpad-unavailable {
   position: absolute;
@@ -4086,6 +4740,14 @@ button.mission-complete-button:focus-visible {
   .scratchpad-heading {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+
+  .geometry-evidence-gallery__list {
+    grid-template-columns: 1fr;
+  }
+
+  .geometry-investigation-panel__steps {
+    grid-template-columns: 1fr;
   }
 
   .learning-workbench-grid {
@@ -4461,6 +5123,10 @@ button.mission-complete-button:focus-visible {
 
 .realtime-spike--panorama .spike-heading > p {
   display: none;
+}
+
+.workspace-card-coach.realtime-spike--panorama .section-index {
+  color: var(--accent-deep);
 }
 
 .realtime-spike--panorama .capability-mode {

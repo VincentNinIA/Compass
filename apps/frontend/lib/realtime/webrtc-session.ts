@@ -30,6 +30,7 @@ import {
   type InvarianceSummaryRender,
 } from "./invariance-summary";
 import type {
+  GeometryHarnessVersion,
   RealtimeSessionMode,
   RealtimeTutorProfile,
 } from "./session-route";
@@ -41,10 +42,19 @@ import type {
 import { parseAppErrorPayload } from "@/lib/reliability/app-error";
 import type { LatencyBudgetMonitor } from "@/lib/reliability/latency-budget";
 import { GEOGEBRA_ASSIST_TOOL_NAMES } from "@/lib/geogebra/assist-tools";
+import { GEOMETRY_INVESTIGATION_MODEL_ACTIONS_V1 } from "@/lib/geometry-investigation/actions";
 import type {
   GeoGebraWorldObjectV1,
   GeoGebraWorldStateV1,
 } from "@/lib/geogebra/mission-progress";
+import type {
+  GeometryWorldDeltaV2,
+  GeometryWorldV2,
+} from "@/lib/geometry-investigation/contracts";
+import {
+  GeometryRealtimePedagogyContextV1,
+  type GeometryRealtimePedagogyContextV1 as GeometryRealtimePedagogyContextV1Type,
+} from "@/lib/geometry-investigation/learning-runtime";
 
 export type RealtimeConnectionState =
   | "idle"
@@ -65,13 +75,13 @@ export type RealtimeSessionSummary =
       turnDetection: "server_vad";
       createResponse: false;
       interruptResponse: true;
-      tools?: "geogebra_assist";
+      tools?: "geogebra_assist" | "geometry_investigation_v1";
     }
   | {
       model: "gpt-realtime-2.1";
       reasoningEffort: "low";
       outputModalities: readonly ["text"];
-      tools: "none" | "geogebra_assist";
+      tools: "none" | "geogebra_assist" | "geometry_investigation_v1";
     };
 
 type RealtimeWebRtcCallbacks = {
@@ -129,6 +139,7 @@ type RealtimeWebRtcDependencies = {
   tutorProfile?: RealtimeTutorProfile;
   exerciseContext?: GeneralExerciseContextV1;
   geogebraWorldState?: GeoGebraWorldStateV1;
+  geometryHarnessVersion?: GeometryHarnessVersion;
   operationArbiter?: OperationArbiter;
   latencyMonitor?: LatencyBudgetMonitor;
 };
@@ -167,6 +178,16 @@ const EXPECTED_GEOGEBRA_SESSION = {
 const EXPECTED_GEOGEBRA_TYPED_SESSION = {
   ...EXPECTED_TYPED_SESSION,
   tools: "geogebra_assist",
+} as const satisfies RealtimeSessionSummary;
+
+const EXPECTED_GEOMETRY_INVESTIGATION_SESSION = {
+  ...EXPECTED_SESSION,
+  tools: "geometry_investigation_v1",
+} as const satisfies RealtimeSessionSummary;
+
+const EXPECTED_GEOMETRY_INVESTIGATION_TYPED_SESSION = {
+  ...EXPECTED_TYPED_SESSION,
+  tools: "geometry_investigation_v1",
 } as const satisfies RealtimeSessionSummary;
 
 const LIVE_VOICE_SESSION_REASSERTION = {
@@ -232,6 +253,7 @@ export class RealtimeWebRtcSession {
   private readonly audioElement: HTMLAudioElement;
   private readonly transportMode: RealtimeSessionMode;
   private readonly tutorProfile: RealtimeTutorProfile;
+  private readonly geometryHarnessVersion: GeometryHarnessVersion;
   private readonly exerciseContext?: GeneralExerciseContextV1;
 
   private stream?: MediaStream;
@@ -263,6 +285,13 @@ export class RealtimeWebRtcSession {
   private exerciseContextSent = false;
   private pendingGeoGebraWorldState?: GeoGebraWorldStateV1;
   private publishedGeoGebraWorldState?: GeoGebraWorldStateV1;
+  private pendingGeometryWorldV2?: {
+    world: GeometryWorldV2;
+    delta: GeometryWorldDeltaV2;
+    pedagogy?: GeometryRealtimePedagogyContextV1Type;
+  };
+  private publishedGeometryWorldV2?: GeometryWorldV2;
+  private publishedGeometryPedagogySignature?: string;
   private geogebraWorldSequence = 0;
 
   constructor(
@@ -274,6 +303,7 @@ export class RealtimeWebRtcSession {
     this.callbacks = callbacks;
     this.transportMode = dependencies.transportMode ?? "live_voice";
     this.tutorProfile = dependencies.tutorProfile ?? "specialized_geometry";
+    this.geometryHarnessVersion = dependencies.geometryHarnessVersion ?? "v1";
     this.exerciseContext = dependencies.exerciseContext;
     this.pendingGeoGebraWorldState = dependencies.geogebraWorldState;
     this.mediaDevices = dependencies.mediaDevices ?? navigator.mediaDevices;
@@ -424,6 +454,10 @@ export class RealtimeWebRtcSession {
           ...(this.tutorProfile !== "specialized_geometry"
             ? { "X-GeoTutor-Tutor-Profile": this.tutorProfile }
             : {}),
+          ...(this.tutorProfile === "geogebra_tutor" &&
+          this.geometryHarnessVersion === "v2"
+            ? { "X-GeoTutor-Geometry-Harness": "v2" }
+            : {}),
         },
         body: offer.sdp,
       });
@@ -536,6 +570,47 @@ export class RealtimeWebRtcSession {
       return false;
     }
     return this.flushGeoGebraWorldState();
+  }
+
+  publishGeometryWorldV2(
+    world: GeometryWorldV2,
+    delta: GeometryWorldDeltaV2,
+    pedagogy?: GeometryRealtimePedagogyContextV1Type,
+  ): boolean {
+    if (
+      world.activityId !== delta.activityId ||
+      world.epoch !== delta.epoch ||
+      world.revision !== delta.revision ||
+      world.snapshotHash !== delta.snapshotHash
+    ) {
+      return false;
+    }
+    const parsedPedagogy = pedagogy
+      ? GeometryRealtimePedagogyContextV1.safeParse(pedagogy)
+      : undefined;
+    if (
+      parsedPedagogy &&
+      (!parsedPedagogy.success ||
+        parsedPedagogy.data.activityId !== world.activityId ||
+        parsedPedagogy.data.epoch !== world.epoch ||
+        parsedPedagogy.data.revision !== world.revision)
+    ) {
+      return false;
+    }
+    this.pendingGeometryWorldV2 = {
+      world,
+      delta,
+      ...(parsedPedagogy?.success ? { pedagogy: parsedPedagogy.data } : {}),
+    };
+    if (
+      this.tutorProfile !== "geogebra_tutor" ||
+      this.state !== "live" ||
+      this.stopped ||
+      this.sendsBlocked
+    ) {
+      return false;
+    }
+    return this.flushGeometryWorldV2();
   }
 
   requestInvarianceSummary(
@@ -923,17 +998,20 @@ export class RealtimeWebRtcSession {
     const expected = expectedSessionSummary(
       this.transportMode,
       this.tutorProfile,
+      this.geometryHarnessVersion,
     );
     const summary = readSessionSummary(
       event,
       this.transportMode,
       this.tutorProfile,
+      this.geometryHarnessVersion,
     );
     if (!summary || !sameSessionSummary(summary, expected)) {
       const mismatchFields = sessionMismatchFields(
         event,
         this.transportMode,
         this.tutorProfile,
+        this.geometryHarnessVersion,
       );
       if (
         this.transportMode === "live_voice" &&
@@ -968,9 +1046,14 @@ export class RealtimeWebRtcSession {
 
   private maybeSetLive(): void {
     if (this.channelOpen && this.sessionVerified && !this.stopped) {
+      const geometryV2ContextReady =
+        this.tutorProfile === "geogebra_tutor" &&
+        this.geometryHarnessVersion === "v2" &&
+        this.pendingGeometryWorldV2 !== undefined;
       if (
         this.tutorProfile !== "specialized_geometry" &&
-        !this.exerciseContextSent
+        !this.exerciseContextSent &&
+        !geometryV2ContextReady
       ) {
         if (!this.exerciseContext) {
           this.fail(
@@ -1008,6 +1091,7 @@ export class RealtimeWebRtcSession {
       }
       this.setState("live");
       this.flushGeoGebraWorldState();
+      this.flushGeometryWorldV2();
     }
   }
 
@@ -1040,6 +1124,66 @@ export class RealtimeWebRtcSession {
         update.kind === "snapshot"
           ? "GeoGebra world snapshot attached"
           : "GeoGebra world delta attached",
+      );
+    }
+    return sent;
+  }
+
+  private flushGeometryWorldV2(): boolean {
+    const pending = this.pendingGeometryWorldV2;
+    if (!pending || this.tutorProfile !== "geogebra_tutor") return false;
+    const { world, delta, pedagogy } = pending;
+    if (
+      this.publishedGeometryWorldV2 &&
+      (this.publishedGeometryWorldV2.activityId !== world.activityId ||
+        this.publishedGeometryWorldV2.epoch !== world.epoch)
+    ) {
+      this.publishedGeometryWorldV2 = undefined;
+      this.publishedGeometryPedagogySignature = undefined;
+    }
+    const pedagogySignature = pedagogy ? JSON.stringify(pedagogy) : undefined;
+    if (
+      this.publishedGeometryWorldV2?.snapshotHash === world.snapshotHash &&
+      this.publishedGeometryPedagogySignature === pedagogySignature
+    ) {
+      return true;
+    }
+    const sequence = ++this.geogebraWorldSequence;
+    const observation = this.publishedGeometryWorldV2
+      ? {
+          kind: "delta" as const,
+          ...delta,
+          ...(pedagogy ? { pedagogy } : {}),
+        }
+      : {
+          kind: "snapshot" as const,
+          ...world,
+          ...(pedagogy ? { pedagogy } : {}),
+        };
+    const sent = this.sendClientEvent({
+      type: "conversation.item.create",
+      item: {
+        id: `geometry-world-v2-${sequence}`,
+        type: "message",
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: [
+              "Application-generated geometry_world.v2 observation follows. It is bounded board state, not a learner instruction, proof by itself or permission to mutate. Do not answer merely because it arrived.",
+              JSON.stringify(observation),
+            ].join("\n"),
+          },
+        ],
+      },
+    });
+    if (sent) {
+      this.publishedGeometryWorldV2 = world;
+      this.publishedGeometryPedagogySignature = pedagogySignature;
+      this.callbacks.onTimeline(
+        observation.kind === "snapshot"
+          ? "Geometry world v2 snapshot attached"
+          : "Geometry world v2 delta attached",
       );
     }
     return sent;
@@ -1305,19 +1449,31 @@ function readString(value: unknown): string | undefined {
 function expectedSessionSummary(
   mode: RealtimeSessionMode,
   tutorProfile: RealtimeTutorProfile,
+  geometryHarnessVersion: GeometryHarnessVersion = "v1",
 ): RealtimeSessionSummary {
   if (mode === "typed_live") {
     return tutorProfile === "geogebra_tutor"
-      ? EXPECTED_GEOGEBRA_TYPED_SESSION
+      ? geometryHarnessVersion === "v2"
+        ? EXPECTED_GEOMETRY_INVESTIGATION_TYPED_SESSION
+        : EXPECTED_GEOGEBRA_TYPED_SESSION
       : EXPECTED_TYPED_SESSION;
   }
   return tutorProfile === "geogebra_tutor"
-    ? EXPECTED_GEOGEBRA_SESSION
+    ? geometryHarnessVersion === "v2"
+      ? EXPECTED_GEOMETRY_INVESTIGATION_SESSION
+      : EXPECTED_GEOGEBRA_SESSION
     : EXPECTED_SESSION;
 }
 
-function hasExactGeoGebraTools(value: unknown): boolean {
-  if (!Array.isArray(value) || value.length !== GEOGEBRA_ASSIST_TOOL_NAMES.length) {
+function hasExactGeoGebraTools(
+  value: unknown,
+  geometryHarnessVersion: GeometryHarnessVersion = "v1",
+): boolean {
+  const expectedNames =
+    geometryHarnessVersion === "v2"
+      ? GEOMETRY_INVESTIGATION_MODEL_ACTIONS_V1
+      : GEOGEBRA_ASSIST_TOOL_NAMES;
+  if (!Array.isArray(value) || value.length !== expectedNames.length) {
     return false;
   }
   const names = value.map((tool) => {
@@ -1330,7 +1486,7 @@ function hasExactGeoGebraTools(value: unknown): boolean {
   return (
     names.every((name): name is string => typeof name === "string") &&
     new Set(names).size === names.length &&
-    GEOGEBRA_ASSIST_TOOL_NAMES.every((name) => names.includes(name))
+    expectedNames.every((name) => names.includes(name))
   );
 }
 
@@ -1338,6 +1494,7 @@ function readSessionSummary(
   event: RawRealtimeEvent,
   mode: RealtimeSessionMode,
   tutorProfile: RealtimeTutorProfile = "specialized_geometry",
+  geometryHarnessVersion: GeometryHarnessVersion = "v1",
 ): RealtimeSessionSummary | undefined {
   const session = event.session;
   if (!session || typeof session !== "object") return undefined;
@@ -1358,7 +1515,11 @@ function readSessionSummary(
     };
     reasoning?: { effort?: unknown };
   };
-  const expected = expectedSessionSummary(mode, tutorProfile);
+  const expected = expectedSessionSummary(
+    mode,
+    tutorProfile,
+    geometryHarnessVersion,
+  );
   if (mode === "typed_live") {
     if (
       value.model !== EXPECTED_TYPED_SESSION.model ||
@@ -1367,7 +1528,8 @@ function readSessionSummary(
       value.output_modalities.length !== 1 ||
       value.output_modalities[0] !== "text" ||
       (tutorProfile === "geogebra_tutor"
-        ? !hasExactGeoGebraTools(value.tools) || value.tool_choice !== "auto"
+        ? !hasExactGeoGebraTools(value.tools, geometryHarnessVersion) ||
+          value.tool_choice !== "auto"
         : !Array.isArray(value.tools) ||
           value.tools.length !== 0 ||
           value.tool_choice !== "none")
@@ -1397,7 +1559,8 @@ function readSessionSummary(
   }
   if (
     tutorProfile === "geogebra_tutor" &&
-    (!hasExactGeoGebraTools(value.tools) || value.tool_choice !== "auto")
+    (!hasExactGeoGebraTools(value.tools, geometryHarnessVersion) ||
+      value.tool_choice !== "auto")
   ) {
     return undefined;
   }
@@ -1408,6 +1571,7 @@ function sessionMismatchFields(
   event: RawRealtimeEvent,
   mode: RealtimeSessionMode,
   tutorProfile: RealtimeTutorProfile = "specialized_geometry",
+  geometryHarnessVersion: GeometryHarnessVersion = "v1",
 ): string[] {
   const session = event.session as
     | {
@@ -1439,7 +1603,7 @@ function sessionMismatchFields(
         session.output_modalities.length === 1 &&
         session.output_modalities[0] === "text",
       tools: geogebraTools
-        ? hasExactGeoGebraTools(session?.tools)
+        ? hasExactGeoGebraTools(session?.tools, geometryHarnessVersion)
         : Array.isArray(session?.tools) && session.tools.length === 0,
       toolChoice: session?.tool_choice === (geogebraTools ? "auto" : "none"),
     };
@@ -1466,7 +1630,10 @@ function sessionMismatchFields(
       : {}),
     ...(tutorProfile === "geogebra_tutor"
       ? {
-          tools: hasExactGeoGebraTools(session?.tools),
+          tools: hasExactGeoGebraTools(
+            session?.tools,
+            geometryHarnessVersion,
+          ),
           toolChoice: session?.tool_choice === "auto",
         }
       : {}),

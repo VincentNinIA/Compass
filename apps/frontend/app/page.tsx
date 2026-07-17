@@ -10,8 +10,16 @@ import { useLanguage } from "@/components/language-provider";
 import { CompassMascot, MascotProvider } from "@/components/compass-mascot";
 import { TeacherExerciseLibrary } from "@/components/teacher-exercise-library";
 import { TeacherWorkspace } from "@/components/teacher-workspace";
-import type { TeacherExercisePublicationV1 } from "@/lib/teacher/exercise";
+import { GeometryPublishedWorkspace } from "@/components/geometry-published-workspace";
+import {
+  parseTeacherExercisePublication,
+  type TeacherExercisePublication,
+} from "@/lib/teacher/exercise";
 import type { LearningSessionReportV1 } from "@/lib/learning/session-report";
+import {
+  GeometryLearningSessionReportV1,
+  type GeometryLearningSessionReportV1 as GeometryLearningReport,
+} from "@/lib/geometry-investigation/contracts";
 
 type AppScreen = "landing" | "teacher" | "library" | TutorWorkspaceScreen;
 
@@ -63,12 +71,15 @@ export default function Home() {
   );
   const [screen, setScreen] = useState<AppScreen>("landing");
   const [assignedExercise, setAssignedExercise] =
-    useState<TeacherExercisePublicationV1>();
+    useState<TeacherExercisePublication>();
   const [localPublications, setLocalPublications] = useState<
-    readonly TeacherExercisePublicationV1[]
+    readonly TeacherExercisePublication[]
   >([]);
   const [learningReports, setLearningReports] = useState<
     readonly LearningSessionReportV1[]
+  >([]);
+  const [geometryLearningReports, setGeometryLearningReports] = useState<
+    readonly GeometryLearningReport[]
   >([]);
   const visibleScreen = workspaceDemoMode ? "work" : screen;
   const mainRef = useRef<HTMLElement>(null);
@@ -91,7 +102,7 @@ export default function Home() {
   }, [visibleScreen]);
 
   const rememberPublication = useCallback(
-    (publication: TeacherExercisePublicationV1) => {
+    (publication: TeacherExercisePublication) => {
       setLocalPublications((current) => [
         publication,
         ...current.filter((exercise) => exercise.id !== publication.id),
@@ -99,6 +110,68 @@ export default function Home() {
     },
     [],
   );
+
+  const rememberGeometryLearningReport = useCallback(
+    (report: GeometryLearningReport) => {
+      setGeometryLearningReports((current) =>
+        [
+          report,
+          ...current.filter((entry) => entry.exerciseId !== report.exerciseId),
+        ]
+          .sort((left, right) => right.updatedAt - left.updatedAt)
+          .slice(0, 8),
+      );
+    },
+    [],
+  );
+
+  const handleGeometryLearningReport = useCallback(
+    (report: GeometryLearningReport) => {
+      rememberGeometryLearningReport(report);
+      if (typeof BroadcastChannel === "undefined") return;
+      const channel = new BroadcastChannel(
+        "compass-geometry-learning-reports",
+      );
+      channel.postMessage(report);
+      channel.close();
+    },
+    [rememberGeometryLearningReport],
+  );
+
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const channel = new BroadcastChannel("compass-geometry-learning-reports");
+    channel.onmessage = (event) => {
+      const parsed = GeometryLearningSessionReportV1.safeParse(event.data);
+      if (parsed.success) rememberGeometryLearningReport(parsed.data);
+    };
+    return () => channel.close();
+  }, [rememberGeometryLearningReport]);
+
+  useEffect(() => {
+    const publicationId = new URLSearchParams(window.location.search).get(
+      "teacherExercise",
+    );
+    if (!publicationId) return;
+    let active = true;
+    void fetch("/api/teacher/exercises", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("teacher_catalog_unavailable");
+        return (await response.json()) as { exercises?: unknown[] };
+      })
+      .then((payload) => {
+        const publication = (payload.exercises ?? [])
+          .map((candidate) => parseTeacherExercisePublication(candidate))
+          .find(({ id }) => id === publicationId);
+        if (!active || !publication) return;
+        setAssignedExercise(publication);
+        setScreen("work");
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const rememberLearningReport = useCallback(
     (report: LearningSessionReportV1) => {
@@ -305,6 +378,7 @@ export default function Home() {
             onOpenLibrary={() => setScreen("library")}
             onPublished={rememberPublication}
             learningReports={learningReports}
+            geometryLearningReports={geometryLearningReports}
           />
         ) : visibleScreen === "library" ? (
           <TeacherExerciseLibrary
@@ -314,6 +388,13 @@ export default function Home() {
               setAssignedExercise(exercise);
               setScreen("work");
             }}
+          />
+        ) : assignedExercise?.schemaVersion ===
+          "teacher_exercise_publication.v2" ? (
+          <GeometryPublishedWorkspace
+            publication={assignedExercise}
+            onHome={goHome}
+            onReport={handleGeometryLearningReport}
           />
         ) : (
           <TutorWorkspace

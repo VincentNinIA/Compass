@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { TeacherExerciseDraftV1 } from "./exercise";
+import { createTeacherGeometryDraftV2 } from "./geometry-exercise";
 import {
   clearTeacherExercisesForTests,
   listTeacherExercises,
   publishTeacherExercise,
+  publishTeacherGeometryExercise,
   TEACHER_EXERCISE_STORE_LIMIT,
 } from "./store";
 
@@ -68,5 +70,22 @@ describe("teacher exercise server-memory store", () => {
       }),
     ).toThrow("teacher_draft_not_publishable");
     expect(listTeacherExercises()).toHaveLength(0);
+  });
+
+  it("stores general and geometry publications in the same bounded catalog", () => {
+    const general = publishTeacherExercise(VALID_DRAFT, {
+      id: "teacher_general-001",
+      now: 10,
+    });
+    const geometry = publishTeacherGeometryExercise(
+      createTeacherGeometryDraftV2("fr"),
+      { id: "teacher_geometry-001", now: 20 },
+    );
+
+    expect(listTeacherExercises()).toEqual([geometry, general]);
+    expect(geometry.content).toMatchObject({
+      kind: "geometry_investigation",
+      exercise: { id: "varignon_fr_v1" },
+    });
   });
 });

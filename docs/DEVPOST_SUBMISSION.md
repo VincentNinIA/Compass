@@ -9,7 +9,7 @@ soumission restent à compléter par le porteur.
 
 Le 17 juillet 2026, le candidat T18 du commit `e1efc28` a été qualifié sur
 `https://compass-geotutor-demo.vercel.app/` via la Production Vercel READY
-`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`. La description Devpost version 5 a été
+`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`. La description Devpost version 6 a été
 alignée sur ce candidat live; la participation reste non soumise.
 
 ## Positionnement recommandé

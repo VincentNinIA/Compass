@@ -89,10 +89,10 @@ pnpm dlx vercel whoami
   la note de démarche obligatoire avant les 10 XP. L'espace professeur affiche
   son formulaire et replace le focus/scroll en tête. `scrollWidth` vaut 375 pour
   390 px et la console rend zéro erreur et zéro warning sur les deux surfaces.
-- Devpost Compass a été mis à jour en version 5 : la phrase T17 obsolète est
-  remplacée par le candidat T18 live au commit `e1efc28`. La page reste
-  `published`, OpenAI Build Week reste `submitted_at: null` et aucun appel de
-  soumission n'a été exécuté.
+- Devpost Compass a été mis à jour en version 6 : les mentions de redéploiement
+  T17/T18 obsolètes sont remplacées par le candidat T18 live au commit
+  `e1efc28`. La page reste `published`, OpenAI Build Week reste
+  `submitted_at: null` et aucun appel de soumission n'a été exécuté.
 
 ## Archive — T19-C01
 

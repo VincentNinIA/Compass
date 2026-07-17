@@ -4,7 +4,7 @@
 
 T20-C01 est close `pass` : le SHA T18 `e1efc28` est servi par
 `https://compass-geotutor-demo.vercel.app/` via la Production READY
-`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, et Devpost version 5 décrit désormais ce
+`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, et Devpost version 6 décrit désormais ce
 candidat live sans soumettre OpenAI Build Week.
 
 Prochaine action : enregistrer la vidéo finale de moins de trois minutes,
@@ -139,7 +139,7 @@ T20-C01 est close : le candidat exact `e1efc28` passe 677/677 Vitest, lint,
 typecheck et build dans un worktree propre. La Production Vercel finale
 `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5` est READY sous Node 22.x et sert l'alias
 stable. Le smoke public desktop/mobile, les routes et les headers passent; la
-fiche Devpost version 5 reste non soumise.
+fiche Devpost version 6 reste non soumise.
 
 ## Hors périmètre immédiat
 

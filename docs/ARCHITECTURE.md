@@ -391,9 +391,9 @@ quatre fonctions App Router, tandis que les URLs immuables de déploiement reste
 protégées par le SSO de l'équipe.
 
 Ce déploiement ne change aucune autorité produit et ne transforme pas les stores
-mémoire en persistance. L'alias stable est public pour permettre les démos live;
-il reste donc réservé à une diffusion restreinte tant qu'un code d'accès et un
-rate limit applicatifs ne protègent pas les routes qui consomment OpenAI.
+mémoire en persistance. À T17, l'alias stable était public pour les démos live
+sans code ni quota; T24 ajoute ensuite ces deux protections avant sa
+qualification publique.
 
 ## T18 — boucle Education jugeable
 
@@ -432,8 +432,8 @@ La Production `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5` est READY et sert
 catalogue professeur répondent avec les headers sécurité/no-store attendus. Le
 smoke mobile vérifie le formulaire professeur, la note de démarche avant XP,
 les six missions GeoGebra, l'absence de débordement et une console sans erreur.
-Le déploiement ne crée aucune persistance, protection d'accès ou soumission
-Devpost supplémentaire.
+À cette étape historique, le déploiement ne créait aucune persistance ni
+protection d'accès; T24 les ajoute ensuite sans modifier le store mémoire.
 
 ## T21 — PRD du harnais d'investigation GeoGebra
 
@@ -659,6 +659,14 @@ les `POST /api/*` par IP et retourne 429 avant les fonctions après six requête
 sur soixante secondes. Le runbook opérationnel est
 `docs/DEMO_ACCESS_RUNBOOK.md`.
 
+T24-C03 sert cette architecture depuis le commit
+`5493bd9d9b33dfec17eac7006b07230bfd3959c3`. La Production
+`dpl_GQtBPXN765XSqrPLyJpakyUZsfen` est READY en `iad1`; l'alias stable répond
+dynamiquement avec la porte d'accès et les headers privés. Le parcours public
+publie et termine Varignon, tandis qu'un smoke Realtime texte négocie la palette
+du harnais v2 sans micro ni mutation. Le store reste éphémère : T25 doit fermer
+les contrats de données et d'accès avant toute persistance.
+
 ```mermaid
 flowchart LR
     Teacher["Identité professeur pilote"] --> Classroom["Classe et aliases"]
@@ -712,7 +720,8 @@ première écriture persistante.
 ### Invariants de migration
 
 - T24-C01 a intégré T22 dans `main` et T24-C02 a fermé l'accès et le budget;
-  T24-C03 doit déployer ce candidat protégé avant tout changement de données.
+  T24-C03 a déployé ce candidat protégé; T25-C01 ferme maintenant les données
+  et accès avant toute persistance.
 - Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
   gateway existants.
 - Aucun second template n'est accepté avant le pilote; les neuf missions et les

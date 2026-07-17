@@ -982,7 +982,8 @@
   simultanément stockage, génération et pilote aurait masqué l'identité du
   candidat et multiplié les causes d'échec.
 - Impact : T24-C01 a intégré et requalifié le candidat; T24-C02 a fermé l'accès
-  et le budget. Le prochain agent prend uniquement T24-C03; chaque tranche possède son candidat, ses migrations
+  et le budget; T24-C03 le sert et le qualifie publiquement. T25-C01 devient la
+  seule carte Builder prête; chaque tranche possède son candidat, ses migrations
   éventuelles et son golden avant la suivante.
 
 ## D-072 - Le pilote utilise une identité professeur et des élèves pseudonymes
@@ -1065,3 +1066,16 @@
   OpenAI, 429 est émis par Vercel après 6 requêtes en 60 secondes, et rotation du
   hash ou du secret révoque toutes les sessions après redéploiement. Le code en
   clair reste uniquement dans une copie opérateur locale ignorée par Git.
+
+## D-078 - La release publique échoue sur tout finding WCAG sérieux
+
+- Décision : ne pas qualifier le premier déploiement T24 malgré ses parcours
+  fonctionnels lorsqu'Axe détecte un contraste sérieux. Corriger la collision
+  CSS, ajouter le contrôle au parcours professeur, committer un nouveau SHA et
+  redéployer cette identité exacte.
+- Raison : un smoke fonctionnel ne prouve pas la lisibilité de l'interface; le
+  fond générique des listes traversait la checklist transparente et abaissait
+  son contraste. Qualifier le SHA initial aurait dissocié preuve et artefact.
+- Impact : `5493bd9` réinitialise le fond de la checklist, le gate Varignon
+  inclut Axe sous mouvement réduit et la Production finale porte ce même SHA.
+  Les findings de release ne sont pas masqués par une preuve antérieure.

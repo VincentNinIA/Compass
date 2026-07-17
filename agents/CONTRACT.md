@@ -1,13 +1,11 @@
-# Contrat Builder — T24-C03 Déployer et qualifier le candidat T22 — active
+# Contrat Builder — T24-C03 Déployer et qualifier le candidat T22 — close `pass`
 
 ## État
 
-- T24-C03 est ouverte le 17 juillet 2026 après fermeture et publication de
-  T24-C02 sur `origin/main` au commit `95e9933`.
-- Le premier déploiement de `95e9933` est READY et fonctionnel, mais son audit
-  WCAG public a trouvé une collision de fond sur la checklist professeur. Il
-  n'est pas qualifié; le candidat corrigé doit être committé, reconstruit depuis
-  un worktree propre puis redéployé avant la clôture.
+- T24-C03 est close `pass` le 17 juillet 2026.
+- Le premier déploiement de `95e9933` a révélé une collision de fond WCAG dans
+  la checklist professeur. Le correctif et son gate Axe sont figés par
+  `5493bd9d9b33dfec17eac7006b07230bfd3959c3`, désormais servi par l'alias.
 
 ## Tranche contractualisée — T24-C03
 
@@ -59,6 +57,34 @@ pnpm test:docs:t0
   rollback documenté désigne un déploiement T18 connu.
 - Les preuves sont closes dans les pilotes et T25-C01 devient la seule carte
   Builder ouvrable; T24-C04 reste une action de dossier distincte.
+
+### Preuves de clôture
+
+- Source exacte `5493bd9d9b33dfec17eac7006b07230bfd3959c3`, arbre
+  `f0c8d4feeec4f674949057605fcaf33361d763dc`, construit depuis un worktree
+  détaché sans fichier non suivi. Le build local porte l'empreinte BUILD_ID
+  `f122b68f1ea67edce7d2cf91616da6fcd8287a511dcd2c3f9d66b5292fbeeeae`.
+- Vitest rend 840/840 sur 93 fichiers; lint, typecheck, build et 102 cartes
+  documentaires passent. Le parcours Varignon local rend 2/2 avec le nouveau
+  contrôle Axe de la checklist professeur.
+- Production finale `dpl_GQtBPXN765XSqrPLyJpakyUZsfen`, READY en `iad1`, URL
+  immuable `https://compass-geotutor-demo-f6xgsvd0s-vincent-nin-ia-s-projects.vercel.app`
+  et alias `https://compass-geotutor-demo.vercel.app/`. Les métadonnées Vercel
+  `gitCommitSha` et `compassSourceCommit` valent toutes deux le SHA attendu.
+- Sans session, la racine expose seulement la porte d'accès, porte des headers
+  `private, no-store` et les API catalogue/modèle répondent 401. Après accès, le
+  cookie est `HttpOnly`, `Secure`, `SameSite=Strict` et ne contient pas le code.
+- Le parcours Production publie Varignon, termine les neuf missions côté élève,
+  rend le bilan factuel et vérifie français, clavier, 390 px, absence de
+  débordement, console et WCAG : 2/2 sans retry, zéro violation. Le smoke
+  Realtime texte rend 1/1 avec harnais v2, palette exacte, zéro micro/audio,
+  monde inchangé et canal fermé.
+- Le WAF reste publié sans draft à 6 POST/60 s/IP; les cinq variables Production
+  sont chiffrées. Le scan de neuf ressources publiques, 1 437 696 octets, ne
+  trouve ni code, hash, secret, marqueur sensible ni clé OpenAI.
+- Le rollback contrôlé cible T18 READY
+  `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`; la procédure est consignée dans
+  `docs/DEMO_ACCESS_RUNBOOK.md`. T25-C01 devient la seule carte Builder prête.
 
 ---
 

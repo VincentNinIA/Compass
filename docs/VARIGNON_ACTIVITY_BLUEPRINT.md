@@ -159,7 +159,7 @@ et des critères d'acceptation dédiés.
 
 | Écart | Carte |
 |---|---|
-| Candidat T22 intégré à `main` et protégé, mais non déployé | T24-C03 |
+| Candidat T22 intégré, protégé et déployé | close `pass` par T24-C03 |
 | Classe, pseudonymes et affectations absents | T25-C01 à T25-C03 |
 | File élève, reprise et bilan persistant absents | T25-C04 à T25-C06 |
 | Registre de recettes Varignon absent | T26-C01 |

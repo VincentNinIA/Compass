@@ -30,7 +30,7 @@ GeoGebra, puis le professeur reçoit des faits utiles pour décider de la suite.
 | Classes et accès | Absents | Construire un pilote limité, pas un LMS complet |
 | Génération adaptative | Absente | Générer une recette Varignon bornée, jamais des commandes libres |
 | Profondeur pédagogique | Un parcours Varignon fixe | Varier étayage, difficulté, preset et transfert sans changer le théorème |
-| Candidat public | Production encore alignée sur T18 | Intégrer, protéger et déployer T22 avant le pilote |
+| Candidat public | T22 protégé qualifié sur `dpl_GQtBPXN765XSqrPLyJpakyUZsfen` | Conserver cette identité pendant la construction de T25 |
 
 Les preuves T22 de référence sont : 829 tests Vitest, 43 tests Playwright hors
 live, un smoke Realtime credentialed et trois golden journeys consécutifs sans
@@ -237,7 +237,8 @@ Les XP ne servent pas de métrique de maîtrise et ne sont jamais convertis en n
 
 ## Règle de reprise
 
-Le prochain agent commence uniquement par T24-C03. Il ne démarre ni la base de
-données T25, ni la génération T26. Le candidat T22 est intégré et protégé; il
-doit maintenant être déployé et qualifié. Chaque carte met à jour le contrat
-Builder et consigne ses preuves avant d'ouvrir la suivante.
+Le prochain agent commence uniquement par T25-C01. Il ne construit aucune UI de
+classe et ne démarre pas la génération T26 avant d'avoir fermé schémas, accès,
+store, migrations, rétention et suppression. Le candidat T22 est intégré,
+protégé et qualifié en Production; chaque carte consigne ses preuves avant
+d'ouvrir la suivante.

@@ -89,6 +89,27 @@ La désactivation retire une protection budgétaire : elle doit être temporaire
 consignée et suivie d'une règle corrigée. Pour couper les coûts en urgence,
 retirer ou faire tourner `OPENAI_API_KEY` reste prioritaire.
 
+### Rollback de la Production
+
+Le candidat T22 protégé qualifié est
+`dpl_GQtBPXN765XSqrPLyJpakyUZsfen`. Le dernier candidat T18 connu et qualifié
+est `dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, à l'URL immuable
+`https://compass-geotutor-demo-dxr8xcxtq-vincent-nin-ia-s-projects.vercel.app`.
+
+En cas d'incident confirmé sur T22 :
+
+```sh
+pnpm dlx vercel@56.3.1 rollback \
+  dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5 --yes
+pnpm dlx vercel@56.3.1 inspect \
+  https://compass-geotutor-demo.vercel.app
+```
+
+Le rollback de déploiement ne retire pas la règle WAF du projet. T18 ne porte
+pas la porte d'accès applicative T24 : après un rollback d'urgence, limiter la
+diffusion de l'URL et rétablir T22 corrigé dès que possible. Ne jamais utiliser
+`alias set` vers un déploiement non inspecté.
+
 ## Vérifications
 
 ```sh

@@ -18,10 +18,12 @@ import { RealtimeSpike } from "./realtime-spike";
 export function GeometryPublishedWorkspace({
   publication,
   onHome,
+  returnLabel,
   onReport,
 }: Readonly<{
   publication: TeacherExercisePublicationV2;
   onHome(): void;
+  returnLabel?: string;
   onReport?(report: GeometryLearningSessionReportV1): void;
 }>) {
   const { text } = useLanguage();
@@ -61,7 +63,7 @@ export function GeometryPublishedWorkspace({
     >
       <div className="teacher-screen-topbar">
         <button type="button" className="screen-back" onClick={onHome}>
-          {text("Back home", "Retour à l’accueil")}
+          {returnLabel ?? text("Back home", "Retour à l’accueil")}
         </button>
         <span>{text("Anonymous session · no grade", "Session anonyme · sans note")}</span>
       </div>

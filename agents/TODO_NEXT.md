@@ -2,6 +2,12 @@
 
 ## Prochaine action
 
+T25-C04A est active à la demande du porteur : provisionner PostgreSQL et les
+secrets Production, simplifier l'affectation immédiate, ouvrir depuis `Ma
+classe` le contrat Varignon exact dans GeoGebra, puis créer et qualifier une
+classe `Test Varignon`. Cette sous-tranche ne clôt pas la persistance du
+checkpoint sémantique prévue par T25-C04.
+
 L'amendement T24-C03 demandé par le porteur est close `pass` : la Production
 Vercel ouvre directement Compass sans code, le WAF reste actif et les variables
 de session démo ont été retirées. T25-C02 reste close `pass` : identité professeur pilote, création/archivage de
@@ -25,19 +31,19 @@ le PDF Varignon. La séquence décidée est :
 3. T26 — recettes Varignon, profil factuel et variantes approuvées ;
 4. T27 — durcissement, instrumentation, pilote réel et candidat final.
 
-Il n'y a plus de carte Builder active; T25-C04 est la prochaine dépendance à
-contractualiser. T24-C04, vidéo, licence, migration
-PostgreSQL réelle et soumission restent des actions distinctes exigeant
-l'autorité du porteur.
+T25-C04 est la carte Builder active, ouverte par la sous-tranche C04A décrite
+ci-dessus. T24-C04, vidéo, licence et soumission restent des actions distinctes;
+la migration PostgreSQL réelle appartient désormais à C04A et ne doit plus être
+présentée comme à faire après sa qualification.
 
 ## Dépendances
 
 - T0 et T1 sont closes avec décision `pass`.
 - T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
   ne laisse aucun P1/P2 ouvert.
-- T23-C01, T23-C02, T24-C01 à T24-C03 et T25-C01/C02 sont closes `pass`.
-  T24-C04 reste `backlog` pour le dossier de soumission; T25-C03 utilise le
-  PDF Varignon confirmé et T25-C04 à T27-C04 restent derrière leurs dépendances.
+- T23-C01, T23-C02, T24-C01 à T24-C03 et T25-C01/C02/C03 sont closes `pass`.
+  T24-C04 reste `backlog` pour le dossier de soumission; T25-C04 est
+  `in_progress` sur C04A et T25-C05 à T27-C04 restent derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet

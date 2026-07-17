@@ -168,7 +168,7 @@ test("teacher assigns the exact Varignon PDF to a frozen group and can withdraw 
       response.status() === 201,
   );
   await varignonCard
-    .getByRole("button", { name: "Assign exact Varignon activity" })
+    .getByRole("button", { name: "Assign now" })
     .click();
   const assignResponse = await assignResponsePromise;
   expect(assignResponse.status()).toBe(201);
@@ -197,9 +197,14 @@ test("teacher assigns the exact Varignon PDF to a frozen group and can withdraw 
   await expect(orionPage.getByText("9 missions", { exact: false })).toBeVisible();
   await expect(
     orionPage.getByText(
-      "Your teacher assigned this exact activity. Opening and resuming the GeoGebra work comes next.",
+      "Your teacher assigned this exact activity. Open it in GeoGebra when you are ready.",
     ),
   ).toBeVisible();
+  await orionPage.getByRole("button", { name: "Start activity" }).click();
+  await expect(orionPage.locator(".geometry-published-workspace")).toBeVisible();
+  await expect(orionPage.getByRole("button", { name: "Back to my class" })).toBeVisible();
+  await orionPage.getByRole("button", { name: "Back to my class" }).click();
+  await expect(orionPage.getByRole("heading", { name: "You're in." })).toBeVisible();
 
   await reopenClassScreen(novaPage);
   await expect(

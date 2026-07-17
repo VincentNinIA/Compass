@@ -730,6 +730,13 @@ La migration `0003_class_assignments` porte cette résolution dans
 `compass_assignment_recipients`; le retry idempotent, le retrait logique et
 l'archivage conservent une frontière transactionnelle unique.
 
+T25-C04A met en service cette boucle sur une base Neon PostgreSQL gratuite liée
+au projet Vercel. Depuis `Ma classe`, l'alias valide localement la publication
+v2 reçue puis ouvre le runtime T22 exact; le retour retrouve la session alias.
+La progression reste encore locale au runtime : la table
+`compass_session_checkpoints` est migrée mais son upsert/restauration n'est pas
+activé avant la seconde sous-tranche C04.
+
 ### Flux de données autorisé
 
 1. Le professeur authentifié crée une classe et distribue un code rotatif.

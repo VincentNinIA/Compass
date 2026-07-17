@@ -2,6 +2,11 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
+import {
+  TeacherExercisePublicationV2,
+  type TeacherExercisePublicationV2 as GeometryPublication,
+} from "@/lib/teacher/geometry-exercise";
+
 import { useLanguage } from "./language-provider";
 
 type Membership = {
@@ -25,7 +30,13 @@ type Membership = {
   }[];
 };
 
-export function ClassroomJoin({ onBack }: { onBack(): void }) {
+export function ClassroomJoin({
+  onBack,
+  onStart,
+}: {
+  onBack(): void;
+  onStart(publication: GeometryPublication): void;
+}) {
   const { text } = useLanguage();
   const [code, setCode] = useState("");
   const [pseudonym, setPseudonym] = useState("");
@@ -115,6 +126,20 @@ export function ClassroomJoin({ onBack }: { onBack(): void }) {
     }
   };
 
+  const startAssignment = (publication: unknown) => {
+    const parsed = TeacherExercisePublicationV2.safeParse(publication);
+    if (!parsed.success) {
+      setMessage(
+        text(
+          "This activity changed and cannot be opened safely. Ask your teacher to assign it again.",
+          "Cette activité a changé et ne peut pas être ouverte en sécurité. Demande à ton professeur de l'affecter à nouveau.",
+        ),
+      );
+      return;
+    }
+    onStart(parsed.data);
+  };
+
   return (
     <section className="classroom-join-screen" aria-labelledby="classroom-join-title">
       <div className="teacher-screen-topbar">
@@ -183,10 +208,16 @@ export function ClassroomJoin({ onBack }: { onBack(): void }) {
                         </small>
                         <p>
                           {text(
-                            "Your teacher assigned this exact activity. Opening and resuming the GeoGebra work comes next.",
-                            "Ton professeur a affecté cette activité exacte. L'ouverture et la reprise du travail GeoGebra arrivent ensuite.",
+                            "Your teacher assigned this exact activity. Open it in GeoGebra when you are ready.",
+                            "Ton professeur a affecté cette activité exacte. Ouvre-la dans GeoGebra quand tu es prêt.",
                           )}
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => startAssignment(assignment.publication)}
+                        >
+                          {text("Start activity", "Commencer l'activité")}
+                        </button>
                       </li>
                     ))}
                   </ul>

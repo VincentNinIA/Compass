@@ -333,7 +333,7 @@ export function ClassroomTeacherPanel() {
     const startValue = assignmentStarts[classroom.id];
     const opensAt = startValue
       ? new Date(startValue).getTime()
-      : assignmentClock + 5 * 60 * 1_000;
+      : Date.now() + 5 * 1_000;
     const durationDays = assignmentDurations[classroom.id] ?? 7;
     const closesAt = opensAt + durationDays * 24 * 60 * 60 * 1_000;
     const fingerprint = JSON.stringify({
@@ -802,7 +802,7 @@ export function ClassroomTeacherPanel() {
                             min={toLocalDateTimeInput(assignmentClock + 1_000)}
                             value={
                               assignmentStarts[entry.id] ??
-                              toLocalDateTimeInput(assignmentClock + 5 * 60_000)
+                              toLocalDateTimeInput(assignmentClock + 5 * 1_000)
                             }
                             required
                             onChange={(event) =>
@@ -835,7 +835,7 @@ export function ClassroomTeacherPanel() {
                             type="submit"
                             disabled={busy || entry.learnerAliases.length === 0}
                           >
-                            {text("Assign exact Varignon activity", "Affecter l'activité Varignon exacte")}
+                            {text("Assign now", "Affecter maintenant")}
                           </button>
                         </form>
                       ) : null}

@@ -101,6 +101,17 @@ Puis vérifier sur l'environnement candidat :
 9. le retrait de l'affectation la fait disparaître immédiatement côté élève ;
 10. l'archivage invalide le dernier code et révoque les affectations ouvertes.
 
+Pour préparer la classe de démonstration unique après déploiement, exécuter :
+
+```sh
+pnpm --dir apps/frontend classroom:demo:seed
+```
+
+Le script crée ou réutilise `Test Varignon`, renouvelle son code, recrée
+l'alias `Demo`, affecte le contrat exact et vérifie sa lecture élève. Les codes
+restent uniquement dans `apps/frontend/.env.classroom-demo.local`, ignoré par
+Git et écrit en mode `0600`; aucune valeur secrète n'est imprimée.
+
 La règle WAF T24 actuelle limite globalement `POST /api/*`. Avant d'activer un
 pilote multi-élèves derrière le même NAT scolaire, l'opérateur doit la remplacer
 par des limites distinctes pour l'accès de démo, la jonction de classe et les

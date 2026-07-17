@@ -1157,3 +1157,17 @@
   variantes et transferts paramétrés restent T26. La résolution livrée est un
   snapshot transactionnel : un alias arrivé après publication n'hérite pas de
   l'affectation, et le retrait masque le contrat sans réécrire son historique.
+
+## D-084 - La classe test ouvre le contrat exact avant la reprise persistante
+
+- Décision : livrer T25-C04 en deux sous-tranches observables. C04A met en
+  service PostgreSQL/secrets, simplifie l'affectation immédiate et ouvre depuis
+  `Ma classe` la publication v2 hashée dans le runtime T22 existant. La suite
+  de C04 ajoute l'upsert et la restauration du checkpoint sémantique allowlisté.
+- Raison : la première incertitude produit est la possibilité de tester la
+  boucle professeur → code → élève → GeoGebra sur une classe réelle. Cette
+  boucle ne doit pas rester bloquée par la reprise multi-session, mais elle ne
+  doit pas non plus être présentée comme déjà persistante.
+- Impact : le retour de l'atelier retrouve la session alias et permet de
+  relancer sur une baseline sûre. Un rechargement ne prétend pas restaurer la
+  progression tant que la seconde sous-tranche C04 n'est pas qualifiée.

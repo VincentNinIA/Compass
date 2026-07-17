@@ -22,6 +22,7 @@
     "gate:t22:live": "set -a; [ ! -f ../../.env ] || . ../../.env; set +a; T22_LIVE=1 playwright test --config playwright.t22-live.config.ts e2e/t22-realtime-live.spec.ts",
     "demo:access:generate": "node scripts/t24-generate-demo-access.mjs",
     "classroom:secrets:generate": "node scripts/t25-generate-classroom-secrets.mjs",
+    "classroom:demo:seed": "node scripts/t25-seed-demo-class.mjs",
     "test:gate:t22": "vitest run scripts/t22-golden-gate.test.mjs",
     "test:eval:t3": "vitest run --config vitest.eval.config.ts"
   },

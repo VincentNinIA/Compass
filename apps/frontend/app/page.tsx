@@ -78,6 +78,7 @@ export default function Home() {
   const [screen, setScreen] = useState<AppScreen>("landing");
   const [assignedExercise, setAssignedExercise] =
     useState<TeacherExercisePublication>();
+  const [assignedFromClass, setAssignedFromClass] = useState(false);
   const [localPublications, setLocalPublications] = useState<
     readonly TeacherExercisePublication[]
   >([]);
@@ -231,7 +232,14 @@ export default function Home() {
 
   const goHome = () => {
     setAssignedExercise(undefined);
+    setAssignedFromClass(false);
     setScreen("landing");
+  };
+
+  const returnToClass = () => {
+    setAssignedExercise(undefined);
+    setAssignedFromClass(false);
+    setScreen("classroom_join");
   };
 
   return (
@@ -396,13 +404,21 @@ export default function Home() {
             geometryLearningReports={geometryLearningReports}
           />
         ) : visibleScreen === "classroom_join" ? (
-          <ClassroomJoin onBack={goHome} />
+          <ClassroomJoin
+            onBack={goHome}
+            onStart={(publication) => {
+              setAssignedExercise(publication);
+              setAssignedFromClass(true);
+              setScreen("work");
+            }}
+          />
         ) : visibleScreen === "library" ? (
           <TeacherExerciseLibrary
             onBack={goHome}
             initialExercises={localPublications}
             onStart={(exercise) => {
               setAssignedExercise(exercise);
+              setAssignedFromClass(false);
               setScreen("work");
             }}
           />
@@ -410,7 +426,12 @@ export default function Home() {
           "teacher_exercise_publication.v2" ? (
           <GeometryPublishedWorkspace
             publication={assignedExercise}
-            onHome={goHome}
+            onHome={assignedFromClass ? returnToClass : goHome}
+            returnLabel={
+              assignedFromClass
+                ? text("Back to my class", "Retour à ma classe")
+                : undefined
+            }
             onReport={handleGeometryLearningReport}
           />
         ) : (

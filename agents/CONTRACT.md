@@ -1,3 +1,68 @@
+# Contrat Builder — T25-C04A Classe test et ouverture Varignon — `in_progress`
+
+## État
+
+- Le porteur demande le 17 juillet 2026 une seule classe de démonstration,
+  réellement utilisable sur la Production Vercel, afin de tester l'exercice
+  Varignon issu de `math.pdf` sans parcourir une configuration avancée.
+- T25-C03 reste close `pass`. Cette sous-tranche ouvre le contrat affecté dans
+  le runtime T22 exact et met en service PostgreSQL/secrets; elle ne clôt pas
+  encore la reprise persistante complète de T25-C04.
+
+## Objectif
+
+Permettre au professeur de créer la classe test et d'affecter Varignon
+immédiatement, puis permettre à l'élève pseudonyme de lancer cette affectation
+dans GeoGebra depuis `Ma classe`, sur le même contrat hashé que celui relu par
+le professeur.
+
+## Inclus
+
+- PostgreSQL managé gratuit rattaché au projet Vercel, migrations 0001 à 0003,
+  secrets serveur et activation Production sans exposition du code professeur.
+- Parcours professeur simplifié pour une affectation immédiate, avec la
+  planification avancée conservée mais repliée.
+- Action élève explicite `Commencer l'activité` depuis l'affectation reçue,
+  validation locale stricte de la publication v2 et ouverture du runtime T22.
+- Retour de l'atelier vers la classe, tests React/Playwright ciblés, gates
+  frontend, déploiement et smoke Production sur une classe test réelle.
+
+## Hors périmètre
+
+- Persistance d'un checkpoint sémantique en cours de mission, synchronisation
+  multi-appareil et bilan de classe persistant; ils restent dans la suite de
+  T25-C04/T25-C05.
+- Variante adaptative T26, second template, identité nominative, LMS ou note.
+- Plan payant, domaine, soumission Devpost ou modification du WAF hors besoin
+  démontré par le smoke de la classe unique.
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend test:e2e:t25
+git diff --check
+# smoke Production professeur -> classe -> élève -> affectation -> GeoGebra
+```
+
+## Définition de fini
+
+- La Production possède une base migrée et échoue toujours fermée sans ses
+  secrets; aucun driver mémoire n'y est activé.
+- Une classe `Test Varignon` et un alias de démonstration reçoivent une
+  affectation active; le bouton élève ouvre les neuf missions dans le vrai
+  atelier GeoGebra.
+- Le contrat ouvert porte le hash exact de l'affectation et le retour conserve
+  la session pseudonyme; les tests et smokes ne révèlent aucun secret.
+
+---
+
+# Archive — T25-C03
+
 # Contrat Builder — T25-C03 Affectations ciblées Varignon — close `pass`
 
 ## État

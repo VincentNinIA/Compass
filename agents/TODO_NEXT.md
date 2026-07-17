@@ -2,19 +2,29 @@
 
 ## Prochaine action
 
-T20-C01 est close `pass` : le SHA T18 `e1efc28` est servi par
-`https://compass-geotutor-demo.vercel.app/` via la Production READY
-`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`, et Devpost version 6 décrit désormais ce
-candidat live sans soumettre OpenAI Build Week.
+T24-C01 est active : intégrer le candidat T22 `0c8e3f4` dans `main`,
+résoudre les divergences sans perdre les changements du porteur, puis
+reconstruire et figer une identité source/build/runtime propre.
 
-Prochaine action : enregistrer la vidéo finale de moins de trois minutes,
-obtenir l'identifiant `/feedback`, ajouter les retours humains réels, valider la
-licence et choisir Education au moment de la soumission. Ajouter un accès de
-démo et un rate limit avant toute diffusion large de l'URL publique.
+T23-C01 et T23-C02 sont closes `pass` après audit, replanning et recentrage sur
+le PDF Varignon. La séquence décidée est :
+
+1. T24 — intégrer, protéger et déployer T22 ;
+2. T25 — classe pilote, pseudonymes, affectations, reprise et bilan persistant ;
+3. T26 — recettes Varignon, profil factuel et variantes approuvées ;
+4. T27 — durcissement, instrumentation, pilote réel et candidat final.
+
+Ne pas ouvrir T25 tant que T24-C01 à T24-C03 ne sont pas closes. Vidéo,
+licence et soumission restent des actions distinctes exigeant l'autorité du
+porteur.
 
 ## Dépendances
 
 - T0 et T1 sont closes avec décision `pass`.
+- T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
+  ne laisse aucun P1/P2 ouvert.
+- T23-C01 et T23-C02 sont closes `pass`; T24-C01 est la seule carte Builder
+  ouvrable. T24-C02 à T27-C04 restent `backlog` derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -146,9 +156,14 @@ fiche Devpost version 6 reste non soumise.
 Ne pas modifier les contrats spécialisés T1 à T6. SLA production, analytics
 persistants, IndexedDB, historique distant, commande GeoGebra générique,
 création arbitraire de points et vérification automatique de toutes les matières
-restent hors périmètre. Authentification, gestion de classes et affectations
-nominatives restent également hors de T16-C01; le catalogue est partagé mais
-éphémère sur un seul processus serveur.
+restent hors périmètre. Le LMS complet, le SSO établissement et les comptes
+élèves nominatifs restent également hors périmètre. T25 autorise seulement une
+identité professeur limitée, des classes à pseudonymes et des affectations
+bornées après fermeture des contrats de données, accès, rétention et suppression.
+
+T22 est implémenté et qualifié sur sa branche candidate, mais sa présence dans
+un PR ne vaut ni intégration à `main`, ni déploiement. T24-C01 doit conserver
+l'historique, résoudre les divergences et rejouer les gates avant toute release.
 
 Avant de diffuser largement l'URL Vercel, ajouter une protection applicative de
 démo et une limitation de débit sur les routes OpenAI. Pour les seules démos
@@ -156,4 +171,4 @@ live actuelles, garder l'URL peu diffusée, surveiller l'usage du projet OpenAI 
 retirer ou faire tourner la clé lorsque la période de démonstration se termine.
 
 La dette du compteur documentaire T17 est résolue : le validateur ne porte plus
-de nombre magique et vérifie désormais les 71 cartes contre le registre roadmap.
+de nombre magique et compare chaque carte au registre roadmap.

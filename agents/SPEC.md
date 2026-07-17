@@ -4,16 +4,23 @@
 
 Compass est un tuteur scolaire multimodal et voice-first. Il lit un exercice
 photographié, en restitue fidèlement l'énoncé pour confirmation, puis accompagne
-l'élève pas à pas quelle que soit la matière lisible. Les modules spécialisés,
-comme GeoGebra pour la géométrie, restent optionnels et ne peuvent revendiquer
-une vérification que lorsqu'un contrat déterministe compatible est disponible.
+l'élève pas à pas quelle que soit la matière lisible. Son différenciateur
+Education prioritaire devient l'investigation géométrique dynamique pilotée par
+le professeur : l'élève construit, explore, conjecture et justifie dans
+GeoGebra. Après le harnais T22, Compass doit relier cette investigation à une
+boucle de classe limitée : affectation ciblée, reprise élève, bilan factuel et
+proposition d'une prochaine variante approuvée par le professeur. Les autres
+modules spécialisés restent optionnels et ne peuvent
+revendiquer une vérification que lorsqu'un contrat déterministe compatible est
+disponible.
 
 ## Utilisateurs
 
 - Élève : comprendre un exercice sans recevoir immédiatement la solution,
   dans une interface rassurante qui lui indique toujours la prochaine action utile.
 - Enseignant : préparer ou générer des exercices adaptés, transmettre des
-  consignes pédagogiques au coach et les publier dans une bibliothèque simple.
+  consignes pédagogiques au coach, régler l'autonomie et les aides d'une
+  investigation GeoGebra, puis publier après prévisualisation.
 - Jury : observer une boucle multimodale fiable, visible et démontrable de bout en bout.
 
 ## Expérience élève
@@ -44,6 +51,8 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Chaque exercice confirmé devient une suite de missions jouables, quelle que
   soit la matière. Un compteur compact garde visibles les XP gagnés pendant la
   session et la prochaine mission à accomplir.
+- Dans la boucle classe du pilote, l'élève rejoint un groupe par code sous un
+  pseudonyme, voit uniquement ses affectations et peut reprendre un état sûr.
 
 ## Expérience enseignant
 
@@ -61,8 +70,17 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   des contrôles locaux spécialisés jouent les rôles de didacticien, adaptateur
   de difficulté, contrôleur de sécurité et contrôleur de coût. Cette mécanique
   reste interne; la surface montre seulement les résultats utiles à la relecture.
-- Une publication rejoint un catalogue partagé éphémère. La gestion des
-  classes, comptes et affectations nominatives reste hors du prototype.
+- Le catalogue partagé éphémère reste l'état T22. La phase suivante ajoute une
+  identité professeur limitée, des classes à élèves pseudonymes et des
+  affectations par classe, groupe ou élève, sans construire un LMS complet.
+- Pour une investigation GeoGebra, le professeur choisit une activité validée,
+  le niveau, les difficultés ciblées et la politique d'aide. Il prévisualise le
+  vrai parcours avant publication; il ne modifie ni les tolérances, ni les
+  permissions, ni les commandes internes.
+- Le théorème de Varignon est l'activité unique de référence jusqu'au pilote,
+  avec exploration de quadrilatères convexes, concaves et croisés. L'adaptation
+  porte sur l'étayage, la difficulté, le preset et le transfert, pas sur un autre
+  théorème.
 
 ## Parcours principal
 
@@ -92,7 +110,17 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 10. Si aucun support ne correspond, l'interface reste honnête : elle
    accompagne par la conversation sans prétendre observer ou corriger un outil.
 11. Le parcours historique médiatrice reste un module spécialisé interne et ne
-   constitue plus le défaut de la surface publique.
+    constitue plus le défaut de la surface publique.
+12. Une publication `geometry_investigation.v1` initialise un scaffold approuvé,
+    observe les dépendances, vérifie les relations compatibles, capture plusieurs
+    états expérimentaux et guide séparément conjecture puis démonstration.
+13. Dans le pilote de classe, le professeur affecte le contrat exact à des
+    destinataires pseudonymes; l'élève le retrouve, le reprend et le termine.
+14. Les faits déterministes et aides effectivement livrées alimentent un bilan
+    minimal; le professeur décide ensuite de l'activité suivante.
+15. Une proposition adaptative ne peut choisir qu'une recette versionnée sous
+    `varignon.v1` et ses paramètres bornés. Compilation, préflight et
+    approbation précèdent toujours l'affectation.
 
 ## Exigences fonctionnelles
 
@@ -139,6 +167,35 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 | FR-39 | Demander une trace courte de démarche avant tout crédit XP auto-déclaré, puis une réponse de transfert à la fin de l'exercice, sans noter ni publier les textes saisis. |
 | FR-40 | Pour un exercice professeur, rendre dans le même onglet un bilan anonyme et factuel de session limité aux comptes terminé/vérifié, aux XP et aux statuts de réflexion. |
 | FR-41 | Réinitialiser scroll et focus à chaque écran et garantir qu'à 390 px mascotte, rail de missions et éléments décoratifs ne masquent aucune action principale. |
+| FR-42 | Valider un contrat fermé `geometry_investigation.v1` décrivant scaffold, missions, relations, aides, démonstration et transfert. |
+| FR-43 | Publier un monde GeoGebra v2 borné avec commandes, parents, ownership, événements terminaux, faits, epoch, révision et hash. |
+| FR-44 | Permettre au coach d'activer un outil autorisé, recentrer la vue et mettre temporairement en évidence des objets sans créer de construction. |
+| FR-45 | Initialiser un scaffold approuvé et créer, après consentement, une variation convexe, concave ou croisée choisie par intention sémantique plutôt que coordonnées modèle. |
+| FR-46 | Classer déterministement un quadrilatère ordonné en convexe, concave, croisé ou dégénéré avec tolérance versionnée. |
+| FR-47 | Vérifier par faits déterministes milieu, parallélisme, perpendicularité, égalité de longueurs, appartenance, non-alignement et parallélogramme. |
+| FR-48 | Capturer en mémoire un état expérimental tout-ou-rien avec checkpoint, snapshot, hash, configuration, provenance et evidence IDs. |
+| FR-49 | Restaurer exactement une capture et rejouer une démonstration temporaire avec pause, arrêt et cleanup vérifié. |
+| FR-50 | Appliquer les niveaux d'autorité O0 à O5, budgets, consent tokens, idempotence, annulation et rejet du stale à toutes les actions du harnais. |
+| FR-51 | Piloter missions, tentatives, aides L1 à L4 et progression depuis le contrat d'activité plutôt que depuis un exercice codé en dur. |
+| FR-52 | Livrer Varignon comme parcours golden : quatre milieux exacts, trois configurations capturées, deux parallélismes par état, conjecture, justification et transfert. |
+| FR-53 | Permettre au professeur de configurer, prévisualiser et publier Varignon puis recevoir un bilan factuel sans identité, texte libre ou note. |
+| FR-54 | Unifier le harnais public en réutilisant adapter, snapshots, ownership, checkpoints, highlights, preuves, policy et arbitre historiques sans créer un runtime parallèle durable. |
+| FR-55 | Qualifier le nouveau harnais sur trois golden journeys consécutifs, EN/FR, clavier, mouvement réduit, zoom 200 % et viewports 390/768/1440. |
+| FR-56 | Intégrer le candidat T22 dans la branche de référence, déployer son artefact exact et conserver une identité source/build/runtime vérifiable. |
+| FR-57 | Protéger la démonstration publique et limiter les routes coûteuses avant diffusion, sans exposer secret, token ou contenu élève. |
+| FR-58 | Permettre à un professeur authentifié dans le pilote de créer, archiver et administrer une classe limitée. |
+| FR-59 | Permettre à un élève de rejoindre une classe par code rotatif sous un pseudonyme, sans compte nominatif ni accès au roster. |
+| FR-60 | Affecter une activité versionnée à une classe, un groupe ou un élève pseudonyme avec dates et politique d'aide bornées. |
+| FR-61 | Afficher à l'élève ses affectations et restaurer un checkpoint sûr après vérification d'activité, version, hash et ownership. |
+| FR-62 | Persister uniquement les faits, missions, configurations, aides et statuts nécessaires à un bilan professeur factuel. |
+| FR-63 | Définir et appliquer isolation, minimisation, expiration, révocation et suppression en cascade pour toutes les données de classe. |
+| FR-64 | Publier un registre de recettes Varignon versionnées, paramétrées et compilables vers le template exact `varignon.v1` de `geometry_investigation.v1`. |
+| FR-65 | Produire un profil de difficultés explicable uniquement à partir de faits déterministes, en conservant l'état `inconnu` lorsque les preuves manquent. |
+| FR-66 | Proposer en un appel modèle maximum une recette Varignon et ses paramètres structurés, sans autre template, commande GeoGebra, texte libre élève ni publication automatique. |
+| FR-67 | Compiler et préflighter localement chaque variante sur le vrai harnais avant de la rendre prévisualisable. |
+| FR-68 | Exiger la prévisualisation et l'approbation explicite du professeur avant toute affectation d'une variante générée. |
+| FR-69 | Livrer une matrice Varignon fermée avec trois niveaux d'étayage, des presets locaux sûrs et les transferts rectangle, losange ou carré, sans modifier les neuf missions ni les relations invariantes. |
+| FR-70 | Qualifier la boucle classe et la fabrique adaptative par golden journeys, puis par un pilote avec un professeur et au moins trois élèves pseudonymes. |
 
 ## Contraintes
 
@@ -146,11 +203,13 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   ou contradictoire demande une clarification ciblée.
 - L'application, pas le modèle, possède l'autorité de prise de parole proactive.
 - Aucune affirmation géométrique sans preuve déterministe.
+- Une capture dynamique est nommée preuve expérimentale et ne devient jamais
+  automatiquement une démonstration universelle.
 - Aucun outil de commande GeoGebra arbitraire.
 - Les hints sont temporaires ou restaurables; les actions destructives exigent une intention explicite.
-- Les images, checkpoints et journaux restent en mémoire pour le prototype.
-- Les XP restent également en mémoire seulement; un rechargement remet le
-  compteur à zéro et aucun profil élève n'est créé.
+- Jusqu'à T24 inclus, images, checkpoints, journaux et XP restent en mémoire.
+  T25 ne persiste ensuite que les champs explicitement allowlistés par FR-62 et
+  FR-63, avec durée de conservation et suppression testées.
 - Le catalogue professeur est borné et conservé uniquement dans la mémoire du
   processus serveur; un redémarrage l'efface. Cette limite technique ne domine
   pas le parcours enseignant ou élève.
@@ -158,9 +217,12 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   de contrôle supplémentaires sont des validateurs locaux sans coût modèle.
 - Les textes de démarche et de transfert restent dans le composant élève : le
   bilan professeur n'en expose que le statut complété ou en attente.
-- Les bilans d'apprentissage et les publications de secours restent dans la
-  mémoire React de l'onglet courant; ils ne constituent ni un dossier élève, ni
-  une synchronisation de classe, ni une persistance de production.
+- Les textes de démarche, transfert, audio, images, transcripts et checkpoints
+  Base64 ne sont jamais persistés dans le dossier d'apprentissage ni transmis
+  au modèle de génération adaptative.
+- Les variantes adaptatives restent sous `varignon.v1`, dans des recettes
+  versionnées et avec les capacités déterministes réellement présentes dans le
+  harnais. Aucun second template n'est ouvert avant le pilote.
 - Le prototype est non commercial et affiche l'attribution GeoGebra.
 - Le changement de langue reste un état de session en mémoire et n'ajoute aucun
   stockage navigateur.
@@ -172,13 +234,18 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Garantir une vérification déterministe automatique pour toutes les matières.
 - Générer ou exécuter automatiquement un outil spécialisé pour un exercice non
   reconnu par un contrat applicatif fermé.
-- Construire un LMS, une authentification, une gestion de classes ou des
-  affectations nominatives.
+- Construire un LMS complet, un SSO établissement, une administration scolaire,
+  un compte élève nominatif, un portail parent ou une facturation.
 - Fournir une notation à enjeu élevé.
 - Garantir une licence GeoGebra commerciale ou une préparation production.
-- Persister des données d'élèves ou des médias.
+- Persister des médias, textes libres, transcripts, identités réelles ou un
+  historique élève non borné.
 - Transmettre au professeur le texte libre saisi par l'élève, inférer sa maîtrise
   ou convertir les XP en note.
+- Générer universellement toute activité GeoGebra depuis un brief libre, utiliser
+  le CAS ou la 3D, ou prouver symboliquement tout théorème dans le MVP Varignon.
+- Ajouter un second théorème ou un second template d'investigation avant le
+  pilote Varignon T27.
 
 ## Critères globaux
 
@@ -233,6 +300,35 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
 - Chaque transition `landing/upload/confirm/work/teacher/library` replace le
   viewport en haut et le focus sur le titre; à 390 px la mascotte flottante et
   le rail de missions laissent les appels à l'action lisibles et activables.
+- Pour Varignon, un point libre placé visuellement au milieu ne satisfait pas la
+  mission; les quatre points doivent dépendre exactement de leurs extrémités.
+- Les configurations convexe, concave et croisée sont classées et capturées sur
+  des révisions distinctes, tandis qu'un état dégénéré demande un nouveau drag.
+- Chaque capture Varignon porte deux faits de parallélisme et une provenance
+  élève; une démonstration assistant ne crédite pas une manipulation élève.
+- L'activation de l'outil Milieu et un highlight L3 ne créent aucun objet et
+  restaurent outil, couleurs, épaisseurs et viewport au cleanup.
+- Une restauration de capture réconcilie hash, inventaire, ownership et
+  listeners; tout échec ferme la voie avant publication d'un faux succès.
+- Le bilan professeur indique configurations, milieux, parallélismes, niveau
+  d'aide et statuts de conjecture/justification/transfert, sans texte libre,
+  identité ni note.
+- Une publication `geometry_investigation.v1` ouvre publiquement le harnais v2
+  exact sans flag et fournit au coach seulement le monde borné, la mission, les
+  preuves manquantes et le niveau d'aide autorisé ; l'application seule avance
+  les missions et attribue les XP.
+- Trois parcours Varignon consécutifs sans retry doivent conserver le même
+  candidat/environnement, restaurer hash/inventaire/ownership/listeners, finir
+  sans helper ni ressource, et produire uniquement des manifests fermés.
+- Un professeur peut créer une classe pilote, affecter le même contrat exact à
+  un groupe ou à un alias et consulter ensuite un bilan factuel isolé.
+- Deux élèves pseudonymes ne peuvent lire ni affectations, checkpoints ou faits
+  l'un de l'autre; révocation, expiration et suppression sont observables.
+- Une variante adaptative invalide ne dépasse jamais le compilateur; une variante
+  valide n'est affectée qu'après prévisualisation et approbation professeur.
+- Les recettes `guided`, `standard` et `challenge`, les presets sûrs et les
+  trois transferts Varignon passent le même golden sans runtime, gateway ou
+  autorité parallèle.
 
 ## Hypothèses validées
 
@@ -240,6 +336,13 @@ une vérification que lorsqu'un contrat déterministe compatible est disponible.
   reste gouvernée séparément par les contrats Realtime existants.
 - Nom public : Compass. Les identifiants techniques historiques `GeoTutor` et
   `__GEOTUTOR_*` restent stables tant qu'ils ne sont pas visibles par l'élève.
-- Application web Next.js avec petites routes serveur et sans base de données.
+- Application web Next.js avec petites routes serveur. L'état T22 reste sans
+  base; T25 introduit un store serveur uniquement après fermeture des contrats,
+  accès, migrations, rétention et suppression.
+- Le contrat Varignon v1 reste le seul template jusqu'au pilote. T26 ajoute des
+  recettes d'étayage, presets et transferts fermés basés sur les faits
+  déterministes déjà disponibles.
+- Le pilote utilise une identité professeur limitée et des élèves pseudonymes;
+  aucune identité scolaire réelle n'est nécessaire à la validation produit.
 - Modèles : `gpt-realtime-2.1` pour la voix, `gpt-5.6-terra` pour l'extraction
   d'exercice élève et `gpt-5.6-luna` pour le brouillon professeur frugal.

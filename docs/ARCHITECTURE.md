@@ -435,6 +435,115 @@ les six missions GeoGebra, l'absence de débordement et une console sans erreur.
 Le déploiement ne crée aucune persistance, protection d'accès ou soumission
 Devpost supplémentaire.
 
+## T21 — PRD du harnais d'investigation GeoGebra
+
+T21-C01 est une tranche documentaire close `pass` au 17 juillet 2026. Elle ne
+modifie aucun runtime et définit dans
+`docs/PRD_GEOGEBRA_INVESTIGATION_HARNESS.md` la cible T22 : contrat
+`geometry_investigation.v1`, actions O0 à O5, monde v2, moteur déterministe,
+preuves expérimentales, checkpoints publics et parcours Varignon.
+
+L'audit distingue désormais trois réalités : le scratchpad public T14 sait
+observer un monde borné et exécuter dix actions simples ; le spécialiste
+historique possède checkpoints, highlights, preuves et restauration plus
+riches ; T22 doit composer ces briques derrière une façade publique unique sans
+présenter la cible comme déjà livrée.
+
+## T22 — harnais unifié, C01-C08 closes
+
+T22-C01 introduit `GeometryInvestigationRuntime` sans retirer le fallback
+généraliste. La façade validée compose adapter, observation, moteur, gateway,
+checkpoints, policy et callbacks sans exposer encore de mutation publique. Les
+contrats stricts activité, monde v2, faits, captures et bilan, ainsi que les
+fixtures Varignon FR/EN à neuf missions, sont la source unique des cartes
+suivantes. Les cartes C02 à C07 complètent progressivement cette façade : monde
+et dépendances stabilisés, calcul des faits, progression des missions, actions
+sémantiques autorisées et états restaurables. L'assemblage public reste réservé
+à C08.
+
+```mermaid
+flowchart LR
+    Activity["geometry_investigation.v1"] --> Runtime["GeometryInvestigationRuntime"]
+    Runtime --> Adapter["GeoGebraAdapter"]
+    Adapter --> Bridge["Events + snapshots stables"]
+    Bridge --> World["GeometryWorldV2 + dépendances"]
+    World --> Engine["Moteur déterministe"]
+    Engine --> Facts["Faits + evidence IDs"]
+    Facts --> Missions["Missions pilotées par activité"]
+    World --> Policy["SILENT / QUEUE / SPEAK"]
+    Policy --> Realtime["geogebra_tutor v2"]
+    Realtime --> Gateway["Actions O0-O5 fermées"]
+    Gateway --> Consent["Budgets + consent tokens"]
+    Consent --> Adapter
+    Runtime <--> Checkpoints["Captures + restore + replay"]
+```
+
+Varignon est le seul template obligatoire du MVP. Le scaffold contient A, B,
+C, D et les côtés. L'élève construit E, F, G, H, capture les configurations
+convexe, concave et croisée, formule une conjecture, vérifie deux parallélismes
+par capture puis suit une justification fondée sur le théorème des milieux.
+Une capture assistant est distincte d'une capture élève et ne crédite jamais la
+manipulation demandée.
+
+T22-C02 ajoute le parse borné des parents, l'ownership, le monde et le delta v2,
+ainsi qu'un stabilisateur à double snapshot. `movingGeos` et les updates
+intermédiaires ne publient rien; un terminal add/remove/update/drag/sélection ou
+undo/redo ne commit qu'après deux mondes identiques. Une méthode Realtime v2
+envoie ces observations sans réponse automatique. Le scratchpad ne l'active que
+par le flag de qualification `t22WorldV2=1`; le parcours public reste v1.
+
+T22-C03 ajoute un moteur pur à tolérances versionnées. Il classe quatre points
+ordonnés en convexe, concave, croisé ou dégénéré et évalue milieu, parallèle,
+perpendiculaire, égalité de longueurs, appartenance, non-alignement et
+parallélogramme. Les faits restent liés à l'epoch, la révision et le hash du
+monde; un `unknown` ne devient jamais une preuve. Le parallélogramme compose les
+deux faits parallèles déclarés. Le flag `t22Engine=1` sert uniquement à la
+qualification sur le vrai applet.
+
+T22-C04 ajoute un gateway strict réutilisable par le tool loop. Sept actions
+modèle sont négociées sous le header v2 ; l'initialisation reste système. Le
+gateway revalide activité, epoch, révision, mission et niveau O0-O5, applique les
+budgets 4/2/1 et consomme un token one-shot avant toute variation O3. `setMode`,
+highlight et focus sont réversibles ; les coordonnées de variation sont choisies
+localement et tout drag concurrent provoque rollback/quarantaine. Le flag
+`t22Actions=1` sert au vrai applet ; le profil public reste historique.
+
+T22-C05 étend la palette à dix actions avec capture, restore et démonstration.
+Un store mémoire borne huit états/12 MB, garde le Base64 privé et expose une
+galerie textuelle. Le restore suspend et réconcilie les listeners, vérifie hash,
+inventaire et ownership sous une nouvelle autorité, puis tente une baseline
+avant fatal. Le replay déclaré offre pause/reprise/stop et rend toujours la
+figure exacte sans crédit élève. Avant `setBase64`, une barrière `inert` rend
+l'annulation transactionnelle; une écriture engagée reste atomique jusqu'à la
+réconciliation. Le flag `t22Evidence=1` qualifie ces garanties sur le vrai
+applet sans bascule publique.
+
+T22-C06 ajoute une machine de session pure dérivée de l'activité. Elle avance
+les neuf missions dans l'ordre à partir de faits courants, de captures élève et
+de traces locales de réflexion ; les captures assistant et les textes du modèle
+ne portent aucun crédit. La policy `SILENT | QUEUE | SPEAK` garde le premier
+blocage silencieux, borne les aides L1-L4 et publie vers Realtime seulement un
+contexte pédagogique fermé. Le rapport anonyme exclut conjecture, transfert et
+identité. Le flag `t22Learning=1` qualifie le parcours complet sur le vrai
+applet, jusqu'à 160 XP déterministes.
+
+T22-C07 ajoute une publication v2 strictement discriminée, un studio professeur
+avec vraie prévisualisation et une session élève ouverte depuis le contrat exact.
+Le rapport anonyme circule seulement dans la session éphémère multi-onglet et
+reste sans identité, note ni texte libre.
+
+T22-C08 rend cette composition publique uniquement pour une publication au
+discriminant compatible. Le scratchpad transmet le monde v2 évalué, la pédagogie
+fermée et le `ToolRuntime` d'investigation à la session `geogebra_tutor`; le
+contexte géométrique remplace alors le contexte général, sans modifier les
+profils historiques. Unmount ferme observer, adapter, checkpoints et globals.
+
+T22-C01 à C08 sont closes `pass` après contre-audit final sans P1/P2 ouvert.
+Trois runs consécutifs sur le même candidat et environnement prouvent contrat
+exact, L4 sous consentement, barrière de restore, 9/9, 160 XP, zéro helper,
+quotas, accessibilité, reflow et cleanup. Le smoke credentialed prouve la
+négociation v2, l'inspection sans mutation et la fermeture du canal.
+
 ## Frontières cibles
 
 ```mermaid
@@ -524,3 +633,82 @@ constructions usuelles. Le tutorat transversal reste
 conversationnel; la vérification déterministe automatique de toutes les
 matières, la notation à enjeu élevé et la génération d'outils arbitraires ne
 sont pas implémentées.
+Le PRD T21 et le harnais T22 sont implémentés jusqu'à C08. Le parcours public
+professeur prévisualise le scaffold réel avant publication; le parcours élève
+construit dans le toolbar/canvas GeoGebra, stabilise et classe Varignon, tient
+un ledger XP monotone, capture trois checkpoints et restaure par confirmation.
+Les aides L1-L4 ne sont créditées qu'après livraison; les effets O2/O5 passent
+par le gateway fermé et sont annulés sur sélection, drag ou parole élève. Le
+gate C08 construit lui-même l'artefact, empreinte sources, `.next` et Chromium,
+puis exige trois parcours UI consécutifs sans retry avec Axe incluant l'applet
+et cleanup terminal. Comptes, classes, persistance, notation à enjeu élevé,
+licence commerciale et déploiement restent hors de cette architecture locale.
+
+## Architecture post-harnais cible — non implémentée
+
+T23 ne modifie pas le runtime. Il fixe la cible T24 à T27 afin que la boucle de
+classe étende le harnais existant au lieu de créer une seconde autorité.
+
+```mermaid
+flowchart LR
+    Teacher["Identité professeur pilote"] --> Classroom["Classe et aliases"]
+    Teacher --> Intent["Intention pédagogique"]
+    Intent --> Registry["Recettes Varignon versionnées"]
+    Registry --> Generate["Proposition structurée bornée"]
+    Generate --> Compile["Compilateur déterministe"]
+    Compile --> Preflight["Préflight vrai harnais"]
+    Preflight --> Approve["Approbation professeur"]
+    Approve --> Assignment["Affectation immuable"]
+    Classroom --> Assignment
+    Assignment --> Queue["File et reprise élève"]
+    Queue --> Runtime["GeometryInvestigationRuntime T22"]
+    Runtime --> Facts["Faits minimaux persistants"]
+    Facts --> Report["Bilan professeur factuel"]
+    Report --> Intent
+```
+
+### Frontières nouvelles
+
+- `ClassroomStore` : classes, codes hachés, aliases pseudonymes et révocation.
+- `AssignmentStore` : activité compilée exacte, destinataires, dates et politique
+  d'aide. Une affectation publiée est immuable.
+- `LearningEvidenceStore` : missions, faits, configurations, assistance et
+  statuts uniquement; aucun texte libre, média, transcript, note ou Base64.
+- `VarignonVariantRegistry` : recette, version, difficulté, preset, transfert,
+  capacités moteur et compilateur vers `geometry_investigation.v1` avec
+  `template:"varignon.v1"` invariant.
+- `AdaptiveDraftService` : un appel modèle maximum qui retourne seulement une
+  recette Varignon connue et ses paramètres stricts.
+- `TemplatePreflight` : compilation et exécution isolée sur le même runtime,
+  avec cleanup vérifié avant prévisualisation.
+
+Ces frontières restent cibles jusqu'à leurs cartes respectives. T25-C01 doit
+choisir le store et fermer migrations, accès, expiration et suppression avant la
+première écriture persistante.
+
+### Flux de données autorisé
+
+1. Le professeur authentifié crée une classe et distribue un code rotatif.
+2. L'élève rejoint sous pseudonyme; aucune identité scolaire n'est demandée.
+3. Une affectation référence un contrat compilé, versionné et approuvé.
+4. La reprise relit un checkpoint court seulement après validation du contrat,
+   de la version, du hash et de l'ownership.
+5. Le runtime produit les faits comme aujourd'hui; une projection allowlistée
+   seulement devient persistante.
+6. Le bilan agrège les faits et les aides, sans inférer une maîtrise ni une note.
+7. Le profil de difficultés reste explicable et peut alimenter un nouveau
+   brouillon, que le professeur doit à nouveau approuver.
+
+### Invariants de migration
+
+- T24 intègre et déploie T22 avant tout changement de données.
+- Aucun nouveau composant n'appelle directement l'API GeoGebra hors adapter et
+  gateway existants.
+- Aucun second template n'est accepté avant le pilote; les neuf missions et les
+  relations de `varignon.v1` restent invariantes.
+- Aucun modèle ne reçoit de checkpoint, scène brute ou texte libre élève.
+- Aucun modèle ne publie, n'affecte ou ne complète une mission.
+- Chaque entité persistante possède propriétaire, durée de conservation et
+  suppression en cascade testée.
+- Le mode catalogue éphémère T22 reste un fallback jusqu'à migration explicite;
+  il ne doit pas être silencieusement mélangé au store de classe.

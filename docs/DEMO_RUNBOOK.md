@@ -127,3 +127,59 @@ This qualification used a local self-signed certificate and proves the
 application candidate, not browser trust on a jury machine. Before presenting,
 repeat the trusted-certificate and physical-microphone checks above without
 changing or mislabelling the automated 3/3 verdict.
+
+## T22 — démonstration de l’investigation Varignon
+
+Le parcours Education public part de l’espace professeur. Choisir **Préparer
+l’investigation Varignon**, relire les neuf missions, ouvrir la vraie
+prévisualisation puis cocher **Prévisualisation relue** avant de publier. Le lien
+élève ouvre le contrat `geometry_investigation.v1` exact dans un nouvel onglet ;
+aucun flag de qualification n’est nécessaire.
+
+Dans l’onglet élève :
+
+1. montrer le coach horizontal puis choisir voix ou texte seulement si une
+   connexion live est utile ; le mode local garde toutes les missions ;
+2. construire E, F, G, H comme milieux puis EF, FG, GH, HE ;
+3. capturer successivement les cas convexe, concave et croisé ;
+4. écrire une conjecture locale, vérifier les deux parallélismes sur les trois
+   captures, expliquer les sept étapes et terminer le transfert ;
+5. montrer 9/9 et 160 XP, puis restaurer une capture avec la confirmation
+   visible ; le hash, l’inventaire, l’ownership et les listeners sont vérifiés ;
+6. revenir à l’accueil et vérifier qu’applet, helpers, checkpoints et ressources
+   Realtime sont fermés.
+
+Le rapport professeur est factuel et éphémère : missions, configurations,
+milieux, parallélismes, aide et XP seulement. Il ne contient ni identité, note,
+conjecture, transfert, transcript ou checkpoint.
+
+### Qualification T22
+
+Après le build de production :
+
+```sh
+pnpm --dir apps/frontend test:gate:t22
+pnpm --dir apps/frontend gate:t22:golden
+
+# Avec OPENAI_API_KEY dans le fichier .env racine, chargé côté serveur :
+pnpm --dir apps/frontend gate:t22:live
+```
+
+`gate:t22:golden` exécute trois parcours séquentiels avec `workers: 1` et
+`retries: 0`. Il empreinte le build et l’environnement, puis valide trois
+manifests fermés sous `output/playwright/T22-C08/`. Chaque manifest couvre
+publication, scaffold, quatre milieux, trois captures, six parallélismes,
+conjecture, sept étapes, transfert, restore exact, quota, zéro helper, Axe,
+reflow 390/768/1440 et cleanup terminal. Base64, data URL, SDP, clé, texte élève,
+transcript et identité sont interdits dans ces preuves.
+
+L’audit Axe couvre toute la surface Compass autour de l’applet ; le sous-arbre
+interne injecté par GeoGebra est exclu de ce scan car il appartient au tiers.
+Le garde d’accessibilité local, le clavier réel et la revue visuelle de l’applet
+restent obligatoires. `gate:t22:live` est isolé, sans trace ni vidéo : il prouve
+la négociation de la palette v2, la publication du monde/pédagogie bornés, une
+lecture outillée sans mutation et la fermeture du canal, sans conserver la
+réponse du modèle.
+
+Ces gates ne déploient rien, ne fusionnent aucune branche, ne soumettent aucun
+projet et ne lèvent pas la restriction de licence commerciale GeoGebra.

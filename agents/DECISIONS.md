@@ -840,3 +840,211 @@
 - Impact : le schéma, le plafond d'un appel et les permissions ne changent pas.
   Une validation locale autorise toujours la publication, mais ne devient ni une
   certification didactique, ni une garantie de niveau, ni une modération globale.
+
+## D-062 - La géométrie dynamique devient le différenciateur Education prioritaire
+
+- Décision : conserver le tutorat général comme fallback, mais centrer la
+  prochaine évolution produit sur des investigations GeoGebra approuvées par le
+  professeur, où l'élève construit, explore, conjecture et justifie. Varignon
+  devient le premier parcours complet et reproductible.
+- Raison : une feuille statique ne permet pas d'explorer le mot « quelconque » ;
+  GeoGebra rend visibles les familles de cas et les invariants. Cette boucle
+  différencie Compass d'un générateur de fiches ou d'un LMS avec chat ajouté.
+- Impact : `geometry_investigation.v1` complète l'exercice général sans le
+  remplacer. L'espace professeur prévisualise l'investigation et le bilan reste
+  factuel, anonyme, sans texte libre ni note.
+
+## D-063 - Un harnais public unifié réutilise les autorités historiques
+
+- Décision : faire évoluer la façade publique `GeoGebraAssistRuntime` vers un
+  `GeometryInvestigationRuntime` qui compose adapter, snapshot, ownership,
+  checkpoint, highlight, preuve, policy et arbitre déjà qualifiés. Ne pas créer
+  un troisième runtime parallèle et ne pas supprimer le spécialiste historique
+  avant parité prouvée.
+- Raison : le dépôt possède déjà les primitives difficiles de restauration,
+  stale, annulation et preuves, mais elles ne sont pas toutes exposées dans le
+  scratchpad public. Les dupliquer créerait des autorités concurrentes et une
+  divergence de sécurité.
+- Impact : T22 migre par étapes derrière contrats v2 et flags explicites. Les
+  exercices généraux restent sur leur chemin actuel ; seules les activités au
+  discriminant compatible utilisent le nouveau harnais jusqu'au gate final.
+
+## D-064 - Actions GeoGebra sémantiques sous niveaux O0 à O5
+
+- Décision : séparer observation, dialogue, guidage UI, mutation assistée,
+  restauration et démonstration en niveaux O0 à O5. Les intentions modèle sont
+  fermées ; les mutations O3 exigent un consent token one-shot et O4/O5 une
+  confirmation visible. L'application choisit commandes, coordonnées de
+  variation, tolérances et preuves.
+- Raison : Compass doit pouvoir agir dans GeoGebra sans retirer l'autonomie de
+  l'élève ni donner au modèle une commande arbitraire. Un outil activé ou un
+  highlight n'a pas la même autorité qu'un déplacement, un restore ou une
+  démonstration.
+- Impact : quatre lectures, deux aides UI et une mutation maximum par tour ;
+  drag, parole, reset ou nouvelle révision annulent les effets en vol. Les
+  captures assistant gardent une provenance distincte et ne créditent jamais
+  une mission exigeant une action élève.
+
+## D-065 - Le profil d'investigation migre par négociation explicite
+
+- Décision : conserver le profil GeoGebra historique par défaut et négocier la
+  palette d'investigation avec `X-GeoTutor-Geometry-Harness:v2` jusqu'à C08.
+  Le modèle reçoit sept actions C04 ; l'initialisation reste système et aucune
+  coordonnée, commande libre ou Base64 n'entre dans son schéma.
+- Raison : le gateway v2 doit être qualifiable en texte et voix sans basculer
+  prématurément le scratchpad public ni créer deux autorités concurrentes.
+- Impact : le serveur et le client vérifient la même palette exacte. Le tool
+  loop publie le résultat au `call_id` d'origine et son annulation restaure les
+  effets UI. C05 peut étendre cette palette avec capture/restore/démonstration,
+  tandis que la bascule des activités compatibles reste réservée à C08.
+
+## D-066 - Les captures restent privées et les démonstrations restaurent avant sortie
+
+- Décision : conserver chaque capture GeoGebra comme transaction mémoire
+  immuable liant faits, hash, inventaire, ownership et checkpoint Base64 privé.
+  Restore O4 et démonstration O5 consomment un consentement borné, suspendent les
+  listeners pendant `setBase64` et ne rendent le contrôle qu'après vérification
+  exacte ; une démo produit `demonstration_viewed`, jamais `learner_completed`.
+- Raison : une miniature ou une animation visible ne suffit pas à prouver que le
+  travail élève est récupérable. Le checkpoint doit rester hors du modèle et du
+  rapport tandis que les callbacks GeoGebra sont neutralisés pendant le reload.
+- Impact : huit captures et 12 MB maximum par activité, miniatures facultatives,
+  nettoyage au reset/unmount, baseline unique avant fatal et synchronisation du
+  stabilisateur sur la nouvelle epoch/révision. Le flag `t22Evidence=1` reste un
+  chemin de qualification jusqu'à la migration publique C08.
+
+## D-067 - La progression Varignon reste locale et pilotée par preuves
+
+- Décision : avancer les neuf missions dans un reducer pur depuis le contrat,
+  les faits courants et la provenance des captures. Conjecture, justification
+  et transfert restent dans React ; Realtime reçoit seulement un contexte
+  pédagogique fermé et ne peut ni compléter une mission ni attribuer des XP.
+- Raison : une réponse de modèle ou une démonstration assistant ne constitue ni
+  une action élève ni une preuve mathématique. Le parcours doit rester complet
+  en mode local et produire le même bilan sans réseau.
+- Impact : V1-V5 et V7-V8 valent 20 XP uniquement lorsqu'elles sont vérifiées ;
+  V6 et V9 valent 10 XP après trace locale non vide. Le premier blocage reste
+  silencieux, une répétition peut produire une seule L1, et le rapport expose
+  statuts, configurations, compteurs d'aide et 160 XP maximum, jamais les textes
+  libres, l'identité ou une note.
+
+## D-068 - La publication géométrique est le contrat public et le bilan reste éphémère
+
+- Décision : router le parcours élève depuis le discriminant strict de la
+  publication v2 et transmettre l'activité sérialisée exacte au runtime. Le
+  studio n'autorise la publication qu'après prévisualisation valide et revue ;
+  le bilan fermé revient au professeur par canal mémoire multi-onglet.
+- Raison : reconstruire Varignon depuis un titre ou un flag créerait une dérive
+  entre ce que le professeur relit et ce que l'élève exécute. Une persistance de
+  réponses libres, d'identité ou de note n'est pas nécessaire au prototype.
+- Impact : les exercices généraux gardent le contrat v1 historique. C08 peut
+  basculer uniquement `geometry_investigation.v1`, supprimer la dépendance aux
+  flags de qualification et auditer le cleanup sans introduire de compte ou de
+  base.
+
+## D-069 - Le monde v2 est le contexte confirmé du coach géométrique public
+
+- Décision : pour `geogebra_tutor` négocié en v2, accepter une observation
+  `geometry_world.v2` ancrée et sa pédagogie fermée comme contexte confirmé de
+  session. Transmettre le `ToolRuntime` d'investigation au tool loop et conserver
+  l'exigence `GeneralExerciseContextV1` pour le tuteur général et GeoGebra v1.
+- Raison : reconstruire un exercice général en parallèle du contrat publié
+  créerait deux sources d'autorité. Le monde v2 contient déjà l'identifiant
+  d'activité, l'epoch, la révision, les objets bornés et la mission courante.
+- Impact : le smoke credentialed peut négocier les dix outils exacts, inspecter
+  la scène sans mutation et fermer le canal. Le gate final exige en plus trois
+  manifests sans retry, identité stable, restore exact, zéro helper et aucune
+  preuve sensible ; il ne déploie ni ne soumet le produit.
+
+## D-070 - La restauration GeoGebra possède une frontière atomique visible
+
+- Décision : rendre le canvas `inert` et `aria-busy`, attendre cette barrière,
+  puis revalider le signal avant tout `setBase64`. Une fois l'écriture engagée,
+  la terminer atomiquement jusqu'aux contrôles hash, inventaire, ownership et
+  listeners; une annulation ne produit jamais de preuve de démonstration vue.
+- Raison : interrompre `setBase64` après mutation peut laisser un monde hybride,
+  tandis qu'une restauration lancée sans barrière peut écraser un geste élève
+  concurrent. La frontière doit donc être observable avant l'opération
+  non-interruptible.
+- Impact : action et parole élève préservent le monde courant tant que l'écriture
+  n'a pas commencé. Pendant l'écriture, aucune entrée canvas n'est acceptée et
+  le checkpoint exact est réconcilié avant de rendre le contrôle. Le golden C08
+  observe cette barrière et les tests injectent les deux côtés de la frontière.
+
+## D-071 - Le chemin post-harnais suit publication, classe, adaptation, pilote
+
+- Décision : exécuter T24 à T27 dans cet ordre strict. Intégrer, protéger et
+  déployer T22 avant d'ajouter la boucle classe; prouver cette boucle avant la
+  génération adaptative; piloter seulement après qualification de la matrice
+  Varignon.
+- Raison : le harnais est techniquement qualifié mais n'est ni intégré à `main`
+  ni servi par la production T18. Commencer simultanément stockage, génération
+  et pilote masquerait l'identité du candidat et multiplierait les causes d'échec.
+- Impact : le prochain agent prend uniquement T24-C01. Chaque tranche possède
+  son candidat, ses migrations éventuelles et son golden avant la suivante.
+
+## D-072 - Le pilote utilise une identité professeur et des élèves pseudonymes
+
+- Décision : authentifier le professeur du pilote et faire rejoindre les élèves
+  par codes rotatifs sous pseudonyme, sans email élève, nom légal, date de
+  naissance, import de roster ou compte parent.
+- Raison : affecter et reprendre des activités exige une isolation stable, mais
+  la validation de valeur ne nécessite pas encore un système d'information
+  scolaire ni des données nominatives.
+- Impact : classes, aliases et affectations possèdent une matrice d'accès,
+  expiration, révocation et suppression. SSO, ENT et comptes élèves complets
+  restent hors périmètre.
+
+## D-073 - Les exercices adaptatifs sont des recettes paramétrées, pas des commandes libres
+
+- Décision : jusqu'au pilote, autoriser le modèle à choisir uniquement une
+  recette versionnée sous `varignon.v1` et des paramètres stricts. Un compilateur
+  local produit ensuite `geometry_investigation.v1`; aucun autre template,
+  commande, coordonnée libre non bornée ou script GeoGebra généré ne franchit
+  cette frontière.
+- Raison : le moteur déterministe peut vérifier des contrats connus, pas une
+  activité arbitraire inventée par un modèle. La variété utile vient des
+  paramètres et formulations, tandis que l'autorité reste applicative.
+- Impact : un registre de recettes Varignon, un compilateur déterministe et un
+  préflight vrai applet précèdent toute prévisualisation. Un rejet revient au
+  brouillon manuel sans publication partielle.
+
+## D-074 - L'adaptation reste factuelle et sous approbation professeur
+
+- Décision : dériver les difficultés uniquement des faits, tentatives, reprises
+  et aides effectivement livrées. L'absence de preuve signifie `inconnu`. Toute
+  proposition est expliquée, prévisualisée et approuvée par le professeur avant
+  affectation.
+- Raison : XP, erreur ponctuelle ou intervention du coach ne suffisent pas à
+  établir une maîtrise. Le professeur doit rester responsable de l'intention et
+  de la progression pédagogique.
+- Impact : aucun scoring prédictif, diagnostic automatique, classement ou note.
+  Le modèle ne reçoit pas de texte libre élève et ne peut publier seul.
+
+## D-075 - La persistance de classe est minimale, bornée et supprimable
+
+- Décision : persister seulement identifiants techniques, contrats approuvés,
+  affectations, missions, faits, configurations, aides et checkpoints sûrs à
+  expiration. Exclure texte libre, audio, image, transcript, Base64, identité
+  réelle et note.
+- Raison : reprise et bilan de classe nécessitent une mémoire serveur, mais pas
+  un dossier élève longitudinal. La minimisation réduit les risques et rend la
+  politique compréhensible pendant le pilote.
+- Impact : T25 commence par schémas, accès, migrations, durée de conservation et
+  suppression en cascade. Les tests scannent store, logs et réponses pour les
+  champs interdits avant ouverture du pilote.
+
+## D-076 - Varignon reste l'unique activité jusqu'au pilote
+
+- Décision : utiliser l'exercice Varignon du PDF fourni comme seule activité de
+  référence pour T24 à T27. T26 adapte le même contrat par trois recettes
+  d'étayage, des difficultés factuelles, des presets locaux sûrs et trois
+  transferts fermés; il n'ajoute pas un autre théorème.
+- Raison : T22 couvre déjà fidèlement l'intention du document — construire,
+  explorer les cas convexe/concave/croisé, conjecturer puis démontrer. La
+  prochaine incertitude produit porte sur la boucle professeur–classe–élève et
+  la qualité de l'adaptation, pas sur la largeur du catalogue.
+- Impact : `varignon.v1`, ses neuf missions et ses relations restent invariants.
+  Les recettes `guided`, `standard` et `challenge` peuvent ajuster aide, preset,
+  formulation et transfert `rectangle`, `rhombus` ou `square`. Tout second
+  template est reporté après le retour du pilote T27.

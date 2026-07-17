@@ -1,3 +1,1027 @@
+# Contrat Builder — T24-C01 Intégrer et figer le candidat T22 — `active`
+
+## État
+
+- T23-C01 et T23-C02 sont closes `pass`.
+- `main` pointe localement sur `be8dcf3`, un commit après `origin/main`, tandis
+  que le harnais qualifié pointe sur `0c8e3f4` depuis le même ancêtre
+  `9e50e8a`.
+- Le cadrage post-harnais est présent dans le worktree mais doit être sauvegardé
+  séparément avant la fusion afin de ne perdre ni le blueprint Varignon ni les
+  preuves T22.
+
+## Tranche contractualisée — T24-C01
+
+### Objectif
+
+Faire de T22 la base officielle de `main` : préserver les changements locaux du
+porteur, fusionner le candidat `0c8e3f4`, résoudre les divergences documentaires,
+reconstruire le produit et figer une identité source/build/runtime vérifiable.
+
+### Inclus
+
+- Créer un commit documentaire propre contenant T21 à T23 et le plan T24 à T27,
+  sans ajouter d'artefact de sortie étranger au scope.
+- Fusionner `codex/geogebra-investigation-harness` dans `main` avec historique
+  conservé et résoudre explicitement chaque conflit.
+- Préserver le runtime T22, le blueprint Varignon et le plan post-harnais comme
+  sources simultanément vraies.
+- Exécuter tests frontend, lint, typecheck, build, Playwright hors live, gate
+  T22, validation documentaire et contrôle d'espaces.
+- Enregistrer le commit de merge, l'empreinte du build et l'inventaire des gates.
+
+### Hors périmètre
+
+- Protection/rate limit de démo, réservés à T24-C02.
+- Déploiement Vercel, réservé à T24-C03.
+- Soumission Devpost, comptes, persistance, variantes adaptatives et pilote.
+- Modification fonctionnelle opportuniste du harnais pendant la fusion.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+pnpm --dir apps/frontend test:gate:t22
+git diff --check
+```
+
+Le smoke Realtime credentialed est rejoué seulement si la clé locale est
+disponible; son absence ne doit pas être masquée.
+
+### Définition de fini
+
+- `main` contient le runtime T22 et le plan Varignon sans marqueur de conflit.
+- Le candidat intégré se reconstruit depuis les fichiers suivis uniquement.
+- Les gates requis passent sur le commit final ou tout échec est corrigé avant
+  clôture.
+- L'arbre est propre et `TODO_NEXT.md` pointe ensuite uniquement vers T24-C02.
+
+### Preuves à consigner
+
+- Hash du commit documentaire et du commit de merge.
+- Résultats exacts de chaque gate, candidat `.next` et version Chromium.
+- État final de `main` face à `origin/main` et à l'ancienne branche T22.
+
+## Archive — T23-C02
+
+# Contrat Builder — T23-C02 Recentrage Varignon — close `pass`
+
+## État
+
+- T23-C02 est close `pass` le 17 juillet 2026.
+- Le PDF fourni décrit Varignon sur deux pages et porte l'empreinte
+  `4f10c5862107d5f0aa256678851d353c1c1d9c7e1eca6aaa78019801a0d61b03`.
+- Le candidat T22 couvre déjà les neuf missions centrales; la modification est
+  documentaire et ne vaut ni intégration, ni déploiement, ni runtime adaptatif.
+
+## Tranche contractualisée — T23-C02
+
+### Objectif
+
+Recentrer T24 à T27 sur l'exercice Varignon fourni : conserver la boucle classe,
+mais remplacer l'élargissement à deux autres templates par une matrice profonde
+de variantes Varignon vérifiables et approuvées par le professeur.
+
+### Inclus
+
+- Vérifier textuellement et visuellement les deux pages du PDF.
+- Comparer énoncé, configurations, conjecture et démonstration au contrat T22.
+- Écrire `docs/VARIGNON_ACTIVITY_BLUEPRINT.md` avec invariants, neuf missions,
+  recettes, difficultés, presets, transferts, parcours et gate adaptatif.
+- Remplacer dans T26 la cible multi-template par `varignon.v1` et ses recettes
+  fermées, sans changer l'ordre T24 → T25 → T26 → T27.
+- Ajouter D-076 et synchroniser SPEC, TODO, ARCHITECTURE, ROADMAP, REFERENCES et
+  cartes concernées.
+
+### Hors périmètre
+
+- Aucun code applicatif, contrat runtime, merge, push ou déploiement.
+- Aucun second théorème, commande GeoGebra libre ou validation automatique du
+  texte de conjecture, preuve ou transfert.
+- Aucun compte, stockage ou pilote humain dans cette carte.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Chaque intention visible dans le PDF correspond à une capacité T22 ou à un
+  écart post-harnais explicite.
+- T26 ne promet plus le théorème des milieux dans un triangle ni un exercice de
+  classification séparé.
+- Le plan définit trois recettes d'étayage et trois transferts Varignon fermés.
+- T24-C01 reste la seule prochaine carte d'implémentation.
+
+### Preuves de clôture
+
+- Blueprint Varignon et carte T23-C02 présents.
+- FR-64, FR-66, FR-69 et D-073/D-076 alignés sur `varignon.v1`.
+- `pnpm test:docs:t0` passe avec 102 cartes alignées sur le registre.
+- `git diff --check` passe sans erreur.
+
+## Archive — T23-C01
+
+# Contrat Builder — T23-C01 Plan produit post-harnais — close `pass`
+
+## État
+
+- T23-C01 est close `pass` le 17 juillet 2026.
+- Le harnais T22 est implémenté et qualifié sur le candidat
+  `0c8e3f4` de la branche `codex/geogebra-investigation-harness`.
+- La branche `main` et la production publique restent à intégrer et déployer
+  dans T24; cette carte documentaire ne vaut ni merge, ni push, ni déploiement.
+
+## Tranche contractualisée — T23-C01
+
+### Objectif
+
+Reclasser l'état réel après T22 et produire un plan exécutable pour passer du
+harnais Varignon à une boucle professeur–élève de classe, puis à une fabrique de
+variantes adaptatives bornées et à un pilote réel.
+
+### Inclus
+
+- Auditer l'implémentation, les limites, les preuves et l'état Git de T22.
+- Écrire `docs/POST_HARNESS_PRODUCT_PLAN.md` avec thèse produit, parcours,
+  architecture, données minimales, risques, métriques et règle de reprise.
+- Ajouter FR-56 à FR-70 et les décisions D-071 à D-075.
+- Créer T24 à T27 et leurs cartes atomiques dans l'ordre publication, classe,
+  adaptation, pilote.
+- Synchroniser SPEC, CONTRACT, DECISIONS, TODO, ARCHITECTURE, ROADMAP et
+  REFERENCES sans modifier le runtime.
+
+### Hors périmètre
+
+- Aucun code applicatif, compte, store, génération, test runtime ou déploiement.
+- Aucun merge, push, changement Vercel, soumission Devpost ou licence.
+- Aucune modification des preuves ou sorties utilisateur existantes.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --check
+```
+
+L'audit préalable revalide en plus 829/829 tests frontend, lint et typecheck sur
+le candidat T22 avant l'écriture du plan.
+
+### Définition de fini
+
+- État livré, état non intégré, cible et hors périmètre sont distingués.
+- Chaque exigence post-harnais pointe vers au moins une carte.
+- Le registre, les fichiers de cartes et leurs dépendances sont cohérents.
+- Le prochain agent démarre uniquement sur T24-C01.
+
+### Preuves de clôture
+
+- Plan post-harnais et cartes T23 à T27 présents.
+- Pilotes documentaires synchronisés avec FR-56 à FR-70 et D-071 à D-075.
+- `pnpm test:docs:t0` passe avec 101 cartes alignées sur le registre.
+- `git diff --check` passe sans erreur.
+
+## Archive — T22-C08
+
+# Contrat Builder — T22-C08 Remédiation du contre-audit QA — close `pass`
+
+## État
+
+- T22-C08 est close `pass` le 17 juillet 2026 après correction et contre-audit
+  indépendant de tous les findings consignés dans `QA_REPORT.md`.
+- T22-C01 à T22-C07 restent closes et la tranche T22 est désormais close.
+- La série `series_0c8aa73859c9ed347b7b62b0` remplace toutes les preuves C08
+  antérieures comme qualification publique active.
+
+## Tranche contractualisée — remédiation C08
+
+### Objectif
+
+Fermer les sept findings QA sans élargir le produit : exécuter réellement les
+aides L3/L4, annuler tout effet sur un geste élève réel, rendre les XP monotones,
+lier publication et build à des preuves runtime, puis remplacer le golden
+déclaratif par trois parcours publics réels sans retry.
+
+### Inclus
+
+- Router les directives d'aide vers le gateway O2/O5 et ne créditer une aide
+  qu'après livraison effective ; rendre le consentement L4 visible et explicite.
+- Relier les événements GeoGebra élève réels à la génération d'interaction et au
+  cleanup avant qu'un replay puisse restaurer sur un drag plus récent.
+- Ajouter un ledger XP monotone par mission, distinct des faits courants.
+- Exposer un état fermé de prévisualisation professeur et bloquer l'approbation
+  tant que scaffold et runtime ne sont pas réellement prêts.
+- Construire dans le runner, empreinter l'artefact servi et la version réelle du
+  navigateur, puis vérifier l'absence de dérive avant/après chaque run.
+- Faire du golden final un parcours UI professeur → prévisualisation →
+  publication → élève, avec outils, gestes, aides, confirmations, restore,
+  accessibilité et cleanup observés plutôt que déclarés.
+- Corriger l'architecture obsolète et synchroniser pilotes/cartes seulement
+  après les nouvelles preuves.
+
+### Hors périmètre
+
+- Aucun compte, classe, persistance, déploiement, merge, push, soumission ou
+  changement de licence.
+- Aucune commande GeoGebra libre, aucun contournement par helper global dans le
+  nouveau golden et aucune exposition de Base64, texte élève, identité ou note.
+- Aucun changement opportuniste des parcours historiques T1 à T20.
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+pnpm --dir apps/frontend test:gate:t22
+git diff --check
+```
+
+Puis smoke Realtime credentialed isolé et trois parcours golden publics
+consécutifs sur l'artefact nouvellement construit, sans retry.
+
+### Définition de fini
+
+- Les sept findings de `QA_REPORT.md` possèdent une correction et une preuve de
+  non-régression ; aucun P1/P2 ne reste ouvert.
+- Un vrai drag annule L3/L4 sans appel d'un global de test et une aide n'est
+  créditée qu'après effet ou texte effectivement livré.
+- Les XP déjà acquis ne baissent jamais lorsque le fait courant disparaît.
+- La preview ne peut être approuvée qu'après scaffold prêt, et le candidat relie
+  sources, `.next` servi et navigateur réel.
+- Les trois runs utilisent le parcours public et dérivent leurs champs qualité
+  d'assertions observées ; manifests, sécurité, cleanup et gates sont verts.
+
+## Qualification de remédiation acquise
+
+- Vitest : 829/829 ; lint, typecheck et build : pass.
+- Playwright hors live : 43 pass, 4 skips attendus sur 47.
+- Smoke Realtime credentialed isolé : 1/1 en 6,1 s.
+- Golden public : 3/3 sans retry, série
+  `series_0c8aa73859c9ed347b7b62b0`, candidat
+  `candidate_b3bc38db342b359299dd3400`, environnement
+  `environment_1cb73222a3ee6a86fddc5fe0`, identité stable.
+- Le golden publie depuis le studio, attend la readiness du vrai scaffold,
+  construit via toolbar/canvas, joue L4 sous consentement avec contrôles,
+  protège le drag par annulation et la restauration par une barrière inert,
+  restaure par la galerie et inclut l'applet dans Axe.
+
+## Archive — T22-C07
+
+# Contrat Builder — T22-C07 Atelier professeur et parcours Varignon complet — close `pass`
+
+## État
+
+- T22-C07 est close `pass` au 17 juillet 2026.
+- T22-C01 à T22-C06 étaient closes `pass`; T22-C08 restait `backlog` à son
+  ouverture.
+- Le gate C06 passe avec 805/805 tests frontend, 41/41 Playwright hors live,
+  lint, typecheck, build et un parcours vrai applet des neuf missions en 11 s.
+
+## Tranche contractualisée — T22-C07
+
+### Objectif
+
+Permettre au professeur de configurer, prévisualiser et publier une activité
+Varignon validée, puis ouvrir côté élève le contrat exact et rendre un bilan
+factuel anonyme après le parcours complet.
+
+### Inclus
+
+- Étendre le brouillon, la route et le catalogue éphémère avec le discriminant
+  strict `TeacherExerciseV2`, sans casser les exercices généraux T16/T18.
+- Proposer Varignon FR/EN et uniquement les réglages autorisés : titre, niveau,
+  objectif, difficultés, formulations, politique d'aide et questions locales.
+- Exécuter la prévisualisation dans le vrai applet sans publication, avec reset
+  et validation rouge bloquant explicitement la publication.
+- Publier explicitement, relire depuis la bibliothèque élève et ouvrir le
+  runtime C06 avec le contrat exact plutôt qu'une reconstruction divergente.
+- Afficher au professeur `GeometryLearningSessionReportV1` : missions,
+  configurations, faits, assistance et XP, sans identité, note ni texte libre.
+- Qualifier React, routes/store, multi-onglet, vrai applet, EN/FR, clavier et
+  viewports 390/768/1440 derrière la frontière C07.
+
+### Hors périmètre
+
+- Aucune bascule publique générale du scratchpad ou retrait du runtime
+  historique, réservés à T22-C08.
+- Aucun compte, classe, élève nommé, affectation, base, persistance ou notation.
+- Aucun déploiement, soumission Devpost ou modification de la PR existante.
+
+### Fichiers prévus
+
+- extensions bornées du studio, des routes draft/catalogue et de leurs contrats
+- composants de configuration, prévisualisation, bibliothèque et bilan Varignon
+- tests route/React/E2E multi-onglet, carte C07 et pilotes après preuves
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Le professeur configure et prévisualise le vrai Varignon avant publication ;
+  une invalidité locale bloque le bouton sans appel ni catalogue partiel.
+- L'élève ouvre le même contrat sérialisé et termine les neuf missions avec les
+  preuves C06, sans accès à un texte ou une identité professeur hors contrat.
+- Le bilan professeur porte seulement les champs du rapport strict et reste
+  disponible dans la session éphémère multi-onglet.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C08.
+
+### Preuves de clôture
+
+- Le draft/publication v2 est strict et discriminé ; FR/EN, réglages autorisés,
+  relecture locale rouge, prévisualisation vrai applet et publication explicite
+  sont couverts sans modifier tolérances ou commandes internes.
+- Le nouvel onglet élève recharge le contrat sérialisé exact, initialise le
+  scaffold approuvé puis termine V1-V9 avec trois captures, six parallélismes,
+  sept étapes de justification, transfert et 160 XP.
+- Le rapport multi-onglet rend 9/9, 7 preuves vérifiées, 3 configurations,
+  4 milieux, 6 parallélismes et L0 sans texte, identité ni note.
+- Les captures `output/playwright/T22-C07-teacher-review.png`,
+  `T22-C07-student-evidence.png` et `T22-C07-teacher-report.png` matérialisent
+  la relecture, les preuves élève et le bilan fermé.
+- Tests ciblés C07 : 36/36. Suite frontend : 815/815 sur 89 fichiers.
+  Playwright hors live : 43/43. Lint, typecheck, build et `git diff --check`
+  passent.
+
+## Archive — T22-C06
+
+# Contrat Builder — T22-C06 Orchestration pédagogique pilotée par activité — close `pass`
+
+## État
+
+- T22-C06 est close `pass` au 17 juillet 2026.
+- T22-C01 à T22-C05 étaient closes `pass`; T22-C07 et T22-C08 restaient
+  `backlog` à son ouverture.
+- Le gate C05 passait avec 787/787 tests frontend, 40/40 Playwright hors live,
+  lint, typecheck, build et restauration exacte sur le vrai applet.
+
+## Tranche contractualisée — T22-C06
+
+### Objectif
+
+Piloter les neuf missions Varignon, tentatives, faits, captures, aides et
+transitions exclusivement depuis `geometry_investigation.v1`, avec progression
+et rapport locaux honnêtes même sans Realtime.
+
+### Inclus
+
+- Créer une machine de session pure couvrant `ready`, `constructing`,
+  `exploring`, `conjecturing`, `verifying`, `justifying`, `transferring`,
+  `completed`, `recovering` et `fatal`.
+- Évaluer l'ordre et la complétion des missions depuis leurs preuves, leur mode
+  de complétion et la provenance des captures ; un fait stale ou une capture
+  `assistant_demo` ne crédite jamais une action élève.
+- Relier tentatives et blocages à une policy L1-L4 puis
+  `SILENT | QUEUE | SPEAK`, avec une seule intervention autorisée et annulation
+  sur nouvelle action, parole, reset ou révision.
+- Conserver conjecture, justification et transfert dans l'état React local ;
+  le rapport ne publie que statuts, compteurs, configurations, niveau d'aide et
+  XP déterministes.
+- Enrichir les observations Realtime avec mission, faits manquants, tentative
+  et niveau d'aide autorisé, sans donner au modèle l'autorité de progression.
+- Qualifier reducer, provenance, ordre des neuf missions, fallback local,
+  absence de double crédit et parcours Varignon derrière le flag T22.
+
+### Hors périmètre
+
+- Aucun éditeur professeur, brouillon, publication ou catalogue v2, réservés à
+  T22-C07.
+- Aucune bascule du scratchpad public, suppression du runtime historique ou
+  golden gate final, réservés à T22-C08.
+- Aucune note, identité, texte libre, transcript ou persistance serveur.
+
+### Fichiers prévus
+
+- `apps/frontend/lib/geometry-investigation/{session,mission,policy,report}*`
+- extensions bornées du runtime, des observations Realtime et du scratchpad T22
+- tests reducer/React/E2E, carte C06 et pilotes après preuves
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run lib/geometry-investigation
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Les neuf missions avancent dans l'ordre à partir de preuves locales courantes
+  et des seules traces/réponses locales explicitement demandées.
+- Première occurrence d'un blocage : silence ; répétition qualifiée : une seule
+  L1, puis escalade bornée sans révéler directement la solution.
+- Captures assistant, faits stale, démos et outputs modèle ne créditent ni
+  mission élève ni XP déterministe.
+- Realtime absent conserve l'intégralité du parcours et des aides textuelles
+  locales ; le rapport reste fermé et sans texte libre.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C07.
+
+### Preuves de clôture
+
+- Le reducer couvre les onze phases, rejette ancres et événements incohérents,
+  avance V1 à V9 séquentiellement et attribue 20 XP aux preuves vérifiées, 10 XP
+  aux réflexions locales, sans double crédit.
+- Les quatre milieux et le cycle intérieur sont dérivés du contrat. Les captures
+  V3-V5 exigent la provenance élève ; V7 exige deux parallélismes sur chacune
+  des trois captures ; V8 exige les sept étapes élève et le parallélogramme.
+- La policy rend le premier blocage `SILENT`, une seule répétition `SPEAK` L1,
+  puis une escalade explicite une étape à la fois. L4 reste réservée à une étape
+  déclarée et au consentement ; un floor occupé rend `QUEUE`.
+- Conjecture et transfert vivent seulement dans React. Le contexte Realtime ne
+  contient que mission, tentatives, preuves manquantes, configurations et niveau
+  maximal ; le rapport strict exclut texte, identité et note.
+- Le vrai applet passe V1-V9 : trois configurations, six parallélismes, sept
+  étapes, 160 XP et rapport 9/9. La capture
+  `output/playwright/T22-C06-nine-missions.png` montre l'état final.
+- Tests ciblés pédagogie/Realtime : 80/80. Suite frontend finale : 805/805 sur
+  86 fichiers avec pool séquentiel. Playwright hors live : 41/41. Lint,
+  typecheck, build et `git diff --check` passent. Le pool forks parallèle a
+  d'abord subi des délais de démarrage sans échec d'assertion ; le pool threads
+  séquentiel passe intégralement.
+
+## Archive — T22-C05
+
+# Contrat Builder — T22-C05 Preuves, checkpoints, restauration et replay — close `pass`
+
+## État
+
+- T22-C05 est close `pass` au 17 juillet 2026.
+- T22-C01 à T22-C04 étaient closes `pass`; T22-C06 à T22-C08 restaient `backlog`
+  à son ouverture.
+- Le gate C04 passe avec 75/75 tests du domaine, 758/758 tests frontend,
+  39/39 Playwright hors live, lint, typecheck et build.
+
+## Tranche contractualisée — T22-C05
+
+### Objectif
+
+Capturer en mémoire des états expérimentaux Varignon tout-ou-rien, restaurer
+exactement leur checkpoint ou la baseline et jouer une démonstration temporaire
+réversible, sans contaminer le travail ni créditer une mission élève.
+
+### Inclus
+
+- Étendre la palette stricte avec `capture_geometry_evidence`,
+  `restore_geometry_checkpoint` et `demonstrate_geometry_step`, aux autorités
+  O2, O4 et O5 et confirmations/tokens dédiés.
+- Créer un store mémoire immuable, borné à huit captures et 12 MB par activité,
+  avec idempotence, provenance `learner | assistant_demo`, suppression et
+  nettoyage au reset/unmount.
+- Capturer seulement après deux mondes concordants : faits passants et courants,
+  checkpoint Base64, snapshot/hash, inventaire, registre et miniature locale
+  facultative forment une transaction unique.
+- Adapter le checkpoint historique derrière une interface v2 qui suspend puis
+  réconcilie les listeners, restaure Base64, inventaire, ownership et hash, et
+  émet une nouvelle révision.
+- En cas de restore divergent, tenter une seule fois la baseline de l'activité ;
+  si elle diverge aussi, geler les mutations dans un état fatal réessayable.
+- Jouer uniquement les étapes de démonstration déclarées, dans une scène
+  temporaire signalée, avec vitesse normale ou réduite, pause/reprise/stop,
+  annulation par drag/parole et restauration exacte terminale.
+- Ajouter une galerie de qualification accessible et clavier derrière le flag
+  T22, sans basculer le parcours public avant C08.
+- Qualifier store/quota/provenance, capture instable, restore/fallback,
+  interruption de replay, vrai applet et mouvement réduit.
+
+### Hors périmètre
+
+- Aucune persistance serveur, base de données, partage d'image ou export de
+  Base64 ; checkpoints, miniatures et preuves restent en mémoire.
+- Aucune progression de mission, policy d'indices, rédaction de conjecture,
+  éditeur professeur, publication ou migration publique C06-C08.
+- Aucune notation et aucune capture `assistant_demo` créditée comme action élève.
+
+### Fichiers prévus
+
+- `apps/frontend/lib/geometry-investigation/{evidence-store,checkpoint,replay}*`
+- extensions strictes de `actions`, `authority`, `action-gateway/runtime`
+- galerie de qualification et test Playwright C05
+- carte C05 et pilotes après preuves
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run lib/geometry-investigation
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Les captures convexe, concave et croisée sont atomiques, immuables, liées à
+  leur activité/epoch/révision/hash et refusent faits stale ou monde instable.
+- Le quota huit/12 MB est exact ; une miniature peut être omise sans perdre un
+  checkpoint admissible, mais aucune entrée partielle ne survit à un échec.
+- Restore retrouve hash, inventaire, ownership et listeners ; baseline puis
+  fatal sont les seuls fallbacks d'une divergence.
+- Stop, drag, parole, timeout et unmount restaurent la scène d'avant démo,
+  suppriment tous les helpers et ne produisent jamais `learner_completed`.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C06.
+
+### Preuves de clôture
+
+- La palette Realtime v2 contient exactement dix actions fermées après ajout de
+  capture O2, restore O4 et démonstration O5. Les schémas refusent Base64,
+  commande libre et propriétés supplémentaires ; les tokens O4/O5 sont liés à
+  activité, epoch, révision, checkpoint ou étape, vitesse et consentement.
+- `GeometryEvidenceStoreV1` conserve au plus huit captures et 12 MB en mémoire,
+  sépare checkpoint privé et vue galerie, vérifie l'identité capture/checkpoint,
+  garde la provenance et omet seulement la miniature lorsque le checkpoint
+  reste admissible. Reset et unmount nettoient preuves et tokens.
+- La capture exige deux mondes stables, faits passants et courants, puis exporte
+  Base64, hash, inventaire, registre et listeners dans une transaction unique.
+  Aucun résultat d'outil ou rapport de galerie n'expose le Base64.
+- Restore suspend les callbacks suivis par l'adaptateur, applique `setBase64`,
+  restaure ownership et inventaire, relit le hash, réconcilie les listeners et
+  synchronise le stabilisateur sur une nouvelle autorité. Une divergence tente
+  une seule baseline avant gel fatal.
+- Le replay exécute seulement les étapes Varignon déclarées, offre vitesse
+  normale/réduite et pause/reprise/stop, puis restaure son checkpoint même après
+  interruption. Son résultat est `demonstration_viewed`, avec
+  `learnerCompleted:false` et aucun objet temporaire restant.
+- La galerie derrière `?t22Evidence=1` nomme textuellement les configurations et
+  la provenance, exige une confirmation séparée pour restore/démo et fournit des
+  contrôles clavier. La capture
+  `output/playwright/T22-C05-three-captures.png` montre les trois cas.
+- Le vrai applet capture convexe, concave et croisé, restaure le cas concave avec
+  hash, inventaire, ownership et nombre de listeners identiques, puis passe
+  pause–reprise–arrêt d'une démo sans helper et avec la figure exacte.
+- Tests ciblés C05 : 103/103 sur 18 fichiers. Suite frontend finale : 787/787
+  sur 81 fichiers. Playwright hors live : 40/40. Lint, typecheck, build et
+  `git diff --check` passent. Un test de navigation historique a dépassé son
+  délai lors d'un premier gate lancé simultanément avec Playwright ; il passe
+  3/3 isolément puis la suite séquentielle repasse 787/787 sans changement.
+
+## Archive — T22-C04
+
+# Contrat Builder — T22-C04 Gateway d'actions et consentement — close `pass`
+
+## État
+
+- T22-C04 est close `pass` au 17 juillet 2026.
+- T22-C01 à T22-C03 sont closes `pass`; T22-C05 à T22-C08 restaient `backlog`
+  à son ouverture.
+
+## Tranche contractualisée — T22-C04
+
+### Objectif
+
+Exposer au profil GeoGebra une palette v2 fermée qui réutilise l'adaptateur,
+l'arbitre et le tool loop historiques, avec niveaux d'autorité O0-O5, budgets,
+idempotence, consent tokens one-shot et annulation, sans commande GeoGebra
+libre ni mutation avant validation complète.
+
+### Inclus
+
+- Schémas stricts des actions PRD 13.1 à 13.7 et 13.11.
+- Autorités O0 observation, O2 guidage UI et O3 mutation consentie, avec la
+  cartographie future O4 restauration et O5 démonstration.
+- Lecture/classification déterministes, setMode, highlight, focus, scaffold
+  interne et variation par cible choisie localement.
+- Budgets, stale, idempotence, consentement one-shot et annulation du tool loop.
+- Profil Realtime v2 négocié en texte/voix sans bascule publique.
+
+### Hors périmètre
+
+- Captures, galerie, restore, replay, missions, atelier professeur et migration
+  publique, réservés aux cartes C05 à C08.
+
+### Preuves de clôture
+
+- La palette modèle contient exactement sept actions : inspection, activation
+  d'outil, highlight, variation, classification, relation et focus.
+  `initialize_geometry_activity` reste interne ; chaque JSON Schema est fermé
+  et aucune coordonnée n'existe dans l'entrée de variation.
+- L'autorité revalide activité, epoch, révision, phase, mission et politique
+  avant l'API. Les budgets sont quatre lectures, deux aides UI et une mutation
+  par tour. Les appels répétés au même call ID restent idempotents.
+- Les tokens O3 sont opaques, liés à cible/point/activité/epoch/révision,
+  expirables et one-shot. Token absent, utilisé, expiré ou mal lié, tentative
+  préalable absente et mission non autorisée échouent avant toute API.
+- Les modes GeoGebra officiels sont fermés (`move=0`, `midpoint=19`, etc.).
+  Highlight restaure exactement couleur, épaisseur et visibilité ; focus
+  restaure le viewport ; l'annulation du tool loop déclenche leur cleanup.
+- La variation cherche localement une coordonnée `deterministic-grid-v1`,
+  vérifie que le point est libre, reclassifie la cible et rollback/quarantaine
+  si un drag ou l'autorité intervient. Aucun output ne révèle la coordonnée.
+- Le profil `geogebra_tutor` v2 est négocié par
+  `X-GeoTutor-Geometry-Harness:v2`; texte et voix vérifient la liste exacte.
+  Le runtime historique reste le défaut jusqu'à C08. Le tool loop conserve le
+  `call_id` OpenAI exact dans `function_call_output` avant continuation.
+- Le vrai applet active Milieu sans créer d'objet, restaure style et viewport,
+  puis atteint une cible concave avec un token one-shot. La capture
+  `output/playwright/T22-C04-midpoint-tool.png` matérialise le mode actif.
+- Aucun `OPENAI_API_KEY` local n'était configuré : aucun appel credentialed
+  n'est revendiqué. Le profil serveur et le vérificateur client texte/voix sont
+  toutefois qualifiés de façon déterministe.
+- Tests domaine : 75/75 sur 12 fichiers. Suite frontend : 758/758 sur 76
+  fichiers. Playwright hors live : 39/39. Lint sans warning, typecheck, build et
+  `git diff --check` passent.
+
+## Archive — T22-C03
+
+# Contrat Builder — T22-C03 Moteur géométrique déterministe — close `pass`
+
+## État
+
+- T22-C03 est close `pass` au 17 juillet 2026.
+- T22-C01 et T22-C02 sont closes `pass`; T22-C04 à T22-C08 restent `backlog`.
+- Le gate C02 passe avec 63/63 tests ciblés, 705/705 tests frontend,
+  37/37 Playwright hors live, lint, typecheck, build et validation documentaire.
+
+## Tranche contractualisée — T22-C03
+
+### Objectif
+
+Évaluer de façon pure et déterministe les relations géométriques déclarées par
+une activité, classifier un quadrilatère ordonné et produire des
+`GeometryFactV1` courants, indépendamment du modèle, de React et des mutations
+GeoGebra.
+
+### Inclus
+
+- Créer des primitives numériques finies et normalisées par l'échelle, avec
+  versions de tolérance explicites et résultat fermé près des dégénérescences.
+- Classifier quatre points ordonnés en `convex`, `concave`, `crossed` ou
+  `degenerate` de façon stable à plusieurs échelles.
+- Évaluer milieu, parallèle, perpendiculaire, égalité de longueurs,
+  appartenance, non-alignement, parallélogramme et type de configuration.
+- Exiger pour un milieu la dépendance structurale exacte en plus de la mesure :
+  un point libre visuellement superposé ne passe jamais.
+- Composer les faits de la fixture Varignon avec statut pass/fail/unknown,
+  mesures bornées, tolérance/version, evidence ID déterministe, activité,
+  epoch, révision et hash du monde courant.
+- Ajouter tests unitaires, cas génératifs déterministes à plusieurs échelles et
+  qualification sur le vrai applet Varignon.
+
+### Hors périmètre
+
+- Aucun tool, consentement, action modèle, mutation GeoGebra, UI, mission,
+  checkpoint, capture, restauration, replay, texte de démonstration ou notation.
+- Aucune revendication de preuve symbolique universelle et aucun usage de
+  `ProveDetails` comme autorité générale.
+- Aucune bascule du parcours public ni anticipation des cartes C04 à C08.
+
+### Fichiers prévus
+
+- `apps/frontend/lib/geometry-investigation/{numeric,classifier,engine}*`
+- contrats et exports voisins strictement nécessaires aux résultats C03
+- test Playwright de qualification C03, carte C03 et pilotes après preuves
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run lib/geometry-investigation
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Les huit relations MVP rendent des faits déterministes liés au monde courant.
+- Un faux milieu libre échoue et les données absentes/non finies ne passent
+  jamais; les quasi-zéros rendent `unknown` ou `degenerate`.
+- Convexe, concave, croisé et dégénéré sont distingués aux échelles testées.
+- La fixture Varignon vérifie ses quatre milieux et les deux parallélismes avec
+  les evidence IDs attendus, sans mutation ni appel modèle.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C04.
+
+### Preuves de clôture
+
+- Les primitives v1 utilisent les facteurs du PRD : coordonnées/milieu
+  `1e-6 × scale`, produits croisé et scalaire normalisés `1e-7`, appartenance
+  normalisée `1e-7`, orientation `1e-9 × scale²` et distinction
+  `1e-8 × scale`. Chaque relation refuse une version de tolérance inconnue.
+- Le classificateur ordonné distingue convexe, concave et croisé aux échelles
+  0,1, 1 et 1 000; colinéarité, points confondus et coordonnées non finies
+  rendent `degenerate`, sans fait passant.
+- Les huit relations MVP sont évaluées sans React ni modèle. Le parallélogramme
+  compose les deux faits de parallélisme déclarés et conserve leurs IDs; une
+  forme dégénérée reste `unknown` même lorsque ces mesures parallèles passent.
+- Les faits portent l'ID de relation attendu par les missions, les mesures
+  finies, la tolérance/version et l'epoch, la révision et le hash exacts du
+  monde. Un résultat `unknown` ne fabrique aucun `GeometryFactV1`.
+- La fixture Varignon produit dix faits courants : quatre milieux, deux
+  parallélismes et le parallélogramme passent; la classification courante est
+  convexe. Les définitions concave et croisée échouent normalement sur ce même
+  état.
+- Le vrai applet, via `?demo=geogebra&t22Engine=1`, vérifie les quatre milieux et
+  les deux parallélismes. Redéfinir E comme point libre exactement aux mêmes
+  coordonnées conserve une distance observée nulle mais fait échouer le milieu
+  faute de dépendance `Midpoint(A,B)`. Le parcours public reste inchangé.
+- Tests ciblés : 50/50 sur six fichiers. Suite frontend : 728/728 sur
+  70 fichiers. Playwright hors live : 38/38, dont le scénario C03 réel. Lint,
+  typecheck et build passent. Une course historique de focus photo observée au
+  premier passage (727/728) a repassé 19/19 isolément puis 728/728 en suite
+  complète, sans changement hors tranche.
+
+## Archive — T22-C02
+
+# Contrat Builder — T22-C02 Monde v2 et événements stabilisés — close `pass`
+
+## État
+
+- T22-C02 est close `pass` au 17 juillet 2026.
+- T22-C01 est close `pass`; T22-C03 à T22-C08 restent `backlog`.
+- Le gate C01 passe avec 689/689 tests frontend, lint, typecheck, build et
+  validation documentaire avant ouverture de C02.
+
+## Tranche contractualisée — T22-C02
+
+### Objectif
+
+Produire depuis l'API GeoGebra un `geometry_world.v2` borné qui conserve
+dépendances, ownership et type précis des événements terminaux après deux
+snapshots concordants, puis permettre sa publication Realtime comme observation
+sans jamais créer automatiquement une réponse modèle.
+
+### Inclus
+
+- Étendre les types API et l'adaptateur uniquement pour les lectures, listeners
+  et événements nécessaires au monde v2.
+- Parser de façon bornée les parents des commandes non localisées, avec
+  `dependency_unknown` explicite lorsque la commande ne peut pas être lue.
+- Lire au plus quarante objets avec type, commande tronquée, parents, ownership,
+  coordonnées finies, couleur et visibilité.
+- Conserver les événements `add`, `remove`, `update`, `dragEnd`, `movedGeos`,
+  `setMode`, sélection/désélection, undo/redo et focus de vue.
+- Coalescer 180 ms, exiger deux snapshots v2 identiques et ignorer les
+  mouvements intermédiaires ou résultats stale avant un unique commit terminal.
+- Ajouter un chemin de publication Realtime v2 non utilisé par le parcours
+  public C01, qui envoie un snapshot/delta borné sans `response.create`.
+- Ajouter tests unitaires parse/stabilisation et intégration faux API.
+
+### Hors périmètre
+
+- Aucun calcul de relation, classificateur, mission, nouveau tool mutateur,
+  consentement, capture, checkpoint public ou UI finale.
+- Aucune bascule du scratchpad public, retrait du monde v1 ou modification des
+  parcours généralistes.
+- Aucun appel modèle déclenché par un événement GeoGebra.
+
+### Fichiers prévus
+
+- `apps/frontend/types/geogebra.ts`
+- `apps/frontend/lib/geogebra/adapter.ts`
+- `apps/frontend/lib/geometry-investigation/{dependencies,world,stabilizer}*`
+- `apps/frontend/lib/realtime/webrtc-session.ts` et tests voisins
+- carte C02 et pilotes après preuves
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run lib/geometry-investigation
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test --grep-invert @live
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- `E=Midpoint(A,B)` publie `parents:["A","B"]`; un point libre sans commande
+  garde `parents:[]` et `dependencyStatus:"unknown"` sans dépendance inventée.
+- Un drag terminal produit un monde et un delta uniques seulement après deux
+  lectures identiques; `movingGeos`, snapshot instable et stale ne publient rien.
+- Le monde est borné à quarante objets et porte activité, epoch, révision, hash,
+  ownership et changement précis.
+- La voie Realtime v2 n'envoie que des items d'observation et aucun
+  `response.create`; le parcours public reste sur le monde v1 jusqu'à C08.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C03.
+
+### Preuves de clôture
+
+- Le parseur borné lit `Midpoint(A,B)` comme parents A/B et retourne
+  explicitement `dependencyStatus:"unknown"`, `parents:[]` pour un point libre
+  ou une commande illisible, sans inférence.
+- `readGeometryWorldV2` borne l'inventaire à quarante objets et conserve type,
+  commande tronquée, parents, ownership, coordonnées finies, couleur,
+  visibilité, activité, epoch, révision et hash. Le delta v2 distingue ajout,
+  retrait et changement.
+- Le stabilisateur ignore `movingGeos` et les updates dépendants pendant un
+  drag, coalesce 180 ms, exige deux mondes identiques, rejette instabilité et
+  stale, puis publie un seul événement terminal précis.
+- La session Realtime possède une voie v2 uniquement observationnelle derrière
+  le flag de qualification : snapshot et delta sont des items utilisateur
+  délimités et aucun `response.create` n'est émis.
+- Le vrai applet, via `?demo=geogebra&t22WorldV2=1`, crée A/B puis
+  `E=Midpoint(A,B)`, observe A/B comme parents, reste silencieux pendant le
+  mouvement et publie exactement un terminal `drag_end` avec les dépendances
+  mises à jour.
+- La course historique du test T6 reset a été stabilisée sans changement
+  runtime : démarrage et reset sont espacés de 25 ms dans le même tour test,
+  tout en conservant les assertions strictes listeners 0→4, hash, inventaire,
+  scopes annulés et double reset. Le scénario passe 3/3 isolé puis dans le gate.
+- Tests ciblés : 63/63. Suite frontend : 705/705 sur 68 fichiers. Playwright
+  hors live : 37/37. Lint, typecheck, build, 80 cartes documentaires et
+  `git diff --check` passent.
+
+## Archive — T22-C01
+
+# Contrat Builder — T22-C01 Contrats v2 et façade du harnais — close `pass`
+
+## État
+
+- T22-C01 est close `pass` au 17 juillet 2026.
+- T21-C01 est close `pass`; T22-C02 à T22-C08 restent `backlog` et ne doivent
+  pas être anticipées.
+- Le gate de départ passe avec 677/677 tests Vitest sur 64 fichiers avant toute
+  modification runtime T22.
+
+## Tranche contractualisée — T22-C01
+
+### Objectif
+
+Introduire les contrats stricts et versionnés du harnais d'investigation, la
+fixture bilingue Varignon et une façade `GeometryInvestigationRuntime`
+composable, sans modifier le parcours public ni autoriser de nouvelle mutation.
+
+### Inclus
+
+- Créer `apps/frontend/lib/geometry-investigation/**` comme source unique des
+  contrats activité, monde, faits, captures et bilan professeur.
+- Valider strictement les bornes, champs fermés et invariants croisés, dont
+  ordre des neuf missions, labels uniques, relations déclarées, coordonnées
+  finies et cohérence de la politique d'aide.
+- Livrer les fixtures `varignon.v1` française et anglaise avec exactement neuf
+  missions et les relations nécessaires au parcours golden.
+- Définir une façade runtime injectant adapter, observation, moteur, gateway,
+  checkpoints, policy et callbacks, sans réimplémenter ces autorités.
+- Introduire le discriminant futur
+  `general_exercise | geometry_investigation` derrière un parse local non
+  branché aux routes de publication ou au parcours public.
+- Ajouter des tests ciblés prouvant succès nominal et rejets représentatifs.
+
+### Hors périmètre
+
+- Aucun listener ou monde v2 actif, moteur géométrique, nouvel outil, token de
+  consentement, capture, restauration, replay ou mutation GeoGebra.
+- Aucun changement de l'atelier professeur/élève, des routes, de Realtime, du
+  catalogue publié ou du parcours généraliste.
+- Aucun déplacement ou retrait des autorités historiques T1 à T6.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md` sans reprise nécessaire.
+
+### Fichiers prévus
+
+- `apps/frontend/lib/geometry-investigation/**`
+- `docs/tranches/T22-harnais-investigation-geogebra/cards/T22-C01.md`
+- pilotes Nin-IA après preuves réelles
+
+### Gates requis
+
+```sh
+pnpm --dir apps/frontend test --run lib/geometry-investigation
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Les sept contrats demandés sont stricts, bornés, versionnés et exportés
+  depuis un module unique.
+- Les fixtures Varignon FR/EN donnent exactement neuf missions ordonnées et
+  passent les invariants sémantiques; champs inconnus, doublons, relations
+  absentes, coordonnées non finies et politiques incohérentes sont rejetés.
+- La façade est composable sans mutation publique et le discriminant futur ne
+  change ni publication ni navigation.
+- Les gates passent et les pilotes pointent ensuite uniquement vers T22-C02.
+
+### Preuves de clôture
+
+- `apps/frontend/lib/geometry-investigation/contracts.ts` exporte les contrats
+  `geometry_investigation.v1`, `geometry_world.v2`, faits, capture
+  expérimentale, bilan anonyme et discriminant professeur futur depuis une
+  source Zod stricte unique.
+- Les fixtures Varignon FR/EN contiennent chacune exactement neuf missions
+  ordonnées, dix relations, quatre points A/B/C/D et les sept étapes de
+  démonstration. Aucun branchement public, route ou outil GeoGebra n'a changé.
+- Les 12/12 tests ciblés prouvent notamment les rejets de champs inconnus,
+  labels dupliqués, ordre invalide, relation absente, coordonnée non finie,
+  policy incohérente, fait stale, texte libre dans le bilan et activité invalide
+  avant composition de la façade.
+- Lint et typecheck passent. La suite complète passe à 689/689 tests sur 66
+  fichiers, le build Next.js passe avec les mêmes page et quatre routes, et la
+  validation documentaire passe avec 80 cartes alignées à la roadmap.
+- `git diff --check` passe et le diff des surfaces publiques, Realtime et
+  GeoGebra historiques reste vide pour cette carte.
+
+## Archive — T21-C01
+
+# Contrat Builder — T21-C01 PRD du harnais d'investigation GeoGebra — close `pass`
+
+## État
+
+- T21-C01 est close `pass` au 17 juillet 2026.
+- Cette tranche est strictement documentaire : aucun runtime, test applicatif,
+  déploiement, secret, catalogue ou contrat réseau n'est modifié.
+- T22 reste entièrement `backlog`; son premier point d'entrée est T22-C01.
+
+## Tranche contractualisée — T21-C01
+
+### Objectif
+
+Produire un PRD complet et un découpage exécutable permettant à un autre agent
+de transformer l'atelier GeoGebra public en harnais d'investigation dynamique,
+avec Varignon comme parcours golden, sans confondre les capacités historiques
+du module spécialiste avec celles réellement exposées au profil public.
+
+### Inclus
+
+- Décrire vision, utilisateurs, parcours professeur/élève, principes
+  pédagogiques, périmètre et non-objectifs.
+- Spécifier les actions sémantiques fermées, permissions, budgets, schémas,
+  événements, preuves, checkpoints et comportements d'erreur.
+- Définir `geometry_investigation.v1`, le moteur déterministe minimal et le
+  scénario Varignon de bout en bout.
+- Décider la réutilisation des briques historiques qualifiées plutôt qu'un
+  second runtime parallèle.
+- Créer T22 et ses cartes ordonnées d'implémentation, avec dépendances, critères
+  Given/When/Then, gates et preuves attendues.
+- Synchroniser SPEC, DECISIONS, TODO_NEXT, ROADMAP, ARCHITECTURE et REFERENCES.
+
+### Hors périmètre
+
+- Aucun changement sous `apps/frontend`, aucune nouvelle dépendance, migration,
+  activation de modèle, modification Vercel ou mutation Devpost/GitHub.
+- Aucune authentification, classe, affectation nominative, base de données,
+  notation ou vérification universelle de la géométrie.
+- Aucun sous-agent d'implémentation et aucune prétention que T22 est déjà livré.
+- Pas de `QA_REPORT.md` Builder et pas de `HANDOFF.md`, le PRD constituant la
+  passation complète et le travail documentaire étant terminé.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --check
+```
+
+### Définition de fini
+
+- Le PRD permet d'implémenter sans choix produit majeur laissé au Builder.
+- Chaque action GeoGebra indique autorité, préconditions, effet, sortie,
+  preuve, annulation et échec fermé.
+- Le scénario Varignon possède un contrat, des états, des validations et des
+  critères de démonstration mesurables.
+- T22 est enregistré avec des cartes ordonnées et `TODO_NEXT.md` pointe sur
+  T22-C01 sans annoncer de capacité non livrée.
+- Les gates documentaires passent sur le même worktree.
+
+### Preuves de clôture
+
+- `docs/PRD_GEOGEBRA_INVESTIGATION_HARNESS.md` constitue la source produit v2.
+- T21-C01 et les huit cartes T22 sont enregistrées dans la roadmap.
+- Les pilotes distinguent explicitement l'état T18/T20 livré de la cible T22.
+- `pnpm test:docs:t0` passe avec 80 cartes correspondant exactement à la
+  roadmap ; IDs, dépendances, références structurées et formats sont valides.
+- `git diff --check` passe. Aucun fichier sous `apps/frontend` n'est modifié par
+  T21 ; les changements runtime et artefacts déjà présents restent hors scope.
+
+## Archive — T20-C01
+
 # Contrat Builder — T20-C01 Redéploiement Vercel du candidat T18 — close `pass`
 
 ## État

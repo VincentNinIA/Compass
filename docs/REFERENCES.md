@@ -26,6 +26,7 @@ Date de vérification initiale : 14 juillet 2026.
 | REF-GGB-EMBED | https://geogebra.github.io/docs/reference/en/GeoGebra_Apps_Embedding/ | Quick Start, `deployggb.js`, `GGBApplet`, version épinglée. |
 | REF-GGB-API | https://geogebra.github.io/docs/reference/en/GeoGebra_Apps_API/ | Création, getters, styles, animation, listeners, client events, fichiers et API object. |
 | REF-GGB-PARAMS | https://geogebra.github.io/docs/reference/en/GeoGebra_App_Parameters/ | `appName`, interface et paramètres d'applet. |
+| REF-GGB-TOOLBAR | https://geogebra.github.io/docs/reference/en/Toolbar/ | Identifiants et modes des outils, dont milieu, relation, parallèle et perpendiculaire. |
 | REF-GGB-COMMANDS | https://geogebra.github.io/docs/manual/en/commands/Geometry_Commands/ | Commandes de construction et de mesure. |
 | REF-GGB-PROVE | https://geogebra.github.io/docs/manual/en/commands/ProveDetails/ | Limites et usage d'une preuve symbolique. |
 | REF-GGB-LICENSE | https://www.geogebra.org/license | Attribution, usage non commercial et licence commerciale. |
@@ -46,3 +47,6 @@ Date de vérification initiale : 14 juillet 2026.
 | ID | Source | Rubriques utilisées |
 |---|---|---|
 | REF-PRD | `/Users/vincentloreaux/Downloads/PRD_GeoTutor_OpenAI_GeoGebra_v1_1.docx` | Sections 1 à 18, FR-01 à FR-17, architecture, contrats, risques et checklist. |
+| REF-PRD-GGB-HARNESS | `docs/PRD_GEOGEBRA_INVESTIGATION_HARNESS.md` | Vision v2, FR-42 à FR-55, actions O0-O5, contrats, Varignon, migration, tests et Definition of Done. |
+| REF-POST-HARNESS-PLAN | `docs/POST_HARNESS_PRODUCT_PLAN.md` | État T22 audité, boucle classe, fabrique adaptative, données minimales, T23 à T27 et règle de reprise. |
+| REF-VARIGNON-BLUEPRINT | `docs/VARIGNON_ACTIVITY_BLUEPRINT.md` | PDF source empreinté, correspondance T22, neuf missions, recettes, difficultés, presets, transferts et gate adaptatif. |

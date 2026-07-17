@@ -8,7 +8,7 @@ est livré et qualifié dans T22. La priorité devient la boucle produit complè
 1. publier et protéger le candidat T22 ;
 2. permettre à un professeur d'affecter une activité à une classe ou à un élève
    pseudonyme ;
-3. produire des variantes adaptatives à partir de templates géométriques fermés ;
+3. produire des variantes adaptatives fermées de l'exercice Varignon ;
 4. mesurer la valeur avec un petit pilote réel avant d'élargir le périmètre.
 
 Cette séquence répond au cœur de Compass : l'IA ne remplace pas le professeur et
@@ -21,15 +21,15 @@ GeoGebra, puis le professeur reçoit des faits utiles pour décider de la suite.
 | Capacité | État au 17 juillet 2026 | Conséquence |
 |---|---|---|
 | Harnais `geometry_investigation.v1` | Livré et qualifié | Réutiliser le runtime, ne pas en créer un second |
-| Varignon | Parcours professeur/élève complet | Premier template de référence |
+| Varignon | Parcours professeur/élève complet | Activité unique de référence jusqu'au pilote |
 | Observation et dépendances GeoGebra | Livrées | Les faux milieux et les faits géométriques sont distingués |
 | Actions O0 à O5 | Livrées | Toute nouvelle activité conserve consentement, budgets et cleanup |
 | Captures, restauration et replay | Livrés | Les preuves expérimentales restent réversibles et privées |
 | Rapport professeur | Livré mais éphémère | Le persister sous forme factuelle et minimale dans T25 |
 | Catalogue professeur | Éphémère | Le remplacer par des affectations bornées et persistantes |
 | Classes et accès | Absents | Construire un pilote limité, pas un LMS complet |
-| Génération adaptative | Absente | Générer des paramètres de templates, jamais des commandes libres |
-| Activités d'investigation | Varignon seulement | Ajouter deux templates couvrant des difficultés différentes |
+| Génération adaptative | Absente | Générer une recette Varignon bornée, jamais des commandes libres |
+| Profondeur pédagogique | Un parcours Varignon fixe | Varier étayage, difficulté, preset et transfert sans changer le théorème |
 | Candidat public | Production encore alignée sur T18 | Intégrer, protéger et déployer T22 avant le pilote |
 
 Les preuves T22 de référence sont : 829 tests Vitest, 43 tests Playwright hors
@@ -42,8 +42,7 @@ Compass doit devenir un atelier d'investigation géométrique orchestré par le
 professeur :
 
 - le professeur définit une intention pédagogique et une cible ;
-- le système sélectionne ou propose une activité compatible avec le moteur de
-  preuve disponible ;
+- le système propose une recette Varignon compatible avec le moteur de preuve ;
 - le professeur prévisualise et approuve avant affectation ;
 - l'élève retrouve son travail, manipule GeoGebra et reçoit le plus petit niveau
   d'aide autorisé ;
@@ -51,9 +50,9 @@ professeur :
 - la prochaine activité est proposée au professeur à partir de difficultés
   déterministes, et non décidée silencieusement par le modèle.
 
-L'expression « exercices infinis » signifie donc « variantes nombreuses,
-bornées et vérifiables d'activités approuvées », pas « génération arbitraire de
-géométrie ou de commandes GeoGebra ».
+L'expression « exercices infinis » signifie d'abord « variantes nombreuses,
+bornées et vérifiables du même problème de Varignon », pas « génération
+arbitraire de géométrie ou de commandes GeoGebra ».
 
 ## Principes non négociables
 
@@ -73,8 +72,8 @@ géométrie ou de commandes GeoGebra ».
 1. Le professeur s'identifie dans un espace pilote limité.
 2. Il crée une classe, obtient un code d'invitation et ajoute des élèves sous
    pseudonyme.
-3. Il choisit une activité ou décrit un objectif, un niveau et une difficulté.
-4. Compass propose un template et des paramètres stricts en un appel borné.
+3. Il choisit Varignon, un niveau d'étayage et une difficulté ciblée.
+4. Compass propose une recette, un preset et un transfert stricts en un appel borné.
 5. Le compilateur local rejette toute proposition hors contrat et exécute le
    préflight sur le vrai harnais.
 6. Le professeur prévisualise, ajuste les formulations et la politique d'aide,
@@ -101,7 +100,7 @@ géométrie ou de commandes GeoGebra ».
 flowchart LR
     Teacher["Professeur"] --> Class["Classe pilote"]
     Teacher --> Intent["Intention pédagogique"]
-    Intent --> Registry["Registre de templates versionnés"]
+    Intent --> Registry["Recettes Varignon versionnées"]
     Registry --> Draft["Proposition IA bornée"]
     Draft --> Compiler["Compilateur et préflight déterministes"]
     Compiler --> Preview["Prévisualisation professeur"]
@@ -121,7 +120,7 @@ flowchart LR
 | `TeacherAccount` | identifiant, secret géré, préférences de langue | clé OpenAI, journal brut |
 | `Classroom` | nom court, propriétaire, code haché, état | données administratives scolaires |
 | `LearnerAlias` | pseudonyme, classe, statut d'accès | nom légal, email élève, date de naissance |
-| `ActivityTemplate` | ID, version, paramètres et capacités requises | commande GeoGebra arbitraire |
+| `ActivityTemplate` | `varignon.v1`, recette, version, paramètres et capacités requises | autre template ou commande GeoGebra arbitraire |
 | `Assignment` | destinataire, contrat exact, dates, politique d'aide | prompt modèle non borné |
 | `LearningEvidence` | faits, missions, aide, timestamps bornés, version | texte libre, audio, image, transcript, Base64 |
 | `SessionCheckpoint` | état sûr chiffré ou référence courte avec expiration | stockage sans limite ou exposition au modèle |
@@ -133,35 +132,29 @@ d'accès, l'expiration et la suppression avant de persister la première donnée
 
 La génération suit une chaîne fermée :
 
-`intention professeur → sélection de template → paramètres structurés →
+`intention professeur → sélection de recette Varignon → paramètres structurés →
 validation de schéma → compilation locale → préflight GeoGebra → aperçu →
 approbation → affectation`.
 
-Le modèle n'émet jamais de commande GeoGebra. Il choisit uniquement parmi des
-templates versionnés et remplit des paramètres bornés : niveau, vocabulaire,
-coordonnées dans un domaine sûr, ordre des missions, difficulté ciblée et
-politique d'aide autorisée. Un échec de compilation revient à un brouillon
-manuel sûr ; il ne publie rien.
+Le modèle n'émet jamais de commande GeoGebra et ne choisit aucun autre template.
+Il remplit seulement des paramètres bornés : recette `guided`, `standard` ou
+`challenge`, difficulté factuelle, preset local, formulation allowlistée,
+politique d'aide et transfert `rectangle`, `rhombus` ou `square`. Les neuf
+missions et les relations de Varignon restent invariantes. Un échec de
+compilation revient à un brouillon manuel sûr ; il ne publie rien.
 
-Trois activités constituent le premier registre :
-
-1. Varignon — milieux, configurations, parallélisme, conjecture et justification ;
-2. théorème des milieux dans un triangle — dépendances de milieux, parallélisme
-   et égalité de longueurs ;
-3. classification/construction de quadrilatères — parallélisme,
-   perpendicularité, égalités et distinction entre apparence et dépendance.
-
-Ces ajouts réutilisent les faits déjà disponibles avant d'étendre le moteur
-mathématique.
+La matrice complète et ses invariants sont définis dans
+`docs/VARIGNON_ACTIVITY_BLUEPRINT.md`. L'ajout d'un autre théorème est reporté
+après le pilote, lorsque la valeur de la boucle classe est prouvée.
 
 ## Tranches et cartes
 
 | Tranche | But | Cartes | Gate de sortie |
 |---|---|---:|---|
-| T23 | Aligner le produit après T22 | 1 | Pilotes, décisions et cartes cohérents |
+| T23 | Aligner le produit après T22 | 2 | Plan post-harnais et blueprint Varignon cohérents |
 | T24 | Publier et sécuriser le candidat T22 | 4 | Main propre, démo protégée, production qualifiée |
 | T25 | Livrer la boucle classe et affectations | 6 | Un professeur affecte, un élève pseudonyme reprend, le bilan persiste |
-| T26 | Livrer la fabrique adaptative | 6 | Trois templates, génération compilée et approbation obligatoire |
+| T26 | Livrer la fabrique Varignon adaptative | 6 | Matrice Varignon compilée et approbation obligatoire |
 | T27 | Piloter et qualifier le produit | 4 | Pilote réel documenté et candidat final reproductible |
 
 ### T24 — Publication et sécurité
@@ -188,12 +181,12 @@ mathématique.
 
 | Carte | Résultat |
 |---|---|
-| T26-C01 | Créer le registre de templates et le compilateur commun |
+| T26-C01 | Créer le registre de recettes Varignon et son compilateur |
 | T26-C02 | Calculer un profil de difficultés factuel et explicable |
 | T26-C03 | Générer un brouillon strict en un appel borné |
 | T26-C04 | Compiler et préflight toute variante avant aperçu |
 | T26-C05 | Faire approuver et affecter la variante par le professeur |
-| T26-C06 | Ajouter deux templates et qualifier les trois parcours |
+| T26-C06 | Qualifier recettes, presets et transferts Varignon |
 
 ### T27 — Pilote et candidat final
 
@@ -224,12 +217,12 @@ Les XP ne servent pas de métrique de maîtrise et ne sont jamais convertis en n
 | Risque | Réponse décidée |
 |---|---|
 | Construire un LMS trop tôt | Limiter T25 à une identité professeur et des élèves pseudonymes |
-| Génération IA non vérifiable | Templates fermés, compilateur local et approbation obligatoire |
+| Génération IA non vérifiable | Recettes Varignon fermées, compilateur local et approbation obligatoire |
 | Sur-interpréter les traces | Afficher faits et assistance, laisser le diagnostic au professeur |
 | Persister trop de données | Allowlist, expiration, suppression et tests de fuite |
 | Fragmenter le runtime | Étendre `GeometryInvestigationRuntime`, jamais le dupliquer |
 | Diffuser une démo coûteuse | Protection applicative, rate limit et monitoring avant URL publique |
-| Ajouter trop de géométrie | Deux activités basées sur les faits déjà supportés |
+| Ajouter trop de géométrie | Garder Varignon seul jusqu'au retour du pilote |
 
 ## Hors périmètre de ce plan
 
@@ -237,6 +230,7 @@ Les XP ne servent pas de métrique de maîtrise et ne sont jamais convertis en n
 - import de roster nominatif ou dossier élève longitudinal ;
 - notation automatique, diagnostic clinique ou décision à enjeu élevé ;
 - génération libre de commandes, scripts, CAS, 3D ou preuves symboliques ;
+- second template ou nouveau théorème géométrique avant le pilote Varignon ;
 - vérification déterministe universelle de toutes les matières ;
 - partage au professeur des formulations libres de l'élève ;
 - soumission Devpost ou achat de licence sans action explicite du porteur.

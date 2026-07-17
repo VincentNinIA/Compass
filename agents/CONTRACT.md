@@ -77,6 +77,9 @@ disponible; son absence ne doit pas être masquée.
   fermeture propre.
 - `origin/main` reçoit la chaîne jusqu'au commit de qualification `2f582fd` sans
   force; la PR #3 est marquée `MERGED` avec `4ea885f` comme merge commit.
+- Un worktree détaché propre sur `6b12ad2`, sans `.env` local, réinstalle 440
+  paquets depuis le store offline puis reconstruit Next.js avec succès; aucun
+  fichier non suivi du workspace principal n'est requis.
 
 ## Archive — T23-C02
 

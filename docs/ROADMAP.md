@@ -100,6 +100,8 @@ Un amendement de démonstration hackathon place désormais l'exercice Varignon
 v2 directement derrière l'unique CTA de l'accueil, sans devoir, bibliothèque,
 code de classe ou pseudonyme dans le parcours jury. L'infrastructure T25 reste
 qualifiée séparément et C04 demeure `in_progress` pour le checkpoint persistant.
+L'amendement direct est close `pass` sur `e6a747d` et la Production
+`dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL` après smoke du vrai applet et retour accueil.
 
 Ordre de dépendance : `T0 → T1 → (T2 et T3 en parallèle possible) → T4 → T5 → T6 → T7 → T8 → T9 → T10 → T11 → T12 → T13 → T14 → T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22 → T23 → T24 → T25 → T26 → T27`.
 

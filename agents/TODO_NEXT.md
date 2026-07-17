@@ -2,15 +2,16 @@
 
 ## Prochaine action
 
-L'amendement démo hackathon est implémenté localement : l'accueil ne présente
+L'amendement démo hackathon est close `pass` : l'accueil ne présente
 plus devoir, bibliothèque ou jonction par code. Une seule action construit la
 publication Varignon v2 validée et ouvre directement le vrai runtime GeoGebra
 avec ses neuf missions, sans réseau ni écriture serveur préalable. Les gates
-locaux, l'inspection desktop/mobile et les parcours classe historiques passent.
-La prochaine action immédiate est le déploiement Vercel et son smoke public.
+locaux, l'inspection desktop/mobile, les parcours classe historiques et le
+smoke Production passent sur `e6a747d` et
+`dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL`.
 
-Après clôture de cet amendement, T25-C04 reste `in_progress` sur sa frontière
-pilote distincte : persister et restaurer le checkpoint sémantique allowlisté.
+T25-C04 reste `in_progress` sur sa frontière pilote distincte. La prochaine
+action Builder est de persister et restaurer le checkpoint sémantique allowlisté.
 La classe `Test Varignon`, PostgreSQL Neon, les secrets Production, les routes
 professeur/alias et les affectations ciblées restent opérationnels mais ne
 dominent plus le golden path du jury. T24-C04, vidéo, licence et soumission

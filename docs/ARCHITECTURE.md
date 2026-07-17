@@ -748,6 +748,9 @@ transmet au même `GeometryPublishedWorkspace`. Ce chemin ne consulte ni classe,
 ni cookie alias, ni catalogue réseau et n'écrit rien en base. Les entrées devoir,
 bibliothèque et classe restent disponibles par surfaces internes/pilotes, mais
 ne sont plus rendues sur l'accueil destiné au jury.
+Ce chemin est servi en Production depuis `e6a747d` par le déploiement
+`dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL` et l'alias stable
+`https://compass-geotutor-demo.vercel.app/`.
 
 ### Flux de données autorisé
 

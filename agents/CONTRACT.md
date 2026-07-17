@@ -1,4 +1,4 @@
-# Contrat Builder — amendement démo hackathon, accès direct à Varignon — `in_progress`
+# Contrat Builder — amendement démo hackathon, accès direct à Varignon — close `pass`
 
 ## État
 
@@ -7,9 +7,9 @@
   avant de voir l'exercice du professeur.
 - La classe pilote T25 reste disponible comme infrastructure et banc de test,
   mais elle ne constitue plus le parcours public principal de la démo.
-- Cet amendement remplace temporairement la reprise persistante C04 comme
-  prochaine action produit. Il ne prétend pas transformer le prototype en
-  portail scolaire sécurisé ou en LMS.
+- Cet amendement est close `pass` sur le commit runtime `e6a747d` et la
+  Production `dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL`. Il ne prétend pas transformer
+  le prototype en portail scolaire sécurisé ou en LMS.
 
 ## Objectif
 
@@ -61,6 +61,21 @@ git diff --check
 - Le retour retrouve l'accueil; la langue, le clavier, le mobile et le
   mouvement réduit restent utilisables sans débordement ni violation Axe.
 - Le build qualifié est déployé sur l'alias stable et son identité est consignée.
+
+## Preuves de clôture
+
+- Le landing EN/FR ne rend plus devoir, bibliothèque ou classe. Une CTA unique
+  crée la publication `teacher_varignon-demo-v1-*` validée puis ouvre le même
+  `GeometryPublishedWorkspace` que la publication professeur historique.
+- Lint, typecheck, build, 884/884 Vitest et les 102 cartes documentaires passent.
+  Le nouveau Playwright direct rend 2/2 avec vrai applet, neuf missions, retour,
+  Axe sans violation, mouvement réduit et viewport 390 px sans débordement.
+- Les non-régressions rendent 3/3 sur la classe T25, 2/2 sur la présentation T6
+  et 6/6 sur les parcours généraliste/mascotte concernés par les nouvelles
+  entrées internes.
+- La Production READY `dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL` sert l'alias stable.
+  Le smoke Playwright CLI ouvre l'accueil sans code, clique la CTA, observe le
+  vrai applet et les neuf missions, puis revient à l'accueil sans formulaire.
 
 ---
 

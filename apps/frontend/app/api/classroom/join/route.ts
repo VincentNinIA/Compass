@@ -138,6 +138,17 @@ async function leaveClass(request: Request): Promise<Response> {
 function publicMembership(membership: {
   classroom: { id: string; label: string; expiresAt: number };
   learnerAlias: { id: string; pseudonym: string; expiresAt: number };
+  assignments: readonly {
+    assignment: {
+      id: string;
+      status: string;
+      contractHash: string;
+      assistancePolicy: unknown;
+      opensAt: number;
+      closesAt: number;
+    };
+    publication: unknown;
+  }[];
 }) {
   return {
     classroom: {
@@ -150,6 +161,15 @@ function publicMembership(membership: {
       pseudonym: membership.learnerAlias.pseudonym,
       expiresAt: membership.learnerAlias.expiresAt,
     },
+    assignments: membership.assignments.map((view) => ({
+      id: view.assignment.id,
+      status: view.assignment.status,
+      contractHash: view.assignment.contractHash,
+      assistancePolicy: view.assignment.assistancePolicy,
+      opensAt: view.assignment.opensAt,
+      closesAt: view.assignment.closesAt,
+      publication: view.publication,
+    })),
   };
 }
 

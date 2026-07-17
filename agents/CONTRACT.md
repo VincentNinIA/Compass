@@ -1,3 +1,97 @@
+# Contrat Builder — T25-C03 Affectations ciblées Varignon — close `pass`
+
+## État
+
+- Le 17 juillet 2026, le porteur confirme que `math.pdf` est l'énoncé à
+  affecter dans la classe, et non la source d'un exercice distinct à attendre.
+- Les deux pages, empreinte
+  `4f10c5862107d5f0aa256678851d353c1c1d9c7e1eca6aaa78019801a0d61b03`,
+  décrivent un seul parcours Varignon déjà couvert par le contrat bilingue
+  `varignon.v1` et sa publication `teacher_exercise_publication.v2`.
+- T25-C02 et l'amendement d'accès public restent clos `pass`. T25-C03 est close
+  `pass`; aucune variante adaptative n'est ouverte avant T26 et T25-C04 reste
+  la prochaine carte à contractualiser.
+
+## Tranche contractualisée — T25-C03
+
+### Objectif
+
+Permettre au professeur de prévisualiser puis d'affecter le contrat Varignon
+exact à une classe, un groupe ou un alias pseudonyme, avec une fenêtre et une
+politique d'aide bornées, puis permettre aux seuls destinataires résolus de
+recevoir ce contrat sans encore ouvrir la reprise T25-C04.
+
+### Inclus
+
+- Catalogue serveur fermé à l'unique activité `varignon.v1`, dérivée du PDF en
+  FR/EN, avec empreinte source et hash SHA-256 du contrat exact affiché.
+- Création transactionnelle d'un `ClassActivityTemplateV1` immuable puis d'une
+  `ClassAssignmentV1` ciblant une classe, un groupe ou un alias actif.
+- Résolution instantanée et dédupliquée des destinataires dans une table dédiée,
+  avec rejet d'une cible vide, étrangère, expirée ou hors ownership.
+- Groupes professeur composés uniquement d'aliases actifs de la même classe.
+- Fenêtre planifiable mais bornée, politique d'aide reprise exactement de la
+  publication, clé d'idempotence et rejet d'une réutilisation divergente.
+- Retrait logique d'une affectation : aucune nouvelle ouverture élève, sans
+  supprimer les destinataires ni les futures preuves requises par la rétention.
+- Aperçu et actions EN/FR dans l'espace professeur; accusé élève contenant le
+  contrat exact uniquement pendant sa fenêtre et uniquement pour un destinataire.
+- Adapter PostgreSQL, store mémoire de référence, migration up/down, tests
+  d'isolation, idempotence, dates et non-régression du catalogue historique.
+
+### Hors périmètre
+
+- Aucun lancement, checkpoint ou retour dans le runtime GeoGebra; file et
+  reprise restent exclusivement T25-C04.
+- Aucun fait persistant, bilan de classe, note, texte libre, média, transcript
+  ou Base64; T25-C05 reste propriétaire des preuves et agrégats.
+- Aucune recette adaptative, génération IA, modification des neuf missions,
+  nouveau template, migration cloud ou mutation Vercel.
+
+### Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend test:e2e:t25
+git diff --check
+# tests négatifs inter-professeurs/inter-aliases, idempotence et transaction
+# scan des réponses/logs pour roster étranger, code, secret et texte libre
+```
+
+### Définition de fini
+
+- L'aperçu professeur et l'affectation portent le même hash et la même
+  publication Varignon issue du PDF; aucun catalogue mémoire historique n'est
+  utilisé comme autorité persistante implicite.
+- Classe, groupe et alias résolvent atomiquement un ensemble non vide et sans
+  doublon; un autre professeur ou alias n'obtient ni affectation ni contrat.
+- Retry avec la même clé et la même intention retourne la même affectation;
+  réemploi divergent, dates invalides et cible périmée échouent sans écriture.
+- Une révocation conserve l'audit minimal mais retire immédiatement le contrat
+  des lectures élève; T25-C04 devient ensuite la seule carte ouvrable.
+
+### Preuves de clôture
+
+- Le catalogue lie `math.pdf` à son empreinte source, reconstruit la publication
+  FR/EN `varignon.v1` et vérifie son hash avant chaque écriture.
+- La migration `0003_class_assignments`, les stores mémoire/PostgreSQL et les
+  tests prouvent snapshot sans doublon, isolation inter-classe/inter-professeur,
+  idempotence, drift fermé, dates bornées et retrait sans perte d'audit.
+- Le golden navigateur couvre groupe, affectation, alias tardif exclu, accusé
+  exact, retrait, Axe et non-régression du parcours classe existant.
+- Le gate final passe 884/884 tests Vitest sur 104 fichiers, lint, typecheck,
+  build, validation des 102 cartes et 3/3 parcours Playwright T25.
+- Aucun runtime, checkpoint, preuve élève, migration cloud ou changement Vercel
+  n'est inclus dans cette clôture.
+
+---
+
+# Archive — amendement T24-C03
+
 # Contrat Builder — amendement T24-C03 Accès public sans code — close `pass`
 
 ## État

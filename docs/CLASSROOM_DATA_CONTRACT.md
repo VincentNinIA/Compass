@@ -23,8 +23,8 @@ un runtime serverless via un fournisseur PostgreSQL managé.
 Le dépôt ne provisionne aucun fournisseur et ne place aucune URL de base dans
 Git ou Vercel. T25-C02 branche `PostgresClassroomPilotStoreV1` sur le port
 serveur. `MemoryClassroomPilotStoreV1` est réservé aux tests explicites et est
-refusé en Vercel Production. Les migrations `0001_classroom_v1` puis
-`0002_classroom_pilot` sont exécutées avec `pg-mem`; le runbook opérateur est
+refusé en Vercel Production. Les migrations `0001_classroom_v1`,
+`0002_classroom_pilot` puis `0003_class_assignments` sont exécutées avec `pg-mem`; le runbook opérateur est
 `docs/CLASSROOM_PILOT_RUNBOOK.md`.
 
 Le catalogue professeur éphémère T22 reste distinct. Une publication n'entre
@@ -41,6 +41,7 @@ aucun mélange silencieux ou fallback vers la mémoire globale n'est autorisé.
 | `LearnerAliasV1` | élève puis professeur pour révocation | Pseudonyme local à une classe | 90 jours |
 | `ClassActivityTemplateV1` | professeur | Publication Varignon exacte et hashée | 90 jours |
 | `ClassAssignmentV1` | professeur | Cible, fenêtre et politique d'aide immuables | clôture + 30 jours |
+| `assignment_recipient` | système | Snapshot dédupliqué des aliases destinataires au moment de l'affectation | durée de l'affectation ou de l'alias |
 | `LearningEvidenceV1` | runtime déterministe | Missions, faits, configurations, aides, complétions et XP | 30 jours |
 | `SessionCheckpointV1` | runtime déterministe | État Varignon sémantique court et vérifiable | 7 jours |
 
@@ -85,10 +86,12 @@ classe divergente échoue sans fallback.
 | Migrer | non | non | non | non | but `migration` seulement |
 | Purger | non | non | non | non | but `retention` seulement |
 
-Une cible `classroom` couvre les aliases actifs de cette classe. Une cible
-`group` couvre uniquement ses membres. Une cible `learner` couvre un seul alias.
-La fenêtre `opensAt ≤ now < closesAt`, l'état `active` et l'expiration sont tous
-requis pour une lecture ou écriture élève.
+Une cible `classroom` résout les aliases actifs de cette classe au moment de
+l'affectation. Une cible `group` résout alors uniquement ses membres actifs; une
+cible `learner` résout un seul alias. Cette résolution est persistée dans
+`compass_assignment_recipients` et n'est pas élargie par une jonction tardive.
+La fenêtre `opensAt ≤ now < closesAt`, l'état `active`, l'appartenance au
+snapshot et l'expiration sont tous requis pour une lecture ou écriture élève.
 
 ## Données interdites
 
@@ -115,6 +118,10 @@ identique dans template, affectation, faits et checkpoint; la politique d'aide
 de l'affectation doit être celle de la publication approuvée. Les identifiants
 de mission, de fait déterministe et d'étape de justification doivent exister
 dans cette publication exacte; un alias doit aussi appartenir à la cible.
+La clé d'idempotence est incorporée à l'identifiant d'affectation : une nouvelle
+tentative avec la même intention rend le même enregistrement, tandis qu'une
+réutilisation divergente échoue sans écriture. Template, affectation et snapshot
+des destinataires sont committés dans une seule transaction.
 
 La montée `classroom_store.v0 → v1` part obligatoirement d'un store vide, car
 T24 ne persistait aucune donnée de classe. La descente applicative refuse
@@ -149,8 +156,9 @@ compteurs par table. Il ne contient aucun identifiant ou contenu élève.
 
 ## Suite autorisée
 
-T25-C02 est close : identité professeur pilote, création/archivage de classe,
-rotation, jonction et roster réutilisent ces contrats sans exposer
-`joinCodeHash`. T25-C03 peut ensuite introduire l'affectation seulement après
-réception de l'énoncé exact du prochain exercice et décision explicite sur son
-contrat pédagogique.
+T25-C03 est close : le professeur prévisualise et affecte la publication
+Varignon exacte issue de `math.pdf`; classe, groupe et alias sont résolus sous
+transaction, et seuls les destinataires figés reçoivent le contrat pendant sa
+fenêtre. T25-C04 peut brancher cette file sur le runtime et le checkpoint sûr;
+elle devra revalider destinataire, statut, fenêtre et hash avant toute ouverture
+ou reprise.

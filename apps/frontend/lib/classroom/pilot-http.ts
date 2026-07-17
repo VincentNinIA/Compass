@@ -90,14 +90,27 @@ export function classroomErrorResponse(error: unknown): Response {
           "The class code is invalid or expired.",
         );
       case "learner_alias_conflict":
+      case "classroom_group_conflict":
         return classroomFailure(
           409,
           error.code,
-          "This pseudonym is already used in the class.",
+          error.code === "learner_alias_conflict"
+            ? "This pseudonym is already used in the class."
+            : "This group name is already used in the class.",
         );
+      case "assignment_contract_drift":
+      case "assignment_idempotency_conflict":
+        return classroomFailure(409, error.code, "The assignment preview changed.");
+      case "assignment_invalid_window":
+        return classroomFailure(400, error.code, "The assignment window is invalid.");
+      case "assignment_target_empty":
+        return classroomFailure(409, error.code, "The assignment target is empty.");
       case "classroom_archived":
         return classroomFailure(409, error.code, "The class is archived.");
       case "classroom_not_found":
+      case "classroom_group_not_found":
+      case "assignment_not_found":
+      case "assignment_target_not_found":
       case "learner_alias_not_found":
         return classroomFailure(404, error.code, "The resource was not found.");
       case "teacher_revoked":

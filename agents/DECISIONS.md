@@ -1103,10 +1103,11 @@
   un exercice suivant. Coupler la classe à un contenu supposé rendrait la
   jonction et la suppression non réutilisables et contredirait la demande du
   porteur de travailler ensuite sur un nouvel exercice.
-- Impact : T25-C03 reçoit le prochain énoncé comme nouvelle entrée autoritative,
+- Impact : T25-C03 reçoit l'énoncé choisi comme nouvelle entrée autoritative,
   puis décide explicitement s'il réutilise `geometry_investigation.v1` ou exige
   un contrat versionné distinct. Aucun élargissement du harnais n'est anticipé
-  dans T25-C02.
+  dans T25-C02. Le porteur a depuis confirmé par D-083 que cette entrée est le
+  même PDF Varignon, sans invalider l'indépendance de la classe.
 
 ## D-081 - La boucle classe sépare autorité persistante et sessions pilotes
 
@@ -1138,3 +1139,21 @@
   flag explicite `COMPASS_DEMO_PROTECTION_ENABLED=1` peut la réactiver dans un
   environnement privé. L'alias public ne rend plus la porte, aucun cookie de
   démo n'est requis et D-077 reste l'historique de la protection initiale.
+
+## D-083 - Le PDF Varignon est l'activité affectée dans T25-C03
+
+- Décision : traiter `math.pdf`, empreinte
+  `4f10c5862107d5f0aa256678851d353c1c1d9c7e1eca6aaa78019801a0d61b03`,
+  comme l'énoncé autoritatif demandé pour T25-C03. Réutiliser la publication
+  bilingue exacte `teacher_exercise_publication.v2` portant
+  `geometry_investigation.v1` et `template:"varignon.v1"`, plutôt que créer un
+  second exercice ou un contrat concurrent.
+- Raison : les deux pages décrivent construction des milieux, exploration des
+  cas convexe, concave et croisé, conjecture du parallélogramme puis preuve;
+  T22 implémente déjà ces intentions dans ses neuf missions qualifiées.
+- Impact : l'affectation persiste un template hashé issu de cette publication,
+  affiche ce même contrat avant validation et le remet seulement aux aliases
+  résolus. T25-C03 ne modifie ni les missions ni la politique d'aide; les
+  variantes et transferts paramétrés restent T26. La résolution livrée est un
+  snapshot transactionnel : un alias arrivé après publication n'hérite pas de
+  l'affectation, et le retrait masque le contrat sans réécrire son historique.

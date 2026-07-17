@@ -1,4 +1,5 @@
 export * from "./access";
+export * from "./activity-catalog";
 export * from "./contracts";
 export * from "./data-policy";
 export * from "./lifecycle";

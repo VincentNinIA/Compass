@@ -2,9 +2,10 @@
 
 ## Portée
 
-Ce runbook met en service T25-C02 : identité professeur limitée, classes,
-codes rotatifs et élèves pseudonymes. Il ne publie ni n'affecte encore
-d'exercice. Le prochain exercice reste une entrée séparée de T25-C03.
+Ce runbook met en service T25-C02 et T25-C03 : identité professeur limitée,
+classes, codes rotatifs, élèves pseudonymes, groupes et affectation du contrat
+Varignon exact issu de `math.pdf`. La réception élève est un accusé de contrat;
+elle ne lance pas encore GeoGebra et ne restaure aucun checkpoint avant T25-C04.
 
 Le runtime échoue fermé. Lorsque le pilote est activé, l'absence de secret ou de
 base ne déclenche jamais de fallback mémoire. Le driver mémoire est accepté
@@ -49,12 +50,14 @@ Appliquer les migrations dans l'ordre avec le rôle de migration :
 ```sh
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f apps/frontend/migrations/0001_classroom_v1.up.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f apps/frontend/migrations/0002_classroom_pilot.up.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f apps/frontend/migrations/0003_class_assignments.up.sql
 ```
 
 `0002` ajoute un verrou transactionnel de rotation/jonction et rend le
-pseudonyme unique sans tenir compte de la casse dans chaque classe. Les scripts
-`down` sont réservés à une base vide contrôlée ; ils ne remplacent ni la purge
-ni une restauration de sauvegarde.
+pseudonyme unique sans tenir compte de la casse dans chaque classe. `0003` rend
+le nom de groupe unique par classe et ajoute le snapshot immuable
+affectation/alias. Les scripts `down` sont réservés à une base vide contrôlée ;
+ils ne remplacent ni la purge ni une restauration de sauvegarde.
 
 ## 3. Configurer le runtime
 
@@ -91,7 +94,12 @@ Puis vérifier sur l'environnement candidat :
 4. le roster n'est visible que dans la session professeur ;
 5. la rotation invalide immédiatement l'ancien code ;
 6. le retrait de l'alias invalide sa session au prochain chargement ;
-7. l'archivage invalide le dernier code.
+7. le professeur prévisualise les neuf missions de `math.pdf`, crée un groupe
+   et affecte Varignon avec le hash affiché ;
+8. seuls les aliases déjà résolus voient l'accusé pendant la fenêtre; un alias
+   arrivé après l'affectation ne le voit pas ;
+9. le retrait de l'affectation la fait disparaître immédiatement côté élève ;
+10. l'archivage invalide le dernier code et révoque les affectations ouvertes.
 
 La règle WAF T24 actuelle limite globalement `POST /api/*`. Avant d'activer un
 pilote multi-élèves derrière le même NAT scolaire, l'opérateur doit la remplacer
@@ -103,7 +111,10 @@ routes coûteuses. T25-C02 n'autorise pas cette mutation Vercel.
 - Code de classe compromis : générer un nouveau code ; l'ancien hash est
   remplacé atomiquement.
 - Alias à retirer : utiliser le roster professeur ; la suppression cascade vers
-  les futures dépendances T25.
+  ses snapshots, faits et checkpoints; les autres destinataires restent isolés.
+- Affectation erronée : utiliser « Retirer »; le statut devient `revoked`,
+  l'élève ne reçoit plus le contrat et l'audit minimal reste conservé jusqu'à
+  expiration.
 - Accès professeur compromis : régénérer les secrets, remplacer le hash et le
   secret de session, puis redéployer.
 - Base indisponible ou migration absente : désactiver

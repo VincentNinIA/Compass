@@ -7,6 +7,22 @@ import { useLanguage } from "./language-provider";
 type Membership = {
   classroom: { id: string; label: string; expiresAt: number };
   learnerAlias: { id: string; pseudonym: string; expiresAt: number };
+  assignments: {
+    id: string;
+    status: "active";
+    contractHash: string;
+    opensAt: number;
+    closesAt: number;
+    publication: {
+      content: {
+        exercise: {
+          title: string;
+          objective: string;
+          missions: { id: string; title: string; instruction: string }[];
+        };
+      };
+    };
+  }[];
 };
 
 export function ClassroomJoin({ onBack }: { onBack(): void }) {
@@ -141,15 +157,41 @@ export function ClassroomJoin({ onBack }: { onBack(): void }) {
               <p>
                 {text("Your pseudonym:", "Ton pseudonyme :")} {membership.learnerAlias.pseudonym}
               </p>
-              <div className="classroom-next-activity">
-                <small>{text("Next step", "Prochaine étape")}</small>
-                <b>
-                  {text(
-                    "Your teacher will assign the first activity here.",
-                    "Ton professeur attribuera ici la première activité.",
-                  )}
-                </b>
-              </div>
+              {membership.assignments.length === 0 ? (
+                <div className="classroom-next-activity">
+                  <small>{text("Next step", "Prochaine étape")}</small>
+                  <b>
+                    {text(
+                      "Your teacher will assign the first activity here.",
+                      "Ton professeur attribuera ici la première activité.",
+                    )}
+                  </b>
+                </div>
+              ) : (
+                <div className="classroom-assignment-receipts">
+                  <h2>{text("Activities received", "Activités reçues")}</h2>
+                  <ul>
+                    {membership.assignments.map((assignment) => (
+                      <li key={assignment.id}>
+                        <span>{text("Ready", "Prête")}</span>
+                        <strong>
+                          {assignment.publication.content.exercise.title}
+                        </strong>
+                        <p>{assignment.publication.content.exercise.objective}</p>
+                        <small>
+                          {assignment.publication.content.exercise.missions.length} {text("missions", "missions")} · {text("contract", "contrat")} {assignment.contractHash.slice(0, 12)}
+                        </small>
+                        <p>
+                          {text(
+                            "Your teacher assigned this exact activity. Opening and resuming the GeoGebra work comes next.",
+                            "Ton professeur a affecté cette activité exacte. L'ouverture et la reprise du travail GeoGebra arrivent ensuite.",
+                          )}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <button type="button" onClick={leave} disabled={status === "busy"}>
                 {text("Leave this class on this device", "Quitter cette classe sur cet appareil")}
               </button>

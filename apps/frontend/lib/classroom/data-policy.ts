@@ -5,6 +5,7 @@ export const PERSISTED_CLASSROOM_ENTITIES_V1 = [
   "learner_alias",
   "activity_template",
   "assignment",
+  "assignment_recipient",
   "learning_evidence",
   "session_checkpoint",
 ] as const;
@@ -98,6 +99,10 @@ export const PERSISTED_FIELD_CATALOG_V1 = Object.freeze([
   policy("assignment", "opensAt", "Keep future work out of the learner queue.", "teacher", "Close plus 30 days maximum."),
   policy("assignment", "closesAt", "Stop learner writes after the work window.", "teacher", "Close plus 30 days maximum."),
   policy("assignment", "expiresAt", "Drive assignment/evidence/checkpoint purge.", "system", "Until purge."),
+
+  policy("assignment_recipient", "assignmentId", "Freeze the assignment recipient set at creation.", "system", "Assignment lifetime."),
+  policy("assignment_recipient", "learnerAliasId", "Identify one pseudonymous recipient without copying identity data.", "system", "Until assignment or alias purge."),
+  policy("assignment_recipient", "createdAt", "Audit when the recipient snapshot was committed.", "system", "Assignment lifetime."),
 
   policy("learning_evidence", "schemaVersion", "Reject incompatible evidence.", "system", "Record lifetime."),
   policy("learning_evidence", "id", "Idempotently update one bounded projection.", "system", "30 days maximum."),

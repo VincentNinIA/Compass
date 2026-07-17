@@ -6,9 +6,13 @@ L'amendement T24-C03 demandé par le porteur est close `pass` : la Production
 Vercel ouvre directement Compass sans code, le WAF reste actif et les variables
 de session démo ont été retirées. T25-C02 reste close `pass` : identité professeur pilote, création/archivage de
 classe, code rotatif, jonction pseudonyme, roster, retrait d'alias et adapter
-PostgreSQL sont livrés sans dépendance à un exercice. La prochaine action du
-porteur est de fournir l'énoncé exact du nouvel exercice. `math.pdf` ne contient
-que Varignon; T25-C03 reste fermée tant que cette source n'est pas reçue.
+PostgreSQL sont livrés sans dépendance à un exercice. Le porteur confirme que
+`math.pdf` est précisément l'énoncé à utiliser : ses deux pages forment le
+parcours Varignon déjà validé sous `varignon.v1`. T25-C03 est close `pass` :
+template exact, groupes, snapshots classe/groupe/alias, idempotence, retrait,
+aperçu professeur et accusé élève isolé sont livrés. T25-C04 est la prochaine
+carte; elle seule pourra ouvrir une affectation dans GeoGebra et reprendre son
+checkpoint après revalidation du destinataire, de la fenêtre et du hash.
 T24-C01 est close `pass` sur le merge `4ea885f` et le candidat
 `candidate_e6b5349451db363138d6d24b` après 829/829 tests, 43 Playwright hors
 live, golden 3/3 et smoke Realtime credentialed 1/1.
@@ -21,8 +25,8 @@ le PDF Varignon. La séquence décidée est :
 3. T26 — recettes Varignon, profil factuel et variantes approuvées ;
 4. T27 — durcissement, instrumentation, pilote réel et candidat final.
 
-Il n'y a plus de carte Builder active. T25-C03 devient la prochaine carte
-ouvrable après réception du nouvel énoncé. T24-C04, vidéo, licence, migration
+Il n'y a plus de carte Builder active; T25-C04 est la prochaine dépendance à
+contractualiser. T24-C04, vidéo, licence, migration
 PostgreSQL réelle et soumission restent des actions distinctes exigeant
 l'autorité du porteur.
 
@@ -32,9 +36,8 @@ l'autorité du porteur.
 - T21-C01 et T22-C01 à T22-C08 sont closes `pass`; le contre-audit final T22
   ne laisse aucun P1/P2 ouvert.
 - T23-C01, T23-C02, T24-C01 à T24-C03 et T25-C01/C02 sont closes `pass`.
-  T24-C04 reste `backlog` pour le dossier de soumission; T25-C03 attend la
-  source du nouvel exercice et T25-C04 à T27-C04 restent derrière leurs
-  dépendances.
+  T24-C04 reste `backlog` pour le dossier de soumission; T25-C03 utilise le
+  PDF Varignon confirmé et T25-C04 à T27-C04 restent derrière leurs dépendances.
 - T2-C02/C04/C05/C06 sont closes après remédiation déterministe : 81/81 tests
   ciblés, 420/420 tests frontend partagés, lint, typecheck et build passent.
 - La réserve live T2-C01 reste ouverte : le gate credentialed final du 15 juillet
@@ -175,8 +178,9 @@ T22 est intégré et qualifié dans `origin/main`; la PR #3 est fusionnée par
 `4ea885f` et la qualification est consignée dans `2f582fd`. T24 protège et sert
 désormais ce runtime sur l'alias public depuis `5493bd9` et
 `dpl_GQtBPXN765XSqrPLyJpakyUZsfen`. T25-C01 ferme désormais les contrats de
-données et d'accès; la frontière active est exclusivement la classe et la
-jonction pseudonyme T25-C02, sans choix d'exercice.
+données et d'accès; T25-C02 ferme la classe et la jonction pseudonyme, puis
+T25-C03 ferme l'affectation Varignon ciblée. T25-C04 est la prochaine frontière
+à contractualiser pour l'ouverture et la reprise.
 
 La protection applicative et le quota WAF sont actifs. Garder néanmoins l'URL
 peu diffusée, surveiller l'usage du projet OpenAI et retirer ou faire tourner la

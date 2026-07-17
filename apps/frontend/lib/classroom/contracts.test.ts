@@ -239,6 +239,11 @@ describe("T25-C01 classroom persistence contracts", () => {
         "closesAt",
         "expiresAt",
       ],
+      assignment_recipient: [
+        "assignmentId",
+        "learnerAliasId",
+        "createdAt",
+      ],
       learning_evidence: [
         "schemaVersion",
         "id",
@@ -306,6 +311,7 @@ describe("T25-C01 classroom persistence contracts", () => {
         "activity_template.publication.*",
         "assignment.target.kind",
         "assignment.assistancePolicy.maxProactiveLevel",
+        "assignment_recipient.learnerAliasId",
         "learning_evidence.missionStates[].status",
         "learning_evidence.facts[].pass",
         "learning_evidence.assistance.hintsDelivered",

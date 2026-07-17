@@ -55,9 +55,12 @@ test("teacher creates a class, learner joins, rotation and removal revoke access
   await expect(page.getByText("New code ready. The previous code no longer works.")).toBeVisible();
   const secondCode = (await page.locator(".classroom-code output").textContent())?.trim();
   expect(secondCode).not.toBe(firstCode);
-  await expect(page.getByText("Orion", { exact: true })).toBeVisible();
+  const geometryCard = classroomCard(page, "Geometry lab");
+  await expect(
+    geometryCard.locator(".classroom-roster").getByText("Orion", { exact: true }),
+  ).toBeVisible();
 
-  await page.getByRole("button", { name: "Remove" }).click();
+  await geometryCard.getByRole("button", { name: "Remove" }).click();
   await expect(page.getByText("Pseudonym removed.")).toBeVisible();
   await learnerPage.reload();
   await learnerPage.getByRole("button", { name: "Join my class" }).click();
@@ -106,3 +109,151 @@ test("student join is keyboard-accessible, bilingual and mobile-safe", async ({ 
     .analyze();
   expect(results.violations).toEqual([]);
 });
+
+test("teacher assigns the exact Varignon PDF to a frozen group and can withdraw it", async ({
+  browser,
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Professor" }).click();
+  await page.getByRole("button", { name: "Manage my classes" }).click();
+  await page.getByLabel("Pilot teacher access code").fill(T25_TEACHER_ACCESS_CODE);
+  await page.getByRole("button", { name: "Open class space" }).click();
+  await expect(page.getByText("Teacher space unlocked.")).toBeVisible();
+
+  await page.getByLabel("New class name").fill("Varignon group lab");
+  await page.getByRole("button", { name: "Create class" }).click();
+  const classCode = (await page.locator(".classroom-code output").textContent())?.trim();
+  expect(classCode).toMatch(/^[2-9A-HJ-NP-Z]{4}(?:-[2-9A-HJ-NP-Z]{4}){2}$/);
+
+  const orionContext = await browser.newContext();
+  const orionPage = await orionContext.newPage();
+  await joinClass(orionPage, classCode ?? "", "Orion");
+
+  await page.reload();
+  await page.getByRole("button", { name: "Professor" }).click();
+  await page.getByRole("button", { name: "Manage my classes" }).click();
+  const varignonCard = classroomCard(page, "Varignon group lab");
+  await expect(
+    varignonCard
+      .locator(".classroom-roster")
+      .getByText("Orion", { exact: true }),
+  ).toBeVisible();
+  await expect(varignonCard.getByText("Approved activity")).toBeVisible();
+  await expect(
+    varignonCard.getByText("math.pdf", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    varignonCard.getByText("9 missions", { exact: false }),
+  ).toBeVisible();
+
+  const groupSection = varignonCard.locator(".classroom-groups");
+  await groupSection.getByLabel("Group name").fill("Guided");
+  await groupSection.getByLabel("Orion").check();
+  await groupSection.getByRole("button", { name: "Create group" }).click();
+  await expect(page.getByText("Group created.")).toBeVisible();
+  await varignonCard
+    .getByLabel("Recipients")
+    .selectOption({ label: "Group · Guided" });
+
+  const opensAt = Date.now() + 5_000;
+  await varignonCard
+    .getByLabel("Opens at")
+    .fill(toLocalDateTimeInput(opensAt));
+  await varignonCard.getByLabel("Available for").selectOption("1");
+  const assignResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/classroom/teacher/assignments") &&
+      response.request().method() === "POST" &&
+      response.status() === 201,
+  );
+  await varignonCard
+    .getByRole("button", { name: "Assign exact Varignon activity" })
+    .click();
+  const assignResponse = await assignResponsePromise;
+  expect(assignResponse.status()).toBe(201);
+  await expect(
+    page.getByText("Varignon assigned to the resolved recipients."),
+  ).toBeVisible();
+  await expect(
+    varignonCard.getByText("1 recipients", { exact: false }),
+  ).toBeVisible();
+
+  const accessibility = await new AxeBuilder({ page })
+    .include(".classroom-assignment-studio")
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+
+  const novaContext = await browser.newContext();
+  const novaPage = await novaContext.newPage();
+  await joinClass(novaPage, classCode ?? "", "Nova");
+  await expect(
+    novaPage.getByText("Your teacher will assign the first activity here."),
+  ).toBeVisible();
+
+  await orionPage.waitForTimeout(Math.max(0, opensAt - Date.now() + 1_000));
+  await reopenClassScreen(orionPage);
+  await expect(orionPage.getByText("Activities received")).toBeVisible();
+  await expect(orionPage.getByText("9 missions", { exact: false })).toBeVisible();
+  await expect(
+    orionPage.getByText(
+      "Your teacher assigned this exact activity. Opening and resuming the GeoGebra work comes next.",
+    ),
+  ).toBeVisible();
+
+  await reopenClassScreen(novaPage);
+  await expect(
+    novaPage.getByText("Your teacher will assign the first activity here."),
+  ).toBeVisible();
+  await expect(novaPage.getByText("Activities received")).toHaveCount(0);
+
+  await varignonCard.getByRole("button", { name: "Withdraw" }).click();
+  await expect(page.getByText("Assignment withdrawn.")).toBeVisible();
+  await reopenClassScreen(orionPage);
+  await expect(
+    orionPage.getByText("Your teacher will assign the first activity here."),
+  ).toBeVisible();
+
+  await orionContext.close();
+  await novaContext.close();
+});
+
+async function joinClass(
+  page: import("@playwright/test").Page,
+  code: string,
+  pseudonym: string,
+): Promise<void> {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Join my class" }).click();
+  await page.getByLabel("Class code", { exact: true }).fill(code);
+  await page.getByLabel("Class pseudonym", { exact: true }).fill(pseudonym);
+  await page.getByRole("button", { name: "Join my class" }).click();
+  await expect(page.getByRole("heading", { name: "You're in." })).toBeVisible();
+}
+
+async function reopenClassScreen(
+  page: import("@playwright/test").Page,
+): Promise<void> {
+  await page.reload();
+  await page.getByRole("button", { name: "Join my class" }).click();
+  await expect(page.getByRole("heading", { name: "You're in." })).toBeVisible();
+}
+
+function toLocalDateTimeInput(timestamp: number): string {
+  const date = new Date(timestamp);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
+    date.getSeconds(),
+  )}`;
+}
+
+function classroomCard(
+  page: import("@playwright/test").Page,
+  label: string,
+): import("@playwright/test").Locator {
+  return page
+    .locator(".classroom-list > li")
+    .filter({ has: page.getByRole("heading", { name: label, exact: true }) });
+}

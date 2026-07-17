@@ -99,6 +99,8 @@ async function createClass(request: Request): Promise<Response> {
         classroom: publicClassroom({
           classroom: result.classroom,
           learnerAliases: [],
+          groups: [],
+          assignments: [],
         }),
         joinCode: result.joinCode,
       },
@@ -129,6 +131,8 @@ async function mutateClass(request: Request): Promise<Response> {
         classroom: publicClassroom({
           classroom: result.classroom,
           learnerAliases: [],
+          groups: [],
+          assignments: [],
         }),
         joinCode: result.joinCode,
       });
@@ -139,7 +143,12 @@ async function mutateClass(request: Request): Promise<Response> {
         payload.classroomId,
       );
       return classroomJson({
-        classroom: publicClassroom({ classroom, learnerAliases: [] }),
+        classroom: publicClassroom({
+          classroom,
+          learnerAliases: [],
+          groups: [],
+          assignments: [],
+        }),
       });
     }
     await context.service.removeLearnerAlias(
@@ -166,6 +175,25 @@ function publicClassroom(entry: ClassroomWithRosterV1) {
       pseudonym: alias.pseudonym,
       createdAt: alias.createdAt,
       expiresAt: alias.expiresAt,
+    })),
+    groups: entry.groups.map((group) => ({
+      id: group.id,
+      label: group.label,
+      learnerAliasIds: group.learnerAliasIds,
+      createdAt: group.createdAt,
+      expiresAt: group.expiresAt,
+    })),
+    assignments: entry.assignments.map((view) => ({
+      id: view.assignment.id,
+      status: view.assignment.status,
+      target: view.assignment.target,
+      contractHash: view.assignment.contractHash,
+      assistancePolicy: view.assignment.assistancePolicy,
+      opensAt: view.assignment.opensAt,
+      closesAt: view.assignment.closesAt,
+      createdAt: view.assignment.createdAt,
+      recipientAliasIds: view.recipientAliasIds,
+      publication: view.publication,
     })),
   };
 }

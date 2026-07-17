@@ -718,6 +718,18 @@ et `/api/classroom/join` échouent fermées si secret, migration ou base manquen
 la mémoire exige un flag de test explicite et reste interdite en Production.
 Le déploiement et les migrations suivent `docs/CLASSROOM_PILOT_RUNBOOK.md`.
 
+T25-C03 utilise comme seule entrée pédagogique le PDF Varignon confirmé par le
+porteur. Un catalogue serveur fermé reconstruit la publication v2 FR/EN déjà
+qualifiée et calcule son hash; l'aperçu professeur doit présenter cette valeur
+exacte avant affectation. Le store matérialise le template sous transaction,
+résout classe, groupe ou alias en destinataires instantanés dédupliqués, puis
+conserve cette résolution séparément de la cible déclarative. La lecture élève
+joint destinataire, fenêtre, statut et hash avant de remettre la publication;
+elle n'ouvre pas encore le runtime ni la reprise, réservés à T25-C04.
+La migration `0003_class_assignments` porte cette résolution dans
+`compass_assignment_recipients`; le retry idempotent, le retrait logique et
+l'archivage conservent une frontière transactionnelle unique.
+
 ### Flux de données autorisé
 
 1. Le professeur authentifié crée une classe et distribue un code rotatif.

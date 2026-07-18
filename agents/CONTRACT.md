@@ -1,3 +1,76 @@
+# Contrat Builder — README GitHub aligné sur la release Compass — close `pass`
+
+## État
+
+- Le porteur demande le 18 juillet 2026 de remettre à jour le README GitHub
+  après la livraison de la mascotte hybride, du coach moteur et du guidage
+  visuel contextuel GeoGebra.
+- Le README courant décrit encore le parcours photo comme entrée publique,
+  dix actions GeoGebra, aucune classe/base et une Production sans quota : ces
+  affirmations ne correspondent plus au candidat publié.
+- La tranche est close `pass` le 18 juillet 2026. Le README décrit désormais
+  l'état réellement livré sans modification du runtime ou de la Production.
+
+## Objectif
+
+Présenter fidèlement sur GitHub la démo Varignon actuelle, ses capacités
+différenciantes, ses garde-fous, son installation et ses limites, avec un lien
+direct vers la Production publique et une preuve visuelle récente.
+
+## Inclus
+
+- Recentrer le golden path sur l'ouverture directe de Varignon en un clic.
+- Documenter les neuf missions, les onze actions fermées, Compass animé, le
+  coaching O2 proactif et le halo contextuel dérivé de cibles sémantiques.
+- Distinguer la démo publique des capacités photo, professeur et classe pilote.
+- Actualiser architecture, vérifications, état Vercel/WAF et limites produit.
+- Ajouter une capture versionnée déjà qualifiée, sans média ni donnée nouvelle.
+
+## Hors périmètre
+
+- Modifier le runtime, les modèles, GeoGebra, les missions, les permissions,
+  les preuves, la base, les variables Vercel ou la Production.
+- Présenter T25-C04 comme terminé, promettre une vérification universelle ou
+  masquer les réserves live et de licence.
+- Créer un `QA_REPORT.md` Builder ou un `HANDOFF.md` sans reprise réelle.
+
+## Fichiers probables
+
+- `README.md`
+- `agents/CONTRACT.md`
+- `agents/TODO_NEXT.md`
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --check
+# audit des liens et affirmations du README contre les pilotes et le runtime
+```
+
+## Définition de fini
+
+- Le README décrit le parcours public et les capacités effectivement livrées.
+- La démo, l'installation, les modèles, les gates et les limites restent
+  lisibles sans jargon de tranche dans l'introduction produit.
+- Aucun secret, état futur ou chiffre historique obsolète n'est présenté comme
+  courant; les liens locaux ciblent des fichiers existants.
+
+## Preuves de clôture
+
+- L'introduction et la section démo ouvrent sur Varignon en un clic, les neuf
+  missions, les onze actions fermées, le coach O2, la mascotte hybride et le
+  pointage sémantique effectivement présents dans le candidat publié.
+- Les capacités photo, professeur et classe PostgreSQL sont séparées du golden
+  path; la reprise checkpoint T25-C04, les réserves live et la licence restent
+  explicitement incomplètes ou limitées.
+- La capture T74 versionnée est rendue depuis un chemin relatif GitHub. Les neuf
+  cibles documentaires locales du README existent.
+- Validation : 102 cartes documentaires passent, les liens locaux passent et
+  `git diff --check` ne signale aucune erreur de whitespace.
+
+---
+
 # Contrat Builder — guidage visuel contextuel du harnais GeoGebra — close `pass`
 
 ## État

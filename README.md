@@ -1,39 +1,76 @@
 # Compass
 
-Compass is a real-time AI learning tutor. For compatible geometry activities,
-it observes students' GeoGebra constructions, checks supported relations
-deterministically, and provides timely voice or visual guidance through a
-closed set of semantic actions.
+Compass is a bilingual, real-time AI learning tutor. In its flagship geometry
+experience, students investigate the Varignon theorem in GeoGebra while an
+animated voice coach observes a bounded world, verifies supported relations
+deterministically, and provides contextual guidance through closed semantic
+actions.
 
-Compass est un prototype de tuteur scolaire bilingue qui transforme un exercice
-pris en photo ou préparé par un professeur en parcours guidé. L'élève travaille
-mission par mission avec un coach vocal ou texte; les mathématiques compatibles
-ouvrent un atelier GeoGebra instrumenté, tandis que les autres matières restent
-dans un tutorat conversationnel sans fausse promesse de vérification.
+Compass est un prototype Education qui accompagne l'élève sans lui retirer la
+main. La démo publique ouvre en un clic une investigation Varignon préparée par
+le professeur : l'élève construit, explore, conjecture et justifie dans le vrai
+applet GeoGebra, avec un coach vocal ou texte qui sait montrer précisément
+l'outil, l'objet ou la zone dont il parle.
 
-Démo HTTPS : [compass-geotutor-demo.vercel.app](https://compass-geotutor-demo.vercel.app/)
+**[Ouvrir la démo publique](https://compass-geotutor-demo.vercel.app/)**
 
-> L'URL publique correspond au dernier candidat Vercel qualifié. Après une
-> modification locale, redéployer et rejouer le smoke avant de présenter la
-> nouvelle fonctionnalité comme disponible en ligne.
+![Compass montre l'outil Milieu dans GeoGebra](output/playwright/T74-midpoint-guidance-1440x900.png)
 
-## Ce que montre le prototype
+## Ce que montre la démo
 
-- Parcours élève en quatre écrans : accueil, photo, confirmation, atelier.
-- Lecture d'exercice scolaire par GPT-5.6 avec Structured Outputs et
-  confirmation humaine avant tutorat.
-- Coach OpenAI Realtime en voix ou texte, avec fallback local explicite.
-- Atelier GeoGebra panoramique : monde borné, dix actions sémantiques fermées et
-  cinq relations vérifiées localement sur l'exercice de démonstration.
-- Progression honnête : 10 XP après une note de démarche élève, 20 XP seulement
-  lorsqu'une preuve déterministe compatible existe.
-- Question de transfert en fin d'exercice; son texte reste dans le workspace.
-- Studio professeur : thème, fiche ou saisie manuelle, brouillon éditable,
-  publication et bibliothèque élève.
-- Bilan professeur anonyme de l'onglet courant : comptes terminé/vérifié, XP et
-  statuts de réflexion, sans nom, réponse libre ni note.
-- Interface EN/FR, responsive, clavier, mouvement réduit et diagnostics
-  techniques repliables.
+- **Un départ immédiat** : une seule action ouvre l'activité Varignon exacte,
+  sans compte, code de classe, pseudonyme ou écriture serveur préalable.
+- **Neuf missions progressives** : construire les quatre milieux, explorer les
+  cas convexe, concave et croisé, conjecturer, justifier puis transférer.
+- **Un vrai monde GeoGebra borné** : objets, dépendances, ownership, epoch,
+  révision et faits sont stabilisés avant toute décision pédagogique.
+- **Des validations honnêtes** : les relations compatibles sont calculées par
+  l'application. Le modèle ne vérifie pas la géométrie et n'attribue pas les XP.
+- **Un coach qui prend l'initiative avec mesure** : à la connexion, après une
+  mission ou lors d'un blocage qualifié, Compass peut poser une question,
+  conseiller ou choisir une action d'interface O2 réversible.
+- **Un guidage visuel précis** : halo, pointeur et appel textuel ciblent le vrai
+  bouton GeoGebra, un point, un segment ou une zone. Les pixels sont dérivés du
+  DOM et du monde géométrique; ils ne viennent jamais du modèle.
+- **Une mascotte fluide et factuelle** : une pose stable et des micro-mouvements
+  CSS remplacent le défilement image par image. Écoute, réflexion, parole,
+  outil, indice et célébration reflètent seulement des états applicatifs réels.
+- **Une expérience accessible** : interface EN/FR, clavier, zoom 200 %,
+  mouvement réduit et layouts qualifiés à 390, 768 et 1440 px.
+
+## Les frontières de confiance
+
+Compass sépare strictement la conversation, les actions visibles et les preuves.
+
+| Niveau | Exemples | Autorité |
+|---|---|---|
+| Dialogue | Question, explication, relance courte | Le modèle formule; l'application décide quand une occasion de parler existe |
+| Guidage O2 | Activer un outil, surligner, cadrer et pointer | Actions fermées, non constructives, budgétées, annulables et restaurées au cleanup |
+| Mutation O3–O5 | Variation, restauration, démonstration | Consentement ou confirmation, cible fermée, rollback et vérification déterministe |
+| Preuve et XP | Milieu, parallélisme, configuration, progression | Application uniquement; aucune sortie modèle ne complète une mission |
+
+Le harnais expose onze actions sémantiques sous niveaux O0 à O5. Il n'existe ni
+commande GeoGebra arbitraire, ni clic DOM libre, ni coordonnée de pointage
+choisie par le modèle. Un geste ou une reprise de parole de l'élève annule le
+travail du coach en cours.
+
+## Capacités disponibles hors du golden path
+
+La page publique reste volontairement simple, mais le dépôt contient aussi :
+
+- un parcours photo générique qui lit un exercice scolaire, demande une
+  confirmation humaine puis ouvre un tutorat conversationnel honnête;
+- un studio professeur qui produit au plus un brouillon IA structuré, le rend
+  éditable et exige une relecture avant publication;
+- un catalogue d'exercices éphémère et un bilan de session factuel sans nom,
+  texte libre ni note;
+- une boucle classe pilote avec identité professeur limitée, codes rotatifs,
+  élèves pseudonymes, affectations Varignon ciblées et PostgreSQL 16;
+- les bancs spécialisés historiques de médiatrice, invariance, reset et
+  restauration exacte, conservés pour les qualifications internes.
+
+Ces capacités ne sont pas empilées sur l'accueil du jury et ne transforment pas
+Compass en LMS.
 
 ## Rôle des modèles
 
@@ -41,28 +78,36 @@ Démo HTTPS : [compass-geotutor-demo.vercel.app](https://compass-geotutor-demo.v
 |---|---|---|
 | Lire une photo d'exercice élève | `gpt-5.6-terra` | Un appel serveur, image en mémoire, `store:false`, outils vides, sortie stricte |
 | Préparer un brouillon professeur | `gpt-5.6-luna` | Un appel maximum, effort faible, `store:false`, outils vides, sortie stricte |
-| Tutorat voix/texte | `gpt-realtime-2.1` | WebRTC; profil général sans outil ou profil GeoGebra à fonctions fermées |
-| Validation et XP vérifiés | Aucun modèle | Calculs applicatifs déterministes et ledger mémoire |
+| Tutorat voix/texte | `gpt-realtime-2.1` | WebRTC; profil général sans outil ou profil investigation à fonctions fermées |
+| Relations, preuves et XP | Aucun modèle | Moteur TypeScript déterministe, contrats versionnés et ledger local |
 
-Les consignes du professeur, le texte extrait et les observations GeoGebra sont
-traités comme des données non fiables. Ils ne peuvent pas modifier le prompt
-système, les permissions ou les règles de preuve.
+Les consignes professeur, le texte extrait et les observations GeoGebra restent
+des données non fiables. Ils ne peuvent pas modifier le prompt système, les
+permissions, les preuves ou les règles de score.
 
 ## Architecture
 
-Le runtime Next.js App Router TypeScript vit dans `apps/frontend`. Les petites
-routes serveur protègent la clé standard `OPENAI_API_KEY`. Le navigateur possède
-la scène GeoGebra, les états de session et les contrôleurs Realtime; les
-mutations, réponses et preuves sont protégées par des contrats fermés, des
-budgets, une autorité d'annulation et un arbitre d'opérations.
+Le runtime est une application Next.js App Router TypeScript sous
+`apps/frontend`. Les routes serveur conservent les secrets hors du navigateur;
+le client orchestre GeoGebra, WebRTC, la progression et les contrôleurs
+d'annulation. Adapter, gateway, moteur de faits, checkpoints, policy et arbitre
+restent des autorités distinctes derrière des contrats Zod fermés.
 
-Le catalogue professeur côté serveur est borné à 64 éléments et éphémère. Pour
-la continuité de la démo serverless, une publication créée dans l'onglet reste
-aussi dans l'état React de cet onglet. Les bilans d'apprentissage suivent la
-même règle : mémoire seulement, aucun compte ou dossier élève.
+La démo directe construit localement une publication
+`geometry_investigation.v1` validée et monte le même
+`GeometryInvestigationRuntime` que le parcours professeur. Elle n'utilise ni
+runtime parallèle ni raccourci de validation. L'audio distant peut alimenter un
+unique niveau RMS local et éphémère pour la bouche de Compass; aucun sample,
+transcript ou historique audio n'est stocké.
+
+La mémoire reste la règle pour la démo, les médias, les XP et les rapports. La
+base PostgreSQL est réservée à la boucle classe pilote et échoue fermée si sa
+configuration manque. La reprise persistante du checkpoint sémantique reste
+une tranche distincte encore incomplète.
 
 Voir [l'architecture détaillée](docs/ARCHITECTURE.md), la
-[roadmap](docs/ROADMAP.md) et les [décisions](agents/DECISIONS.md).
+[roadmap](docs/ROADMAP.md), les [décisions](agents/DECISIONS.md) et le
+[contrat de données classe](docs/CLASSROOM_DATA_CONTRACT.md).
 
 ## Installation locale
 
@@ -75,13 +120,15 @@ cp .env.example .env
 pnpm dev
 ```
 
-Ouvrir <http://localhost:3000>. Sans clé, les chemins déterministes et la saisie
-manuelle professeur restent utilisables; les appels OpenAI affichent leur
-fallback au lieu de simuler une session live.
+Ouvrir <http://localhost:3000>. `OPENAI_API_KEY` est optionnelle pour les
+chemins locaux et déterministes, mais requise pour la lecture photo, le
+brouillon professeur et les sessions Realtime. Elle doit rester serveur-only :
+ne jamais la préfixer par `NEXT_PUBLIC_` ni la committer.
 
-`OPENAI_API_KEY` est une variable serveur unique utilisée par les routes de
-lecture photo, de brouillon professeur et de session Realtime. Ne jamais la
-préfixer par `NEXT_PUBLIC_` ni la committer.
+La classe pilote est désactivée par défaut. Son activation exige PostgreSQL,
+les migrations et les secrets décrits dans le
+[runbook classe](docs/CLASSROOM_PILOT_RUNBOOK.md); aucun fallback mémoire n'est
+autorisé en Production.
 
 ## Vérification reproductible
 
@@ -94,8 +141,12 @@ pnpm build
 pnpm --dir apps/frontend exec playwright test --grep-invert @live
 ```
 
-Le gate live credentialed est séparé; il exige une clé, un certificat et une
-piste audio hors dépôt :
+Le dernier candidat fonctionnel qualifié rend 102 cartes documentaires,
+899/899 tests Vitest sur 106 fichiers, lint, typecheck et build verts. Le gate
+ciblé du parcours direct et de la mascotte rend 5/5 scénarios Playwright.
+
+Les gates credentialed restent séparés : ils exigent une clé, un certificat et
+une piste audio hors dépôt.
 
 ```sh
 GEOTUTOR_TLS_CERT=/path/to/cert.pem \
@@ -103,30 +154,43 @@ GEOTUTOR_TLS_KEY=/path/to/key.pem \
 pnpm gate:t6:live
 ```
 
-Dernier gate local T18 : 69 cartes documentaires, 677/677 tests Vitest sur
-64 fichiers, build Next.js et 36/36 scénarios Playwright hors live.
-
 Le [runbook de démonstration](docs/DEMO_RUNBOOK.md) distingue le harness local,
 le microphone physique et le certificat de confiance. Les réserves live
-historiques restent documentées dans `agents/TODO_NEXT.md` et ne doivent pas être
-présentées comme résolues par un build local.
+historiques restent explicites dans `agents/TODO_NEXT.md`.
+
+## Production publique
+
+Le projet Vercel isolé `compass-geotutor-demo` sert l'alias HTTPS stable :
+[compass-geotutor-demo.vercel.app](https://compass-geotutor-demo.vercel.app/).
+La release animée et guidée est READY sous le déploiement
+`dpl_62Q7d7DXTQoyaT3LtSmSkndPZMNz`.
+
+L'alias s'ouvre sans code applicatif. Une règle Vercel WAF limite toutefois les
+`POST /api/*` à six requêtes par fenêtre de soixante secondes et par IP, avant
+l'exécution des fonctions. Les sessions professeur et élèves du pilote restent
+des frontières d'authentification séparées. Voir le
+[runbook d'accès public](docs/DEMO_ACCESS_RUNBOOK.md).
 
 ## Limites assumées
 
-- Pas d'authentification, classes, affectations, profils ou synchronisation.
-- Pas de base de données; catalogue, XP et bilans disparaissent au rechargement
-  ou au redémarrage du processus concerné.
-- Pas de note ni de vérification automatique générale : hors module spécialisé,
-  « terminé » reste une déclaration élève accompagnée d'une trace de démarche.
-- Les textes de démarche et de transfert ne sont pas transmis au professeur.
-- La démo Vercel publique n'a pas encore de code d'accès ni de rate limit
-  applicatif; éviter une diffusion large avant ce durcissement.
-- GeoGebra est utilisé dans le cadre de ce prototype non commercial avec son
-  attribution; un usage commercial exige un accord distinct.
+- Compass ne vérifie automatiquement que les relations couvertes par un contrat
+  déterministe compatible; ailleurs, le tutorat reste conversationnel.
+- La démo publique n'est ni un LMS, ni une notation à enjeu élevé, ni un dossier
+  élève persistant.
+- La classe pilote existe, mais la reprise persistante de la progression
+  GeoGebra n'est pas encore qualifiée et le quota WAF global doit être segmenté
+  avant un pilote multi-élèves derrière un même NAT.
+- Les textes de démarche et de transfert ne sont ni notés ni transmis au
+  professeur; médias, transcripts et Base64 ne sont pas persistés.
+- Les fonctionnalités live dépendent des credentials, du navigateur, du
+  microphone et des services externes; les fallbacks ne se présentent jamais
+  comme une session live.
+- GeoGebra est utilisé pour ce prototype non commercial avec attribution. Un
+  usage commercial exige un accord distinct.
 
 ## Candidature
 
 Le dossier prêt à adapter se trouve dans
 [`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md). Il contient la copie
-de soumission, le parcours jury, un script vidéo inférieur à trois minutes et la
-checklist des éléments qui restent sous responsabilité humaine.
+de soumission, le parcours jury, un script vidéo inférieur à trois minutes et
+la checklist des actions qui restent sous responsabilité humaine.

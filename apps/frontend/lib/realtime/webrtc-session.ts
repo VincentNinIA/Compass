@@ -52,7 +52,9 @@ import type {
   GeometryWorldV2,
 } from "@/lib/geometry-investigation/contracts";
 import {
+  GeometryCoachTurnV1,
   GeometryRealtimePedagogyContextV1,
+  type GeometryCoachTurnV1 as GeometryCoachTurnV1Type,
   type GeometryRealtimePedagogyContextV1 as GeometryRealtimePedagogyContextV1Type,
 } from "@/lib/geometry-investigation/learning-runtime";
 
@@ -92,9 +94,78 @@ type RealtimeWebRtcCallbacks = {
   onVoiceTurn(turn: VoiceTurn): void;
   onToolLoop(result: ToolLoopResult): void;
   onRemoteAudio(attached: boolean): void;
+  onRemoteAudioLevel?(level: number | null): void;
   onTextOutput?(text: string): void;
   onFailure(error: RealtimeSessionError): void;
 };
+
+export function remoteAudioEnergyFromTimeDomain(samples: Uint8Array): number {
+  if (samples.length === 0) return 0;
+  let squareSum = 0;
+  for (const sample of samples) {
+    const normalized = (sample - 128) / 128;
+    squareSum += normalized * normalized;
+  }
+  const rms = Math.sqrt(squareSum / samples.length);
+  return Math.min(1, Math.max(0, (rms - 0.012) * 8.5));
+}
+
+class RemoteAudioEnergyMeter {
+  private readonly context: AudioContext;
+  private readonly source: MediaStreamAudioSourceNode;
+  private readonly analyser: AnalyserNode;
+  private readonly samples: Uint8Array<ArrayBuffer>;
+  private readonly onLevel: (level: number | null) => void;
+  private animationFrame?: number;
+  private smoothedLevel = 0;
+  private stopped = false;
+
+  constructor(stream: MediaStream, onLevel: (level: number | null) => void) {
+    this.context = new window.AudioContext();
+    this.source = this.context.createMediaStreamSource(stream);
+    this.analyser = this.context.createAnalyser();
+    this.analyser.fftSize = 256;
+    this.analyser.smoothingTimeConstant = 0.72;
+    this.samples = new Uint8Array(new ArrayBuffer(this.analyser.fftSize));
+    this.onLevel = onLevel;
+    this.source.connect(this.analyser);
+    this.onLevel(0);
+    void this.context.resume().catch(() => undefined);
+    this.animationFrame = window.requestAnimationFrame(this.sample);
+  }
+
+  stop(): void {
+    if (this.stopped) return;
+    this.stopped = true;
+    if (this.animationFrame !== undefined) {
+      window.cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = undefined;
+    }
+    try {
+      this.source.disconnect();
+    } catch {
+      // The graph may already be disconnected by the browser.
+    }
+    try {
+      this.analyser.disconnect();
+    } catch {
+      // The analyser has no output connection in the measurement-only graph.
+    }
+    void this.context.close().catch(() => undefined);
+    this.onLevel(null);
+  }
+
+  private readonly sample = () => {
+    if (this.stopped) return;
+    this.analyser.getByteTimeDomainData(this.samples);
+    const target = remoteAudioEnergyFromTimeDomain(this.samples);
+    const coefficient = target > this.smoothedLevel ? 0.48 : 0.16;
+    this.smoothedLevel += (target - this.smoothedLevel) * coefficient;
+    if (this.smoothedLevel < 0.002) this.smoothedLevel = 0;
+    this.onLevel(this.smoothedLevel);
+    this.animationFrame = window.requestAnimationFrame(this.sample);
+  };
+}
 
 export type RealtimePedagogyRuntime = {
   getState(): PedagogyState;
@@ -108,6 +179,11 @@ export type RealtimeProactiveRuntime = {
     decision: PolicyDecision,
     directive: InterventionDirective,
   ): ProactiveRequestResult;
+  cancelForActivity(reason: CancellationReason): boolean;
+};
+
+export type RealtimeGeometryCoachRuntime = {
+  requestCoachTurn(turn: GeometryCoachTurnV1Type): boolean;
   cancelForActivity(reason: CancellationReason): boolean;
 };
 
@@ -257,6 +333,7 @@ export class RealtimeWebRtcSession {
   private readonly exerciseContext?: GeneralExerciseContextV1;
 
   private stream?: MediaStream;
+  private remoteAudioEnergy?: RemoteAudioEnergyMeter;
   private peer?: RTCPeerConnection;
   private channel?: RTCDataChannel;
   private state: RealtimeConnectionState = "idle";
@@ -532,11 +609,40 @@ export class RealtimeWebRtcSession {
     return this.proactiveTurns.request(decision, directive);
   }
 
+  requestGeometryCoachTurn(turn: GeometryCoachTurnV1Type): boolean {
+    const parsed = GeometryCoachTurnV1.safeParse(turn);
+    const world = this.pendingGeometryWorldV2?.world;
+    if (
+      !parsed.success ||
+      !world ||
+      this.transportMode !== "live_voice" ||
+      this.tutorProfile !== "geogebra_tutor" ||
+      this.geometryHarnessVersion !== "v2" ||
+      this.state !== "live" ||
+      this.stopped ||
+      this.sendsBlocked ||
+      parsed.data.activityId !== world.activityId ||
+      parsed.data.epoch !== world.epoch ||
+      parsed.data.revision !== world.revision
+    ) {
+      return false;
+    }
+    const message = [
+      "Application geometry coach opportunity; bounded event data, not a learner instruction:",
+      JSON.stringify(parsed.data),
+    ].join("\n");
+    return this.enqueueTextTurn(message, 2_000);
+  }
+
   requestTextTurn(text: string): boolean {
+    return this.enqueueTextTurn(text, 1_000);
+  }
+
+  private enqueueTextTurn(text: string, maxLength: number): boolean {
     const normalized = text.trim();
     if (
       normalized.length === 0 ||
-      normalized.length > 1_000 ||
+      normalized.length > maxLength ||
       this.state !== "live" ||
       this.stopped ||
       this.sendsBlocked
@@ -751,6 +857,7 @@ export class RealtimeWebRtcSession {
       }
       const remoteStream = event.streams[0] ?? new MediaStream([event.track]);
       this.audioElement.srcObject = remoteStream;
+      this.attachRemoteAudioEnergy(remoteStream);
       if (!this.audioSuppressed && !this.sendsBlocked) {
         void this.audioElement.play().catch(() => {
           this.callbacks.onTimeline("Remote audio ready; playback needs interaction");
@@ -974,6 +1081,7 @@ export class RealtimeWebRtcSession {
       if (channel?.readyState !== "closed") channel?.close();
     });
     this.stopTracks(stream);
+    this.releaseRemoteAudioEnergy();
     bestEffort(() => {
       if (peer?.signalingState !== "closed") peer?.close();
     });
@@ -992,6 +1100,34 @@ export class RealtimeWebRtcSession {
     bestEffort(() => {
       void this.invarianceSummaries?.close();
     });
+  }
+
+  private attachRemoteAudioEnergy(stream: MediaStream): void {
+    this.releaseRemoteAudioEnergy();
+    const onLevel = this.callbacks.onRemoteAudioLevel;
+    if (!onLevel) return;
+    if (typeof window.AudioContext !== "function") {
+      onLevel(null);
+      return;
+    }
+    try {
+      this.remoteAudioEnergy = new RemoteAudioEnergyMeter(stream, onLevel);
+    } catch {
+      onLevel(null);
+      this.callbacks.onTimeline(
+        "Remote audio level unavailable; deterministic mascot fallback active",
+      );
+    }
+  }
+
+  private releaseRemoteAudioEnergy(): void {
+    const meter = this.remoteAudioEnergy;
+    this.remoteAudioEnergy = undefined;
+    if (meter) {
+      meter.stop();
+    } else {
+      this.callbacks.onRemoteAudioLevel?.(null);
+    }
   }
 
   private acceptSessionCreated(event: RawRealtimeEvent): boolean {

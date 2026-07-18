@@ -2,16 +2,37 @@
 
 ## Prochaine action
 
-L'amendement démo hackathon est close `pass` : l'accueil ne présente
-plus devoir, bibliothèque ou jonction par code. Une seule action construit la
-publication Varignon v2 validée et ouvre directement le vrai runtime GeoGebra
-avec ses neuf missions, sans réseau ni écriture serveur préalable. Les gates
-locaux, l'inspection desktop/mobile, les parcours classe historiques et le
-smoke Production passent sur `e6a747d` et
-`dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL`.
+La tranche `guidage visuel contextuel du harnais GeoGebra` est close `pass`.
+Le registre couvre les onze actions; l'agent sait demander un halo sur le vrai
+bouton d'outil, un pointeur dérivé sur un point ou segment, ou un cadrage du
+plan. `midpoint` ouvre `More` puis cible exactement `mode=19`; la couche reste
+non bloquante, restaure l'état et passe les viewports 390/768/1440 ainsi que le
+mouvement réduit. Les gates rendent 102 cartes, 899/899 Vitest, lint, typecheck
+et build verts.
+
+La tranche `coach GeoGebra moteur et guidage O2 souple` est close `pass`. Les
+trois gestes O2 réversibles ne dépendent plus d'un actor, d'un drapeau
+d'approbation ou de l'allowlist de mission. Connexion, transition de mission et
+indice qualifié ouvrent désormais une occasion Realtime bornée où le modèle
+choisit question, conseil ou action; une reprise élève annule le tour. Les gates
+rendent 102 cartes documentaires, 892/892 Vitest, lint, typecheck et build verts.
+
+La correction hybride CSS/audio de la mascotte est close `pass`. Les deux
+boucles React à 6–9 fps, remounts, doubles sprites et flous par cellule ont
+disparu. Chaque activité garde une pose stable et utilise le compositeur CSS;
+la bouche reçoit un niveau audio local éphémère avec fallback déterministe. Le
+gate rend 893/893 Vitest et 5/5 Playwright; les six inspections 390/768/1440,
+normal/réduit, ne montrent ni obstruction ni débordement.
+
+La tranche de présence animée à deux couches reste close `pass`; ses cameos,
+ses épingles et son autorité de leases doivent être préservés.
+
+L'amendement d'accès direct reste close `pass` : l'accueil conserve sa CTA
+unique et ouvre le vrai runtime sans réseau ni écriture serveur préalable.
 
 T25-C04 reste `in_progress` sur sa frontière pilote distincte. La prochaine
-action Builder est de persister et restaurer le checkpoint sémantique allowlisté.
+action Builder redevient la persistance et la restauration du checkpoint
+sémantique allowlisté.
 La classe `Test Varignon`, PostgreSQL Neon, les secrets Production, les routes
 professeur/alias et les affectations ciblées restent opérationnels mais ne
 dominent plus le golden path du jury. T24-C04, vidéo, licence et soumission

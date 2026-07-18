@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   RealtimeSessionError,
   RealtimeWebRtcSession,
+  remoteAudioEnergyFromTimeDomain,
   type RealtimeConnectionState,
   type RealtimeInvarianceSummaryRuntime,
   type RealtimePedagogyRuntime,
@@ -48,7 +49,10 @@ import { GEOGEBRA_ASSIST_TOOL_DEFINITIONS } from "@/lib/geogebra/assist-tools";
 import { GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS } from "@/lib/geometry-investigation/actions";
 import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
 import { GeometryWorldV2 } from "@/lib/geometry-investigation/contracts";
-import { GeometryRealtimePedagogyContextV1 } from "@/lib/geometry-investigation/learning-runtime";
+import {
+  GeometryCoachTurnV1,
+  GeometryRealtimePedagogyContextV1,
+} from "@/lib/geometry-investigation/learning-runtime";
 import { createGeometryWorldDeltaV2 } from "@/lib/geometry-investigation/world";
 
 const OFFER = "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\nm=audio 9 RTP/AVP 111\r\n";
@@ -236,6 +240,7 @@ function createHarness(
   const voiceTurns: unknown[] = [];
   const toolLoops: unknown[] = [];
   const onRemoteAudio = vi.fn();
+  const remoteAudioLevels: Array<number | null> = [];
   const failures: RealtimeSessionError[] = [];
   const textOutputs: string[] = [];
   const fetchImpl = vi.fn(async () => response);
@@ -251,6 +256,7 @@ function createHarness(
       onVoiceTurn: (turn) => voiceTurns.push(turn),
       onToolLoop: (result) => toolLoops.push(result),
       onRemoteAudio,
+      onRemoteAudioLevel: (level) => remoteAudioLevels.push(level),
       onTextOutput: (text) => textOutputs.push(text),
       onFailure: (failure) => failures.push(failure),
     },
@@ -284,6 +290,7 @@ function createHarness(
     voiceTurns,
     toolLoops,
     onRemoteAudio,
+    remoteAudioLevels,
     failures,
     textOutputs,
     fetchImpl,
@@ -291,7 +298,88 @@ function createHarness(
   };
 }
 
+describe("remoteAudioEnergyFromTimeDomain", () => {
+  it("returns only a bounded scalar for silence and waveform amplitude", () => {
+    expect(remoteAudioEnergyFromTimeDomain(new Uint8Array())).toBe(0);
+    expect(remoteAudioEnergyFromTimeDomain(new Uint8Array(256).fill(128))).toBe(0);
+
+    const voiceLike = new Uint8Array(256);
+    voiceLike.forEach((_, index) => {
+      voiceLike[index] = index % 2 === 0 ? 116 : 140;
+    });
+    expect(remoteAudioEnergyFromTimeDomain(voiceLike)).toBeGreaterThan(0);
+
+    const saturated = new Uint8Array(256);
+    saturated.forEach((_, index) => {
+      saturated[index] = index % 2 === 0 ? 0 : 255;
+    });
+    expect(remoteAudioEnergyFromTimeDomain(saturated)).toBe(1);
+  });
+});
+
 describe("RealtimeWebRtcSession", () => {
+  it("samples only remote amplitude and releases the Web Audio graph on Stop", async () => {
+    const source = {
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    const analyser = {
+      fftSize: 0,
+      smoothingTimeConstant: 0,
+      disconnect: vi.fn(),
+      getByteTimeDomainData: vi.fn((samples: Uint8Array) => {
+        samples.forEach((_, index) => {
+          samples[index] = index % 2 === 0 ? 112 : 144;
+        });
+      }),
+    };
+    const resume = vi.fn(async () => undefined);
+    const close = vi.fn(async () => undefined);
+    class TestAudioContext {
+      createMediaStreamSource = vi.fn(() => source);
+      createAnalyser = vi.fn(() => analyser);
+      resume = resume;
+      close = close;
+    }
+    const animationFrames = new Map<number, FrameRequestCallback>();
+    let animationFrameId = 0;
+    const cancelAnimationFrame = vi.fn((id: number) => {
+      animationFrames.delete(id);
+    });
+    vi.stubGlobal("AudioContext", TestAudioContext);
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn((callback: FrameRequestCallback) => {
+        const id = ++animationFrameId;
+        animationFrames.set(id, callback);
+        return id;
+      }),
+    );
+    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+
+    try {
+      const harness = createHarness();
+      await harness.session.start();
+      harness.peer.ontrack?.({
+        track: {} as MediaStreamTrack,
+        streams: [{} as MediaStream],
+      } as unknown as RTCTrackEvent);
+
+      expect(source.connect).toHaveBeenCalledWith(analyser);
+      expect(harness.remoteAudioLevels.slice(-2)).toEqual([null, 0]);
+      animationFrames.get(1)?.(16);
+      expect(harness.remoteAudioLevels.at(-1)).toBeGreaterThan(0);
+
+      harness.session.stop();
+      expect(source.disconnect).toHaveBeenCalledTimes(1);
+      expect(close).toHaveBeenCalledTimes(1);
+      expect(cancelAnimationFrame).toHaveBeenCalledTimes(1);
+      expect(harness.remoteAudioLevels.at(-1)).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("clears and rotates the evidence run when the session ends", () => {
     const log = new EvidenceLog({
       runId: "run-session",
@@ -988,6 +1076,131 @@ describe("RealtimeWebRtcSession", () => {
     expect(
       sent.some((event) => event.item?.id === "confirmed-exercise-context-v1"),
     ).toBe(false);
+  });
+
+  it("requests one anchored and cancellable coach turn for a current geometry event", async () => {
+    const harness = createHarness(
+      new Response(ANSWER, { status: 201 }),
+      { gateway: { execute: vi.fn() }, getContext: () => undefined },
+      undefined,
+      undefined,
+      "live_voice",
+      undefined,
+      undefined,
+      "geogebra_tutor",
+      undefined,
+      undefined,
+      "v2",
+    );
+    const world = geometryWorldV2(2, "drag_end", 2);
+    const pedagogy = GeometryRealtimePedagogyContextV1.parse({
+      schemaVersion: "geometry_realtime_pedagogy_context.v1",
+      activityId: world.activityId,
+      epoch: world.epoch,
+      revision: world.revision,
+      phase: "constructing",
+      activeMissionId: "V2",
+      attemptCount: 0,
+      explicitHelpRequestCount: 0,
+      missingEvidenceIds: [],
+      capturedConfigurations: [],
+      maxHelpLevel: 3,
+    });
+    expect(
+      harness.session.publishGeometryWorldV2(
+        world,
+        createGeometryWorldDeltaV2(undefined, world),
+        pedagogy,
+      ),
+    ).toBe(false);
+    await harness.session.start();
+    harness.peer.channel.open();
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "session.created",
+        session: {
+          model: "gpt-realtime-2.1",
+          reasoning: { effort: "low" },
+          audio: {
+            input: {
+              turn_detection: {
+                type: "server_vad",
+                create_response: false,
+                interrupt_response: true,
+              },
+            },
+            output: { voice: "cedar" },
+          },
+          tools: GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
+          tool_choice: "auto",
+        },
+      }),
+    );
+    const turn = GeometryCoachTurnV1.parse({
+      schemaVersion: "geometry_coach_turn.v1",
+      activityId: world.activityId,
+      epoch: world.epoch,
+      revision: world.revision,
+      reason: "mission_advanced",
+      previousMission: {
+        id: "V1",
+        order: 1,
+        title: "Construire les quatre milieux",
+        outcome: "verified",
+      },
+      currentMission: {
+        id: "V2",
+        order: 2,
+        title: "Relier les milieux",
+        instruction: "Relie E, F, G et H dans cet ordre.",
+      },
+    });
+    expect(harness.session.requestGeometryCoachTurn(turn)).toBe(true);
+    expect(
+      harness.session.requestGeometryCoachTurn({ ...turn, revision: 1 }),
+    ).toBe(false);
+
+    const sent = harness.peer.channel.send.mock.calls.map(([value]) =>
+      JSON.parse(value),
+    );
+    expect(sent).toContainEqual(
+      expect.objectContaining({
+        type: "conversation.item.create",
+        item: expect.objectContaining({
+          role: "user",
+          content: [
+            expect.objectContaining({
+              text: expect.stringContaining('"reason":"mission_advanced"'),
+            }),
+          ],
+        }),
+      }),
+    );
+    expect(
+      sent.some(
+        (event) =>
+          event.type === "response.create" &&
+          event.response?.metadata?.geotutor_turn_id === "text-turn-1",
+      ),
+    ).toBe(true);
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "input_audio_buffer.speech_started",
+        item_id: "learner-interruption",
+      }),
+    );
+    const afterInterruption = harness.peer.channel.send.mock.calls.map(
+      ([value]) => JSON.parse(value),
+    );
+    expect(afterInterruption.some((event) => event.type === "response.cancel")).toBe(
+      true,
+    );
+    expect(
+      afterInterruption.some(
+        (event) => event.type === "output_audio_buffer.clear",
+      ),
+    ).toBe(true);
   });
 
   it("does not become live until session.created matches the server profile", async () => {

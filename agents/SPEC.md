@@ -203,6 +203,10 @@ disponible.
 | FR-68 | Exiger la prévisualisation et l'approbation explicite du professeur avant toute affectation d'une variante générée. |
 | FR-69 | Livrer une matrice Varignon fermée avec trois niveaux d'étayage, des presets locaux sûrs et les transferts rectangle, losange ou carré, sans modifier les neuf missions ni les relations invariantes. |
 | FR-70 | Qualifier la boucle classe et la fabrique adaptative par golden journeys, puis par un pilote avec un professeur et au moins trois élèves pseudonymes. |
+| FR-71 | Dans l'atelier Varignon public, rendre Compass animé dans le coach pendant les états voix/outils et par apparitions finies dans le plan lors des actions élève, aides, changements de mission et preuves vérifiées, avec interpolation visuelle des huit frames, aucune réaction négative à la première erreur et aucune obstruction des contrôles. |
+| FR-73 | Pour éviter tout effet diaporama, rendre chaque activité de Compass avec une pose d'atlas stable et des micro-mouvements CSS composités; la parole live peut consommer uniquement un niveau d'énergie audio éphémère, avec fallback déterministe, sans boucle de frames React, transcript ou stockage audio. |
+| FR-72 | Dans une investigation GeoGebra, laisser Compass choisir spontanément une question, un conseil ou une action d'interface O2 réversible à partir du monde borné et de la mission courante, notamment à la connexion, après une mission franchie ou sur un blocage qualifié, sans exiger une demande d'aide préalable et sans étendre son autorité aux mutations, preuves ou scores. |
+| FR-74 | Pour toute action O2 choisie par Compass, localiser la cible sémantique dans le vrai applet et montrer temporairement le bouton d'outil, l'objet, le segment ou la zone concernés par un halo, un pointeur et un texte accessible, sans coordonnée modèle, interception de pointeur ni effet persistant. |
 
 ## Contraintes
 
@@ -271,9 +275,29 @@ disponible.
   `prefers-reduced-motion`.
 - Le changement EN/FR conserve le même parcours, les mêmes actions et les mêmes
   garanties d'accessibilité sans débordement dans les deux langues.
-- La mascotte conserve une identité stable sur les neuf états, chaque animation
-  possède exactement huit frames et `prefers-reduced-motion` affiche une pose
-  fixe sans masquer l'état visible.
+- La mascotte conserve une identité stable sur les neuf états et l'atlas source
+  possède exactement huit cellules par état. Le runtime sélectionne une pose
+  stable plutôt que de faire défiler ces cellules; `prefers-reduced-motion`
+  force la cellule zéro et masque les accents sans retirer l'état visible.
+- Dans Varignon, la présence coach reste visible au repos; parler, écouter,
+  réfléchir, modifier et guider sont perceptibles pendant l'état applicatif
+  exact. Le dernier objet élève stabilisé oriente une apparition silencieuse;
+  une mission ne reçoit une épingle et une célébration qu'à son premier passage
+  déterministe à `verified`, jamais sur un simple statut `completed`.
+- Les actions `activate_geometry_tool`, `highlight_geometry_objects` et
+  `focus_geometry_view` ne requièrent ni consentement, ni actor assistant, ni
+  déclaration par mission : elles restent non mutantes, allowlistées, ancrées à
+  la révision, budgétées et annulables. Toute action O3–O5 conserve ses
+  confirmations et tentatives préalables.
+- Chaque geste O2 rend sa cible compréhensible : le vrai contrôle GeoGebra est
+  révélé et entouré, un objet ou segment est pointé depuis le monde et ses
+  dépendances, et une zone cadrée reçoit un repère temporaire. Le modèle ne
+  fournit aucun pixel; texte, cleanup, mouvement réduit et `pointer-events:none`
+  restent obligatoires.
+- Une occasion proactive n'est ouverte qu'à la connexion, lors d'une transition
+  de mission ou d'un blocage qualifié. Elle transporte un événement fermé et
+  courant; le modèle choisit la formulation et l'éventuelle action O2, tandis
+  qu'un geste ou une parole élève annule immédiatement le travail en cours.
 - Sur mobile, l'élève distingue le choix d'une image existante de l'ouverture
   de la caméra arrière; les deux sources suivent la même validation locale.
 - Une photo lisible de géométrie multi-étapes, d'algèbre ou d'une autre matière

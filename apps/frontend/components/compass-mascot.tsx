@@ -7,6 +7,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import Image from "next/image";
@@ -27,6 +28,11 @@ export const MASCOT_ACTIVITIES = [
 ] as const;
 
 export type MascotActivity = (typeof MASCOT_ACTIVITIES)[number];
+export type MascotPlacement = "floating" | "workspace" | "coach" | "canvas";
+export type MascotFocusSide = "left" | "center" | "right";
+export type MascotSpeechEnergy = number | null;
+
+type MascotSpeechEnergyListener = (energy: MascotSpeechEnergy) => void;
 
 type MascotLease = Readonly<{
   activity: MascotActivity;
@@ -49,6 +55,8 @@ export type MascotController = Readonly<{
     activity: Exclude<MascotActivity, "idle">,
     durationMs?: number,
   ): void;
+  setSpeechEnergy(energy: MascotSpeechEnergy): void;
+  subscribeSpeechEnergy(listener: MascotSpeechEnergyListener): () => void;
   reset(): void;
 }>;
 
@@ -76,16 +84,18 @@ const ROW_BY_ACTIVITY: Readonly<Record<MascotActivity, number>> = {
   error: 8,
 };
 
-const FRAME_DURATION_MS: Readonly<Record<MascotActivity, number>> = {
-  idle: 220,
-  receiving: 150,
-  thinking: 170,
-  listening: 160,
-  speaking: 110,
-  modifying: 140,
-  hinting: 140,
-  celebrating: 130,
-  error: 180,
+// The first cell of every row is the clean key pose in the current atlas.
+// Activity is animated by the compositor, never by advancing whole-body cells.
+const POSE_BY_ACTIVITY: Readonly<Record<MascotActivity, number>> = {
+  idle: 0,
+  receiving: 0,
+  thinking: 0,
+  listening: 0,
+  speaking: 0,
+  modifying: 0,
+  hinting: 0,
+  celebrating: 0,
+  error: 0,
 };
 
 const COPY: Readonly<
@@ -108,15 +118,32 @@ const IDLE_SNAPSHOT: MascotSnapshot = Object.freeze({
 });
 
 const NOOP = () => undefined;
+const NOOP_SUBSCRIBE = () => NOOP;
 const DEFAULT_CONTROLLER: MascotController = Object.freeze({
   current: IDLE_SNAPSHOT,
   start: NOOP,
   stop: NOOP,
   pulse: NOOP,
+  setSpeechEnergy: NOOP,
+  subscribeSpeechEnergy: NOOP_SUBSCRIBE,
   reset: NOOP,
 });
 
 const MascotContext = createContext<MascotController>(DEFAULT_CONTROLLER);
+
+let atlasDecodePromise: Promise<void> | undefined;
+
+function preloadMascotAtlas(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (atlasDecodePromise) return atlasDecodePromise;
+  const image = new window.Image();
+  image.src = "/mascot/compass-mentor-atlas.webp";
+  atlasDecodePromise =
+    typeof image.decode === "function"
+      ? image.decode().catch(() => undefined)
+      : Promise.resolve();
+  return atlasDecodePromise;
+}
 
 export function selectMascotLease(
   leases: Iterable<MascotLease>,
@@ -182,6 +209,8 @@ export function mascotActivityForRealtimeEvent(
 export function MascotProvider({ children }: { children: ReactNode }) {
   const leasesRef = useRef(new Map<string, MascotLease>());
   const timersRef = useRef(new Map<string, number>());
+  const speechEnergyRef = useRef<MascotSpeechEnergy>(null);
+  const speechEnergyListenersRef = useRef(new Set<MascotSpeechEnergyListener>());
   const sequenceRef = useRef(0);
   const tokenRef = useRef(0);
   const [snapshot, setSnapshot] = useState<MascotSnapshot>(IDLE_SNAPSHOT);
@@ -255,11 +284,37 @@ export function MascotProvider({ children }: { children: ReactNode }) {
     [clearTimer, publish],
   );
 
+  const setSpeechEnergy = useCallback<MascotController["setSpeechEnergy"]>(
+    (energy) => {
+      const next =
+        energy === null || !Number.isFinite(energy)
+          ? null
+          : Math.min(1, Math.max(0, energy));
+      if (Object.is(speechEnergyRef.current, next)) return;
+      speechEnergyRef.current = next;
+      for (const listener of speechEnergyListenersRef.current) listener(next);
+    },
+    [],
+  );
+
+  const subscribeSpeechEnergy = useCallback<
+    MascotController["subscribeSpeechEnergy"]
+  >((listener) => {
+    speechEnergyListenersRef.current.add(listener);
+    listener(speechEnergyRef.current);
+    return () => speechEnergyListenersRef.current.delete(listener);
+  }, []);
+
   const reset = useCallback(() => {
     for (const timer of timersRef.current.values()) window.clearTimeout(timer);
     timersRef.current.clear();
     leasesRef.current.clear();
+    setSpeechEnergy(null);
     setSnapshot(IDLE_SNAPSHOT);
+  }, [setSpeechEnergy]);
+
+  useEffect(() => {
+    void preloadMascotAtlas();
   }, []);
 
   useEffect(() => {
@@ -269,6 +324,7 @@ export function MascotProvider({ children }: { children: ReactNode }) {
         start: MascotController["start"];
         stop: MascotController["stop"];
         pulse: MascotController["pulse"];
+        setSpeechEnergy: MascotController["setSpeechEnergy"];
         reset: MascotController["reset"];
       }>;
     };
@@ -277,23 +333,33 @@ export function MascotProvider({ children }: { children: ReactNode }) {
       start,
       stop,
       pulse,
+      setSpeechEnergy,
       reset,
     });
     return () => {
       delete debugWindow.__COMPASS_MASCOT_DEBUG__;
     };
-  }, [pulse, reset, start, stop]);
+  }, [pulse, reset, setSpeechEnergy, start, stop]);
 
   useEffect(
     () => () => {
       for (const timer of timersRef.current.values()) window.clearTimeout(timer);
       timersRef.current.clear();
       leasesRef.current.clear();
+      speechEnergyListenersRef.current.clear();
     },
     [],
   );
 
-  const value: MascotController = { current: snapshot, start, stop, pulse, reset };
+  const value: MascotController = {
+    current: snapshot,
+    start,
+    stop,
+    pulse,
+    setSpeechEnergy,
+    subscribeSpeechEnergy,
+    reset,
+  };
 
   return <MascotContext.Provider value={value}>{children}</MascotContext.Provider>;
 }
@@ -319,13 +385,19 @@ function useReducedMotion() {
 
 export function CompassMascot({
   placement = "floating",
+  focusSide = "center",
+  labelOverride,
+  quiet = false,
 }: {
-  placement?: "floating" | "workspace";
+  placement?: MascotPlacement;
+  focusSide?: MascotFocusSide;
+  labelOverride?: string;
+  quiet?: boolean;
 }) {
   const { language, text } = useLanguage();
-  const { current } = useMascotController();
+  const { current, subscribeSpeechEnergy } = useMascotController();
   const reducedMotion = useReducedMotion();
-  const label = COPY[current.activity][language];
+  const label = labelOverride ?? COPY[current.activity][language];
 
   if (placement === "workspace") {
     return (
@@ -351,12 +423,15 @@ export function CompassMascot({
 
   return (
     <MascotAnimation
-      key={current.activity}
       snapshot={current}
       language={language}
       reducedMotion={reducedMotion}
       title={text("Compass presence", "Présence de Compass")}
       placement={placement}
+      focusSide={focusSide}
+      label={label}
+      quiet={quiet}
+      subscribeSpeechEnergy={subscribeSpeechEnergy}
     />
   );
 }
@@ -367,54 +442,86 @@ function MascotAnimation({
   reducedMotion,
   title,
   placement,
+  focusSide,
+  label,
+  quiet,
+  subscribeSpeechEnergy,
 }: {
   snapshot: MascotSnapshot;
   language: "en" | "fr";
   reducedMotion: boolean;
   title: string;
-  placement: "floating" | "workspace";
+  placement: Exclude<MascotPlacement, "workspace">;
+  focusSide: MascotFocusSide;
+  label: string;
+  quiet: boolean;
+  subscribeSpeechEnergy: MascotController["subscribeSpeechEnergy"];
 }) {
-  const [frame, setFrame] = useState(0);
-
-  useEffect(() => {
-    if (reducedMotion || snapshot.activity === "idle") return;
-
-    let nextFrame = 0;
-    let settleTimer: number | undefined;
-    const timer = window.setInterval(() => {
-      nextFrame += 1;
-      setFrame(nextFrame);
-      if (nextFrame < 7) return;
-      window.clearInterval(timer);
-      settleTimer = window.setTimeout(() => setFrame(0), 420);
-    }, FRAME_DURATION_MS[snapshot.activity]);
-
-    return () => {
-      window.clearInterval(timer);
-      if (settleTimer !== undefined) window.clearTimeout(settleTimer);
-    };
-  }, [reducedMotion, snapshot.activity]);
-
-  const renderedFrame = reducedMotion ? 0 : frame;
+  const presenceRef = useRef<HTMLElement>(null);
+  const renderedFrame = reducedMotion ? 0 : POSE_BY_ACTIVITY[snapshot.activity];
   const row = ROW_BY_ACTIVITY[snapshot.activity];
-  const backgroundPosition = `${(renderedFrame / 7) * 100}% ${(row / 8) * 100}%`;
-  const label = COPY[snapshot.activity][language];
+  const frameStyle: CSSProperties = {
+    backgroundPosition: `${(renderedFrame / 7) * 100}% ${(row / 8) * 100}%`,
+  };
+
+  useEffect(
+    () =>
+      subscribeSpeechEnergy((energy) => {
+        const presence = presenceRef.current;
+        if (!presence) return;
+        const hasMeter = energy !== null;
+        if (presence.dataset.speechSignal !== (hasMeter ? "meter" : "fallback")) {
+          presence.dataset.speechSignal = hasMeter ? "meter" : "fallback";
+        }
+        const level = energy ?? 0;
+        presence.style.setProperty("--mascot-speech-energy", level.toFixed(3));
+        presence.style.setProperty(
+          "--mascot-speech-lift",
+          `${(-2.4 * level).toFixed(2)}px`,
+        );
+        presence.style.setProperty(
+          "--mascot-mouth-scale",
+          (0.18 + level * 1.45).toFixed(3),
+        );
+        presence.style.setProperty(
+          "--mascot-wave-opacity",
+          Math.min(1, 0.05 + level * 1.2).toFixed(3),
+        );
+        presence.style.setProperty(
+          "--mascot-wave-scale",
+          (0.35 + level * 0.65).toFixed(3),
+        );
+      }),
+    [subscribeSpeechEnergy],
+  );
 
   return (
     <aside
+      ref={presenceRef}
       className={`compass-mascot-presence compass-mascot-presence--${placement}`}
       data-placement={placement}
       data-frame={renderedFrame}
+      data-renderer="css-compositor"
       data-mascot-state={snapshot.activity}
       data-source={snapshot.source ?? "idle"}
+      data-focus-side={focusSide}
+      data-reduced-motion={reducedMotion ? "true" : "false"}
+      data-speech-signal="fallback"
       aria-label={title}
     >
-      <div
-        className="compass-mascot-sprite"
-        style={{ backgroundPosition }}
-        aria-hidden="true"
-      />
-      <p>{label}</p>
+      <div className="compass-mascot-sprite-stage" aria-hidden="true">
+        <div
+          className="compass-mascot-sprite compass-mascot-sprite--current"
+          style={frameStyle}
+        />
+        <span className="compass-mascot-mouth" />
+        <span className="compass-mascot-motion-accent">
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
+      {quiet ? null : <p>{label ?? COPY[snapshot.activity][language]}</p>}
     </aside>
   );
 }

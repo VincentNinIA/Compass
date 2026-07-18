@@ -239,6 +239,15 @@ describe("POST /api/realtime/session", () => {
             output_modalities?: string[];
           };
           expect(session.instructions).toContain("geometry_world.v2");
+          expect(session.instructions).toContain("geometry_coach_turn.v1");
+          expect(session.instructions).toContain("autonomously activate");
+          expect(session.instructions).toContain(
+            "visibly point to an exact GeoGebra toolbar control",
+          );
+          expect(session.instructions).toContain(
+            "highlight_geometry_objects to point to named points or segments",
+          );
+          expect(session.instructions).toContain("which tool they would choose");
           expect(session.instructions).toContain("prior learner attempt");
           expect(session.instructions).toContain("Never propose or send coordinates");
           expect(session.tools).toEqual(

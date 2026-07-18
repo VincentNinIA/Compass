@@ -14,7 +14,7 @@ const activityId = VARIGNON_ACTIVITY_FR_V1.id;
 const common = { activityId, epoch: 1, revision: 2 } as const;
 
 describe("GeometryActionGatewayV1", () => {
-  it("rejects malformed, stale and unauthorized calls before touching the API", async () => {
+  it("rejects malformed and stale calls but accepts current O2 guidance across missions", async () => {
     const fixture = gatewayFixture();
     const malformed = await fixture.gateway.execute(
       call("activate_geometry_tool", {
@@ -34,7 +34,9 @@ describe("GeometryActionGatewayV1", () => {
       context(),
     );
     fixture.authority.missionId = "V6";
-    const notAllowed = await fixture.gateway.execute(
+    fixture.authority.actor = "system";
+    fixture.authority.uiGuidanceAllowed = false;
+    const allowed = await fixture.gateway.execute(
       call(
         "activate_geometry_tool",
         { ...common, tool: "midpoint" },
@@ -44,8 +46,8 @@ describe("GeometryActionGatewayV1", () => {
     );
     expect(malformed).toMatchObject({ ok: false, error: { code: "invalid_arguments" } });
     expect(stale).toMatchObject({ ok: false, error: { code: "stale_revision" } });
-    expect(notAllowed).toMatchObject({ ok: false, error: { code: "action_not_allowed" } });
-    expect(fixture.apiCalls()).toBe(0);
+    expect(allowed).toMatchObject({ ok: true });
+    expect(fixture.apiCalls()).toBeGreaterThan(0);
   });
 
   it("enforces four reads and two reversible UI actions per turn", async () => {
@@ -284,11 +286,15 @@ describe("GeometryActionGatewayV1", () => {
   });
 });
 
-type MutableAuthority = Omit<GeometryActionAuthorityV1, "isCurrent"> & {
+type MutableAuthority = Omit<
+  GeometryActionAuthorityV1,
+  "isCurrent" | "uiGuidanceAllowed"
+> & {
   phase: GeometryActionAuthorityV1["phase"];
   actor: GeometryActionAuthorityV1["actor"];
   maxLevel: GeometryActionAuthorityV1["maxLevel"];
   missionId?: string;
+  uiGuidanceAllowed: boolean;
   attemptedVariationTargets: ("convex" | "concave" | "crossed")[];
 };
 

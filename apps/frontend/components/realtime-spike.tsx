@@ -13,6 +13,7 @@ import {
   RealtimeWebRtcSession,
   type RealtimeCancellationRuntime,
   type RealtimeConnectionState,
+  type RealtimeGeometryCoachRuntime,
   type RealtimeInvarianceRequestRuntime,
   type RealtimeInvarianceSummaryRuntime,
   type RealtimePedagogyRuntime,
@@ -177,6 +178,7 @@ export function RealtimeSpike({
   toolRuntime,
   pedagogyRuntime,
   onProactiveRuntime,
+  onGeometryCoachRuntime,
   onCancellationRuntime,
   invarianceSummaryRuntime,
   onInvarianceRequestRuntime,
@@ -193,6 +195,7 @@ export function RealtimeSpike({
   toolRuntime?: ToolRuntime;
   pedagogyRuntime?: RealtimePedagogyRuntime;
   onProactiveRuntime?(runtime?: RealtimeProactiveRuntime): void;
+  onGeometryCoachRuntime?(runtime?: RealtimeGeometryCoachRuntime): void;
   onCancellationRuntime?(runtime?: RealtimeCancellationRuntime): void;
   invarianceSummaryRuntime?: RealtimeInvarianceSummaryRuntime;
   onInvarianceRequestRuntime?(runtime?: RealtimeInvarianceRequestRuntime): void;
@@ -214,6 +217,7 @@ export function RealtimeSpike({
     start: startMascot,
     stop: stopMascot,
     pulse: pulseMascot,
+    setSpeechEnergy: setMascotSpeechEnergy,
   } = useMascotController();
   const audioRef = useRef<HTMLAudioElement>(null);
   const sessionRef = useRef<RealtimeWebRtcSession | undefined>(undefined);
@@ -363,6 +367,7 @@ export function RealtimeSpike({
             remoteAudioRef.current = false;
             setRemoteAudio(false);
             onProactiveRuntime?.(undefined);
+            onGeometryCoachRuntime?.(undefined);
             clearRealtimeMascot();
             publishMode(
               "scripted_local",
@@ -378,6 +383,7 @@ export function RealtimeSpike({
     [
       clearRealtimeMascot,
       onCancellationRuntime,
+      onGeometryCoachRuntime,
       onProactiveRuntime,
       publishMode,
     ],
@@ -394,6 +400,7 @@ export function RealtimeSpike({
         return next;
       });
       onProactiveRuntime?.(undefined);
+      onGeometryCoachRuntime?.(undefined);
       onCancellationRuntime?.(undefined);
       clearRealtimeMascot();
       pulseMascot("realtime-error", "error", 2_400);
@@ -401,6 +408,7 @@ export function RealtimeSpike({
     [
       clearRealtimeMascot,
       onCancellationRuntime,
+      onGeometryCoachRuntime,
       onProactiveRuntime,
       publishMode,
       pulseMascot,
@@ -426,11 +434,23 @@ export function RealtimeSpike({
             session.requestProactive(decision, directive),
           cancelForActivity: (reason) => session.cancelForActivity(reason),
         });
+        if (
+          tutorProfile === "geogebra_tutor" &&
+          geometryWorldObservationRef.current
+        ) {
+          onGeometryCoachRuntime?.({
+            requestCoachTurn: (turn) => session.requestGeometryCoachTurn(turn),
+            cancelForActivity: (reason) => session.cancelForActivity(reason),
+          });
+        } else {
+          onGeometryCoachRuntime?.(undefined);
+        }
       } else {
         onProactiveRuntime?.(undefined);
+        onGeometryCoachRuntime?.(undefined);
       }
     },
-    [onProactiveRuntime, publishMode],
+    [onGeometryCoachRuntime, onProactiveRuntime, publishMode, tutorProfile],
   );
 
   const createSession = useCallback((mode: RealtimeSessionMode) => {
@@ -532,6 +552,7 @@ export function RealtimeSpike({
             promoteConnectedMode(mode);
           }
         },
+        onRemoteAudioLevel: setMascotSpeechEnergy,
         onTextOutput: (output) => {
           setTextOutput(output);
           setTestPromptStatus(
@@ -592,6 +613,7 @@ export function RealtimeSpike({
     pulseMascot,
     startMascot,
     stopMascot,
+    setMascotSpeechEnergy,
     text,
     tutorProfile,
     exerciseContext,
@@ -630,10 +652,18 @@ export function RealtimeSpike({
     setTransportIntent(undefined);
     remoteAudioRef.current = false;
     setRemoteAudio(false);
+    setMascotSpeechEnergy(null);
     clearRealtimeMascot();
     onProactiveRuntime?.(undefined);
+    onGeometryCoachRuntime?.(undefined);
     publishCancellationRuntime(undefined);
-  }, [clearRealtimeMascot, onProactiveRuntime, publishCancellationRuntime]);
+  }, [
+    clearRealtimeMascot,
+    onGeometryCoachRuntime,
+    onProactiveRuntime,
+    publishCancellationRuntime,
+    setMascotSpeechEnergy,
+  ]);
 
   const stop = () => {
     stopSession();
@@ -861,11 +891,19 @@ export function RealtimeSpike({
         firstAudioTimerRef.current = undefined;
       }
       sessionRef.current?.stop();
+      setMascotSpeechEnergy(null);
       clearRealtimeMascot();
       onProactiveRuntime?.(undefined);
+      onGeometryCoachRuntime?.(undefined);
       onCancellationRuntime?.(undefined);
     },
-    [clearRealtimeMascot, onCancellationRuntime, onProactiveRuntime],
+    [
+      clearRealtimeMascot,
+      onCancellationRuntime,
+      onGeometryCoachRuntime,
+      onProactiveRuntime,
+      setMascotSpeechEnergy,
+    ],
   );
 
   const retryReady = retryAllowed(backoff, backoffClock);

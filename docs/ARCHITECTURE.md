@@ -752,6 +752,95 @@ Ce chemin est servi en Production depuis `e6a747d` par le déploiement
 `dpl_9iyS9y7dhuy3LMJRA4qGXbX3tqbL` et l'alias stable
 `https://compass-geotutor-demo.vercel.app/`.
 
+### Présence animée du coach dans l'atelier publié
+
+`GeometryPublishedWorkspace` monte une seule autorité `MascotProvider` autour
+du coach panoramique et du scratchpad. La présence permanente de la barre et la
+couche décorative du plan lisent donc le même registre de leases : les états
+Realtime existants pilotent écoute, réflexion, parole et outil; le runtime
+d'apprentissage pilote accueil, indice et célébration. Aucune seconde policy
+de parole et aucun appel modèle ne sont introduits.
+
+Le correctif hybride conserve l'atlas 8 × 9 comme réservoir de poses mais ne
+fait plus défiler les cellules. Chaque activité choisit une pose stable; le
+navigateur anime respiration, réflexion, écoute, outil, pointage et célébration
+par `transform`/`opacity`, sans timer ni remount React. L'atlas est décodé une
+fois avant usage. En mouvement réduit, la cellule zéro reste fixe et les
+accents sont supprimés sans retirer le libellé d'état.
+
+La piste audio distante peut alimenter un `AnalyserNode` local. Seul son niveau
+RMS normalisé et lissé rejoint les variables CSS du coach et du cameo pour la
+bouche et les ondes; ni samples, ni transcript, ni historique ne sortent de la
+session. Stop et cleanup ferment ce graphe. Sans Web Audio ou sans piste, une
+animation CSS déterministe conserve une parole perceptible.
+
+La couche du plan est injectée dans `GeoGebraScratchpad` mais reste
+`aria-hidden` et `pointer-events:none`. Elle reçoit trois sorties de
+présentation, sans nouvelle autorité métier :
+
+- les commits `geometry_world.v2` stabilisés pour suivre uniquement un geste
+  learner terminal et orienter Compass selon les coordonnées des objets;
+- la directive d'aide déjà décidée par `GeometryLearningRuntimeV1` pour pointer
+  les objets allowlistés pendant l'action correspondante;
+- l'état de mission pour afficher une carte finie et épingler seulement le
+  premier passage à `verified`, jamais un simple `completed`.
+
+Les dernières observations et orientations sont aussi conservées dans des refs
+locales. Les callbacks transmis au scratchpad restent ainsi stables pendant les
+déplacements et ne provoquent pas de teardown/remontage de l'adapter GeoGebra.
+Les épingles sont dédupliquées par mission; elles ne modifient ni les preuves,
+ni le score, ni le journal T22.
+
+### Coach moteur et frontière O2 réversible
+
+Le harnais distingue désormais une décision pédagogique d'une autorité de
+mutation. Compass peut sélectionner un outil allowlisté, surligner des objets
+existants ou cadrer la vue sans basculer l'actor en `assistant`, sans drapeau de
+consentement UI et sans répéter ces trois permissions dans chaque mission. Ces
+gestes O2 ne construisent aucun objet. Ils restent soumis à une activité et une
+révision courantes, à une phase utilisable, au niveau O2, aux politiques de
+l'activité, au budget par tour, à l'idempotence et à l'annulation.
+
+Les mutations O3–O5 conservent leur chemin séparé : tentative préalable,
+consentement ou confirmation one-shot, cible fermée, rollback et preuve
+déterministe. L'assouplissement O2 n'est donc pas une commande GeoGebra libre.
+
+Le workspace publié peut remettre au transport un `geometry_coach_turn.v1` à
+trois moments sémantiques : ouverture du coach, transition de mission et indice
+qualifié. L'événement contient l'ancre du monde et les seules données de mission
+utiles; il ne contient pas de phrase imposée. Realtime refuse un événement
+invalide ou stale, déduplique la transition via le workspace et utilise le même
+gate de réponse et le même chemin d'annulation que les tours élève. Les simples
+deltas `geometry_world.v2` restent observation-only et ne font jamais parler le
+coach.
+
+### Guidage visuel contextuel du harnais
+
+La couche de présentation O2 reçoit uniquement des indications issues des
+actions sémantiques déjà autorisées. `activate_geometry_tool` cible le contrôle
+GeoGebra par son identifiant numérique `mode`; si le contrôle n'existe pas dans
+la liste compacte, le harnais ouvre `More`/`Plus`, attend son insertion, le fait
+défiler dans le panneau puis calcule son rectangle réel. Le cas `midpoint`
+repose ainsi sur `mode=19`, et non sur une position CSS supposée.
+
+`highlight_geometry_objects` continue de restaurer exactement couleur,
+épaisseur et visibilité. Sa cible visuelle est un point du monde v2 ou le centre
+dérivé des parents pour un segment, une droite ou un polygone. La conversion du
+repère logique vers l'écran utilise `getViewProperties` et la surface graphique
+réelle. `focus_geometry_view` projette de la même façon la boîte effectivement
+appliquée. Aucun argument modèle ne contient de pixel ou de coordonnée de
+pointage.
+
+Le registre de capacités associe les onze actions à leur niveau O0-O5, leur
+surface (`coach`, `toolbar`, `canvas`, `gallery` ou `activity`), leur mutation,
+leur consentement et leur primitive visuelle. Il est vérifié contre
+`GEOMETRY_ACTIONS_V1` pour empêcher toute capacité orpheline. La couche halo est
+bornée au shell, `pointer-events:none`, bilingue et accompagnée d'un statut
+accessible. Elle recentre le shell pour rendre une cible du plan visible,
+contraint l'appel textuel dans les petits viewports et désactive son impulsion
+sous mouvement réduit; timeout, geste/parole élève, Stop, cleanup et unmount la
+retirent.
+
 ### Flux de données autorisé
 
 1. Le professeur authentifié crée une classe et distribue un code rotatif.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { GeoGebraAccessibilityGuard } from "@/lib/geogebra/accessibility";
 import { GeoGebraAdapter } from "@/lib/geogebra/adapter";
@@ -28,6 +28,11 @@ import { GeometryWorldObserverV2 } from "@/lib/geometry-investigation/stabilizer
 import type { GeometryWorldCommitV2 } from "@/lib/geometry-investigation/stabilizer";
 import { createGeometryWorldDeltaV2 } from "@/lib/geometry-investigation/world";
 import { GeometryUiEffectsV1 } from "@/lib/geometry-investigation/ui-effects";
+import {
+  findGeoGebraMoreButtonV1,
+  findGeoGebraToolButtonV1,
+  parseGeometryViewPropertiesV1,
+} from "@/lib/geometry-investigation/visual-guidance";
 import { VARIGNON_ACTIVITY_FR_V1 } from "@/lib/geometry-investigation/varignon";
 import type { GeneralExerciseReadyV1 } from "@/lib/exercise/general-exercise-contracts";
 import type { GeoGebraWorldStateV1 } from "@/lib/geogebra/mission-progress";
@@ -35,6 +40,10 @@ import type { ToolRuntime } from "@/lib/tools/runtime";
 import { useLanguage } from "./language-provider";
 import { useMascotController } from "./compass-mascot";
 import { GeometryEvidenceGallery } from "./geometry-evidence-gallery";
+import {
+  GeometryGuidanceOverlay,
+  type GeometryGuidancePresentationV1,
+} from "./geometry-guidance-overlay";
 import { GeometryInvestigationPanel } from "./geometry-investigation-panel";
 
 type ScratchpadState =
@@ -70,8 +79,11 @@ export function GeoGebraScratchpad({
   investigation,
   onGeometryLearningReport,
   onGeometryWorldCommit,
+  onGeometryLearningState,
+  onGeometryLearningDirective,
   onLearnerInteractionRuntime,
   onReadiness,
+  canvasOverlay,
 }: {
   onToolRuntime?(runtime?: ToolRuntime): void;
   exercise?: GeneralExerciseReadyV1;
@@ -82,8 +94,11 @@ export function GeoGebraScratchpad({
     commit?: GeometryWorldCommitV2,
     pedagogy?: GeometryRealtimePedagogyContextV1,
   ): void;
+  onGeometryLearningState?(state?: GeometrySessionStateV1): void;
+  onGeometryLearningDirective?(directive?: GeometryHintDirectiveV1): void;
   onLearnerInteractionRuntime?(runtime?: GeometryLearnerInteractionRuntime): void;
   onReadiness?(readiness: GeometryScratchpadReadinessV1): void;
+  canvasOverlay?: ReactNode;
 }) {
   const { text } = useLanguage();
   const { start: startMascot, stop: stopMascot, pulse: pulseMascot } =
@@ -103,6 +118,8 @@ export function GeoGebraScratchpad({
     useState<GeometrySessionStateV1>();
   const [learningDirective, setLearningDirective] =
     useState<GeometryHintDirectiveV1>();
+  const [guidancePresentation, setGuidancePresentation] =
+    useState<GeometryGuidancePresentationV1>();
   const evidenceHarnessRef = useRef<EvidenceHarnessControls | undefined>(
     undefined,
   );
@@ -110,6 +127,11 @@ export function GeoGebraScratchpad({
     LearningDirectiveActionRuntime | undefined
   >(undefined);
   const activity = investigation ?? VARIGNON_ACTIVITY_FR_V1;
+  const dismissGuidance = useCallback((cueId: number) => {
+    setGuidancePresentation((current) =>
+      current?.cue.id === cueId ? undefined : current,
+    );
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -222,8 +244,15 @@ export function GeoGebraScratchpad({
         const handleLearningDecision = (
           decision: ReturnType<GeometryLearningRuntimeV1["requestHelp"]>,
         ) => {
+          stopMascot("geometry-help-request");
           if (decision?.type !== "SPEAK") return;
           setLearningDirective(decision.directive);
+          onGeometryLearningDirective?.(decision.directive);
+          pulseMascot(
+            `geometry-hint:${decision.directive.id}`,
+            "hinting",
+            decision.directive.action ? 3_600 : 2_800,
+          );
           if (decision.directive.level <= 3 && !decision.directive.action) {
             learningRuntime?.markAssistanceDelivered(decision.directive);
             return;
@@ -241,6 +270,7 @@ export function GeoGebraScratchpad({
             {
               onState: (next) => {
                 setLearningSession(next);
+                onGeometryLearningState?.(next);
                 // A restore is authorized by the mission that opened the
                 // visible confirmation. The reducer has no active mission
                 // while recovering, so keep that authority until the restored
@@ -500,6 +530,26 @@ export function GeoGebraScratchpad({
                 freezeMutations: () => {
                   investigationAuthority.phase = "fatal";
                 },
+                onGuidanceCue: (cue) => {
+                  if (disposed) return;
+                  const view = api.getViewProperties
+                    ? parseGeometryViewPropertiesV1(api.getViewProperties(1))
+                    : undefined;
+                  setGuidancePresentation(
+                    cue
+                      ? {
+                          cue,
+                          ...(currentWorldV2 ? { world: currentWorldV2 } : {}),
+                          ...(view ? { view } : {}),
+                        }
+                      : undefined,
+                  );
+                },
+                prepareToolTarget: (mode) => {
+                  const root = containerRef.current;
+                  if (!root || findGeoGebraToolButtonV1(root, mode)) return;
+                  findGeoGebraMoreButtonV1(root)?.click();
+                },
               });
               const replay = checkpoints
                 ? new GeometryReplayControllerV1({
@@ -655,6 +705,13 @@ export function GeoGebraScratchpad({
                   missionId: directive.missionId,
                   uiGuidanceAllowed: true,
                 });
+                const mascotSource = `geometry-hint-action:${directive.id}`;
+                startMascot(
+                  mascotSource,
+                  directive.action === "demonstrate_geometry_step"
+                    ? "modifying"
+                    : "hinting",
+                );
                 try {
                   const world = currentWorldV2;
                   const common = {
@@ -730,6 +787,7 @@ export function GeoGebraScratchpad({
                   learningRuntime.markAssistanceDelivered(directive);
                   return true;
                 } finally {
+                  stopMascot(mascotSource);
                   Object.assign(investigationAuthority, previousAuthority);
                 }
               };
@@ -955,10 +1013,13 @@ export function GeoGebraScratchpad({
 
     return () => {
       disposed = true;
+      setGuidancePresentation(undefined);
       stopMascot("general-geogebra-load");
       onToolRuntime?.(undefined);
       onWorldState?.(undefined);
       onGeometryWorldCommit?.(undefined);
+      onGeometryLearningState?.(undefined);
+      onGeometryLearningDirective?.(undefined);
       onLearnerInteractionRuntime?.(undefined);
       assistRuntime?.dispose();
       worldObserverV2?.stop();
@@ -984,6 +1045,8 @@ export function GeoGebraScratchpad({
     exercise,
     investigation,
     onGeometryLearningReport,
+    onGeometryLearningDirective,
+    onGeometryLearningState,
     onGeometryWorldCommit,
     onLearnerInteractionRuntime,
     onReadiness,
@@ -1061,6 +1124,13 @@ export function GeoGebraScratchpad({
           data-checkpoint-restoring={checkpointRestoring}
           inert={checkpointRestoring}
         />
+        {canvasOverlay}
+        <GeometryGuidanceOverlay
+          presentation={guidancePresentation}
+          appletRootRef={containerRef}
+          locale={activity.locale}
+          onDismiss={dismissGuidance}
+        />
         {checkpointRestoring ? (
           <div className="geogebra-checkpoint-barrier" role="status">
             {text(
@@ -1099,6 +1169,7 @@ export function GeoGebraScratchpad({
           }
           onRequestHelp={() => {
             if (!learningRuntimeRef(window)) return;
+            pulseMascot("geometry-help-request", "thinking", 1_200);
             const runtime = window.__GEOTUTOR_LEARNING_V1__ as {
               requestHelp(): unknown;
             };

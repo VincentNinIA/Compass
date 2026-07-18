@@ -58,7 +58,7 @@ test("T9-C03 exposes all nine atlas states without a live model dependency", asy
   for (const activity of ACTIVITIES) {
     await setMascotActivity(page, activity);
     await expect(mascot).toHaveAttribute("data-mascot-state", activity);
-    await expect(mascot.locator(".compass-mascot-sprite")).toHaveCSS(
+    await expect(mascot.locator(".compass-mascot-sprite--current")).toHaveCSS(
       "background-image",
       /compass-mentor-atlas\.webp/,
     );
@@ -105,6 +105,7 @@ test("T9-C03 mascot stays inside 390, 768 and 1440 px viewports", async ({
     { width: 768, height: 1024 },
     { width: 1440, height: 900 },
   ]) {
+    await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.setViewportSize(viewport);
     await page.goto("/");
     await setMascotActivity(page, "hinting");
@@ -124,11 +125,41 @@ test("T9-C03 mascot stays inside 390, 768 and 1440 px viewports", async ({
     await expect(
       page.getByRole("heading", { name: "Varignon — the midpoint quadrilateral" }),
     ).toBeVisible();
+    await page.waitForFunction(
+      () => Boolean((window as MascotDebugWindow).__COMPASS_MASCOT_DEBUG__),
+    );
+    await setMascotActivity(page, "hinting");
+    const coachMascot = page.locator(".compass-mascot-presence--coach");
+    await expect(coachMascot).toHaveAttribute("data-mascot-state", "hinting");
+    await expect(coachMascot).toHaveAttribute("data-renderer", "css-compositor");
+    await expect(coachMascot.locator(".compass-mascot-sprite")).toHaveCount(1);
 
     await page.screenshot({
       path: path.join(
         PLAYWRIGHT_OUTPUT,
         `T9-mascot-hinting-${viewport.width}x${viewport.height}.png`,
+      ),
+    });
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    await page.getByRole("button", { name: /Start the exercise/ }).click();
+    await expect(
+      page.getByRole("heading", { name: "Varignon — the midpoint quadrilateral" }),
+    ).toBeVisible();
+    await page.waitForFunction(
+      () => Boolean((window as MascotDebugWindow).__COMPASS_MASCOT_DEBUG__),
+    );
+    await setMascotActivity(page, "hinting");
+    const reducedMascot = page.locator(".compass-mascot-presence--coach");
+    await expect(reducedMascot).toHaveAttribute("data-reduced-motion", "true");
+    await expect(reducedMascot).toHaveAttribute("data-frame", "0");
+    await expect(reducedMascot.locator(".compass-mascot-sprite")).toHaveCount(1);
+    await expectNoDocumentOverflow(page);
+    await page.screenshot({
+      path: path.join(
+        PLAYWRIGHT_OUTPUT,
+        `T9-mascot-hinting-reduced-${viewport.width}x${viewport.height}.png`,
       ),
     });
   }

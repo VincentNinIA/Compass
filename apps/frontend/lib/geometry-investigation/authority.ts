@@ -109,18 +109,12 @@ export function authorizeGeometryActionV1(
     return reject("invalid_phase", "The activity is not ready for this action.");
   }
   const mission = activity.missions.find(({ id }) => id === authority.missionId);
-  if (!mission || !mission.allowedActions.includes(action)) {
-    return reject("action_not_allowed", "The active mission does not allow this action.");
-  }
 
   if (
     action === "activate_geometry_tool" ||
     action === "highlight_geometry_objects" ||
     action === "focus_geometry_view"
   ) {
-    if (!authority.uiGuidanceAllowed || authority.actor !== "assistant") {
-      return reject("invalid_authority", "UI guidance was not requested or approved.");
-    }
     if (
       action === "activate_geometry_tool" &&
       !activity.assistancePolicy.allowToolActivation
@@ -133,6 +127,11 @@ export function authorizeGeometryActionV1(
     ) {
       return reject("action_not_allowed", "Temporary highlights are disabled by the activity.");
     }
+    return { ok: true, level, ...(mission ? { mission } : {}) };
+  }
+
+  if (!mission || !mission.allowedActions.includes(action)) {
+    return reject("action_not_allowed", "The active mission does not allow this action.");
   }
 
   if (action === "create_geometry_variation") {

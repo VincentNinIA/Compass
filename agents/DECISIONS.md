@@ -1185,3 +1185,78 @@
 - Impact : la démo n'affaiblit ni le gateway GeoGebra, ni les preuves, ni les
   routes de classe. Elle supprime seulement leur friction du parcours public et
   n'effectue aucune écriture serveur avant l'ouverture de l'activité.
+
+## D-086 - La présence Varignon combine coach continu et apparitions factuelles
+
+- Décision : monter une seule autorité de mascotte autour du workspace publié
+  v2, rendre son atlas dans la barre coach et autoriser une seconde projection
+  décorative dans le plan uniquement pour des événements fermés du harnais. Les
+  huit cellules restent les poses autoritatives; chaque changement est fondu et
+  accompagné de micro-mouvements CSS continus. Les états voix et outil peuvent
+  répéter leur séquence uniquement tant que leur lease réel reste actif; `idle`,
+  mission, preuve et erreur restent des séquences finies.
+- Raison : le chemin direct contournait T9 et le portrait panoramique fixe ne
+  montrait ni écoute, ni parole, ni action. Une interpolation de présentation
+  rend l'atlas lisible sans inventer de frames, tandis que la durée de l'état
+  Realtime constitue une borne plus honnête qu'un cycle parlant achevé alors que
+  l'audio continue.
+- Impact : `GeometryPublishedWorkspace` orchestre seulement la présentation à
+  partir du monde v2 et de l'état de session exposé par le scratchpad. Les
+  apparitions n'interceptent aucun pointeur, ne lisent aucun transcript et ne
+  déclenchent ni réponse, ni preuve, ni mutation. Seul un passage inédit à
+  `verified` crée une épingle; l'actor learner et les noms d'objet stabilisés
+  gouvernent le regard. Mouvement réduit conserve une pose fixe et les libellés.
+
+## D-088 - Le runtime remplace le frameur d'atlas par un compositeur hybride
+
+- Décision : les huit cellules de chaque ligne restent un réservoir de poses,
+  mais une activité n'en fait plus défiler la séquence. React publie seulement
+  l'état et une pose stable; respiration, écoute, réflexion, outil, pointage et
+  célébration utilisent `transform` et `opacity`. Pour `speaking`, un analyseur
+  local diffuse exclusivement un niveau RMS lissé aux propriétés CSS de toutes
+  les présences; en son absence, une boucle CSS déterministe prend le relais.
+- Raison : les intervalles de 110 à 180 ms, le remount et le flou par cellule
+  rendent les poses distinctes perceptibles à 6–9 fps. Interpoler ces images
+  entières ne crée pas de mouvement naturel; conserver une silhouette stable et
+  déplacer de petites couches sur le compositeur supprime cette rupture.
+- Impact : D-088 remplace la répétition de séquences autorisée par D-086 dans le
+  rendu, sans changer ses leases ou ses cameos. Le signal audio est un nombre
+  borné, éphémère et non persistant; il ne contient ni transcript ni échantillon.
+  Un rig Rive reste une migration future, après validation d'un asset articulé.
+
+## D-087 - Le modèle conduit le guidage réversible, le harnais garde les frontières
+
+- Décision : rendre les actions O2 `activate_geometry_tool`,
+  `highlight_geometry_objects` et `focus_geometry_view` disponibles dans toute
+  investigation courante, indépendamment de l'actor, du drapeau
+  `uiGuidanceAllowed` et de l'allowlist de la mission. Ouvrir au modèle une
+  occasion de coaching fermée à la connexion, aux transitions de mission et aux
+  blocages déjà qualifiés par le runtime; le modèle choisit alors la question,
+  le conseil ou l'action O2.
+- Raison : sélectionner un outil, cadrer ou surligner ne modifie pas la figure.
+  Exiger une demande d'aide puis un changement d'actor faisait échouer les appels
+  vocaux légitimes et transformait le code en metteur en scène du dialogue. Le
+  bon partage est que l'IA décide du geste pédagogique et que le code garantisse
+  seulement la frontière d'action.
+- Impact : la palette fermée, l'ancre activité/epoch/révision, la phase, les
+  politiques d'activité, le budget, l'idempotence, la staleness et l'annulation
+  restent obligatoires. Les mutations O3–O5, les captures de preuve, les
+  restaurations et les scores ne changent pas d'autorité. Aucun delta ordinaire
+  ne déclenche une réponse; une reprise élève préempte toujours le coach.
+
+## D-089 - Le pointage est dérivé de la cible sémantique, jamais du modèle
+
+- Décision : chaque action O2 publie une indication de présentation fermée. Un
+  outil est localisé par son identifiant `mode` dans le DOM de l'applet épinglé;
+  un objet ou segment est ancré depuis ses coordonnées et parents dans le monde
+  v2; une zone reprend la boîte logique réellement appliquée. Le harnais peut
+  ouvrir et faire défiler le panneau d'outils pour révéler la cible exacte.
+- Raison : `setMode(19)` active bien « Milieu ou centre », mais son bouton reste
+  absent du DOM compact tant que `More`/`Plus` n'est pas ouvert. Un simple texte
+  ou un cameo latéral ne montre donc pas où agir, tandis qu'un pixel fourni par
+  le modèle serait fragile, non testable et dissocié de la géométrie courante.
+- Impact : le modèle continue à choisir uniquement parmi les actions fermées.
+  Halo, pointeur, appel textuel, scroll et projection sont éphémères,
+  `pointer-events:none`, bilingues et supprimés avec le cleanup O2. Un registre
+  exhaustif relie les onze actions à leur niveau, surface et primitive visuelle;
+  aucune de ces indications ne devient mutation, preuve ou validation.

@@ -6,6 +6,7 @@ export * from "./action-runtime";
 export * from "./authority";
 export * from "./consent";
 export * from "./ui-effects";
+export * from "./visual-guidance";
 export * from "./contracts";
 export * from "./dependencies";
 export * from "./engine";

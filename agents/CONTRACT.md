@@ -1,3 +1,474 @@
+# Contrat Builder — guidage visuel contextuel du harnais GeoGebra — close `pass`
+
+## État
+
+- Le porteur demande le 18 juillet 2026 que Compass puisse montrer précisément
+  l'élément dont il parle : bouton d'outil, objet, segment ou zone du plan.
+- L'audit du vrai applet épinglé confirme que les boutons GeoGebra portent un
+  identifiant stable `mode`/`id` et un état `selected`, mais que certains outils
+  comme `midpoint` ne rejoignent le DOM qu'après ouverture de `More`/`Plus`.
+- La tranche est close `pass` le 18 juillet 2026. Les changements
+  coach/mascotte déjà présents dans le worktree sont conservés et réutilisés
+  sans déplacer leurs autorités.
+
+## Objectif
+
+Donner au harnais une couche de guidage visuel contextuel et réversible : quand
+le modèle choisit une action O2 existante, l'application localise sa cible
+sémantique dans le vrai applet, la rend visible et la pointe exactement, tout en
+documentant pour les onze actions du harnais ce qu'elles peuvent faire et sur
+quelle surface elles agissent.
+
+## Inclus
+
+- Ajouter un registre exhaustif et testable des onze actions
+  `GEOMETRY_ACTIONS_V1`, avec niveau O0-O5, surface cible, effet visible,
+  mutation éventuelle, consentement et primitive de présentation.
+- Produire depuis `activate_geometry_tool` une indication d'outil contenant
+  mode, libellé et ordre de clic. Localiser le contrôle par son attribut
+  GeoGebra `mode`, ouvrir le groupe d'outils étendu si nécessaire, faire défiler
+  le panneau puis rendre halo, pointeur et appel textuel autour du vrai bouton.
+- Produire depuis `highlight_geometry_objects` une indication d'objets. Garder
+  la restauration exacte de couleur/épaisseur/visibilité et ancrer le pointeur
+  sur un point, ou sur le centre dérivé des parents pour un segment, une droite
+  ou un polygone.
+- Produire depuis `focus_geometry_view` une indication de zone correspondant à
+  la boîte logique réellement appliquée au viewport.
+- Calculer les positions écran exclusivement depuis le monde v2, les parents et
+  `getViewProperties`; le modèle ne fournit jamais de pixel ni de coordonnée de
+  pointage.
+- Rendre la couche `pointer-events:none`, bornée dans le shell GeoGebra,
+  bilingue, accompagnée d'un statut accessible, stable sous mouvement réduit et
+  supprimée au timeout, à l'annulation, au cleanup ou à l'unmount.
+- Préserver la mascotte et ses leases existants; le halo contextuel complète le
+  cameo au lieu de créer une seconde policy de parole ou d'action.
+- Ajouter tests unitaires, qualification CLI Playwright du vrai applet et
+  documentation de la cartographie complète du harnais.
+
+## Hors périmètre
+
+- Ajouter une nouvelle action modèle, une commande GeoGebra libre, un clic DOM
+  arbitraire ou une coordonnée choisie par le modèle.
+- Modifier les permissions, budgets ou consentements O3-O5, les neuf missions,
+  les faits, les preuves, le score, les checkpoints ou la persistance T25-C04.
+- Utiliser une capture d'écran ou un modèle vision pour localiser l'interface.
+- Faire du halo une preuve de correction, intercepter les interactions élève ou
+  maintenir une animation permanente dans le plan.
+- Déployer, committer, pousser, créer un `QA_REPORT.md` Builder ou un `HANDOFF.md`
+  sans reprise réelle.
+
+## Fichiers probables
+
+- `apps/frontend/lib/geometry-investigation/visual-guidance.ts`
+- `apps/frontend/lib/geometry-investigation/ui-effects.ts`
+- `apps/frontend/components/geometry-guidance-overlay.tsx`
+- `apps/frontend/components/geogebra-scratchpad.tsx`
+- `apps/frontend/app/globals.css`
+- tests unitaires voisins et documents pilotes
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+git diff --check
+# Playwright CLI, vrai applet : midpoint, point/segment, focus, cleanup,
+# mouvement réduit et viewports 390/768/1440 sans obstruction.
+```
+
+## Définition de fini
+
+- Un appel O2 `midpoint` active le mode 19 sans créer d'objet, révèle le groupe
+  `Construct` si nécessaire et place le halo sur le bouton `mode="19"` réellement
+  rendu; l'ordre de clic reste visible et annoncé.
+- Un highlight de point ou segment restaure exactement le style et rend un
+  pointeur au bon endroit du plan à partir de la géométrie courante.
+- Un focus rend temporairement visible la zone logique appliquée, sans changer
+  la construction ni fournir une nouvelle autorité au modèle.
+- Les onze actions possèdent une entrée unique dans la cartographie de capacité;
+  un ajout ou retrait non documenté fait échouer le test.
+- Timeout, action/parole élève, Stop, reset, cleanup et unmount retirent les
+  repères sans helper, objet, listener ou pointeur persistant.
+- La couche reste lisible mais non bloquante à 390, 768 et 1440 px, au clavier,
+  au zoom et sous mouvement réduit; les gates contractuels passent.
+
+## Preuves de clôture
+
+- Le vrai applet active `midpoint` en mode 19, ouvre `More`, sélectionne le
+  bouton `mode="19"` et place son halo sur le rectangle DOM exact sans créer
+  d'objet; le plan reste à huit objets.
+- Le pointeur de `AB` est projeté à un pixel près sur la moyenne de ses parents
+  A/B. La surbrillance applique puis restaure exactement `#6E6D73` et
+  l'épaisseur 5; `focus_geometry_view` cadre la surface effectivement appliquée
+  et le cleanup restaure le mode 0 ainsi que le viewport initial.
+- La cartographie compile les onze entrées de `GEOMETRY_ACTIONS_V1` et verrouille
+  niveau, surface, mutation, consentement et primitive de présentation. Les
+  instructions Realtime indiquent explicitement quand pointer un outil, un
+  point/segment ou une zone, sans pixel modèle.
+- Les inspections Playwright réelles à 390, 768 et 1440 px confirment une couche
+  `pointer-events:none`, sans débordement horizontal; le plan est recentré pour
+  rendre une cible géométrique visible et le mouvement réduit rend
+  `animation-name:none`.
+- Validation : 102 cartes documentaires, lint, typecheck, build et 899/899 tests
+  Vitest sur 106 fichiers passent; `git diff --check` ne signale aucune erreur
+  de whitespace.
+
+---
+
+# Contrat Builder — coach GeoGebra moteur et guidage O2 souple — close `pass`
+
+## État
+
+- Le porteur demande le 18 juillet 2026 que Compass cesse d'attendre une
+  autorisation artificielle avant une aide d'interface réversible et devienne
+  une force motrice attentive dans l'investigation.
+- La tranche est close `pass` le 18 juillet 2026. Le harnais agit maintenant en
+  garde du corps : le modèle choisit la question, le conseil ou l'action O2
+  utile; le runtime borne toujours la palette, la révision, les budgets,
+  l'idempotence et l'annulation.
+- Les changements animés actuellement présents dans le worktree sont conservés
+  et restent hors de cette modification comportementale.
+
+## Objectif
+
+Permettre au coach vocal d'observer le plan, d'activer spontanément un outil
+GeoGebra, de surligner ou cadrer au moment qu'il juge pédagogiquement utile, et
+de relancer brièvement l'élève à la connexion, après une mission franchie ou
+sur un blocage qualifié, sans automatiser le discours ni affaiblir les garde-fous
+des mutations.
+
+## Inclus
+
+- Retirer, pour les seules actions O2 réversibles `activate_geometry_tool`,
+  `highlight_geometry_objects` et `focus_geometry_view`, l'exigence d'un actor
+  `assistant`, d'un drapeau d'approbation UI et d'une déclaration par mission.
+- Conserver pour ces actions la palette fermée, la phase, l'ancre
+  activité/epoch/révision, le niveau O2, les politiques d'activité, les budgets,
+  l'idempotence, la staleness et l'annulation par geste ou parole élève.
+- Conserver sans assouplissement le consentement, la tentative préalable et les
+  autorités des mutations O3–O5, preuves et restaurations.
+- Donner au profil Realtime investigation une consigne de coach actif : lire le
+  monde borné, poser une question courte, orienter vers la mission suivante,
+  choisir le plus petit geste réversible utile et ne jamais inventer l'état.
+- Introduire un événement fermé `geometry_coach_turn.v1` pour ouvrir une
+  occasion de réponse à la connexion, lors d'une transition de mission ou d'un
+  indice qualifié. L'événement transporte les missions et l'ancre courante,
+  mais ne dicte ni une phrase ni un appel d'outil.
+- Rejeter un événement coach invalide ou ancré sur un monde obsolète, dédupliquer
+  les transitions et annuler réponse/outils dès que l'élève agit ou parle.
+- Étendre les tests d'autorité, gateway, session Realtime et workspace publié.
+
+## Hors périmètre
+
+- Autoriser une commande GeoGebra libre, des coordonnées inventées ou une action
+  non déclarée dans la palette fermée.
+- Lever les confirmations O3–O5, transformer une observation en preuve ou laisser
+  le modèle faire avancer une mission ou attribuer un score.
+- Faire parler le coach à chaque delta, boucle de mascotte ou mouvement du plan.
+- Modifier les neuf missions Varignon, leurs relations, leurs tolérances, le
+  ledger XP, la persistance T25-C04 ou déployer en Production.
+
+## Fichiers probables
+
+- `apps/frontend/lib/geometry-investigation/authority.ts`
+- `apps/frontend/lib/geometry-investigation/learning-runtime.ts`
+- `apps/frontend/lib/realtime/session-route.ts`
+- `apps/frontend/lib/realtime/webrtc-session.ts`
+- `apps/frontend/components/realtime-spike.tsx`
+- `apps/frontend/components/geometry-published-workspace.tsx`
+- tests ciblés et documents pilotes
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+git diff --check
+```
+
+## Définition de fini
+
+- Un appel voix O2 courant active notamment `midpoint` même si l'autorité reste
+  `system`, si `uiGuidanceAllowed` vaut faux ou si la mission ne déclare pas
+  l'action; les protections de phase, ancre, politique et budget restent vertes.
+- À la connexion, après une mission `verified` ou `completed`, et lors d'un
+  indice qualifié, le modèle reçoit au plus une occasion bornée et courante de
+  prendre la parole; il peut questionner, expliquer ou choisir une action O2.
+- Une reprise élève, un événement stale, une session indisponible ou un budget
+  épuisé échoue proprement sans prétendre que l'action a réussi.
+- Les mutations O3–O5 et les preuves gardent exactement leurs autorités
+  antérieures; les gates contractuels passent sans régression de la tranche
+  animée déjà présente.
+
+## Preuves de clôture
+
+- `authorizeGeometryActionV1` autorise les trois gestes UI O2 avant le contrôle
+  des actions de mission et sans lire l'actor ou `uiGuidanceAllowed`. Les tests
+  prouvent `midpoint` avec actor `system`, drapeau faux et mission V6, tout en
+  conservant le niveau O2, la staleness, la politique et le budget de deux
+  gestes UI par tour.
+- Le schéma strict `geometry_coach_turn.v1` distingue orientation, mission
+  franchie et indice qualifié. Le workspace déduit `verified` ou `completed`,
+  attend le monde de même activité/epoch/révision, déduplique la transition et
+  remet l'événement au coach sans produire de phrase applicative.
+- Le transport refuse les schémas invalides, les ancres obsolètes, les profils
+  non investigation et les sessions non vocales. Un tour accepté passe par le
+  gate Realtime existant; une reprise de parole émet `response.cancel` et
+  `output_audio_buffer.clear`.
+- Les instructions Realtime autorisent explicitement activation, surbrillance
+  et cadrage spontanés, demandent au coach de lire le plan et l'encouragent à
+  demander à l'élève quel outil ou quelle idée il choisirait. Les contraintes
+  de mutation, de preuve et d'absence de coordonnées inventées restent intactes.
+- Validation : 102 cartes documentaires, lint, typecheck, build et 892/892
+  tests Vitest sur 104 fichiers passent; `git diff --check` ne signale aucune
+  erreur de whitespace.
+
+---
+
+# Contrat Builder — correction hybride CSS/audio de la mascotte — close `pass`
+
+## État
+
+- Le porteur constate le 18 juillet 2026 une latence visible : les changements
+  de cellules de l'atlas se lisent comme un défilement image par image au lieu
+  d'un personnage vivant.
+- La cause déterministe est localisée : chaque présence exécute sa propre boucle
+  React `setTimeout` à environ 6–9 frames par seconde, remonte la couche courante
+  et applique flou/fondu à chaque cellule.
+- La tranche est close `pass` le 18 juillet 2026. Le frameur est remplacé par
+  un rendu hybride à pose stable, micro-mouvements composités et énergie audio
+  locale. Elle ne modifie aucune autorité pédagogique.
+
+## Objectif
+
+Supprimer immédiatement l'effet diaporama et la latence perçue tout en
+conservant l'atlas actuel : React ne change plus que l'activité, le navigateur
+anime les mouvements continus par `transform`/`opacity`, et la parole peut
+piloter une bouche locale depuis la seule énergie de l'audio distant.
+
+## Inclus
+
+- Choisir une pose représentative et stable parmi les huit cellules de chaque
+  état; en mouvement réduit, conserver la cellule zéro.
+- Supprimer la boucle de frames, les timers associés, le remount par `key`, la
+  double couche précédente/courante et le flou appliqué à chaque image.
+- Précharger et décoder l'atlas une fois par document avant sa première
+  utilisation animée.
+- Porter respiration, réflexion, écoute, parole, outil, pointage, célébration et
+  erreur par des animations CSS compositées sans rendu React périodique.
+- Mesurer localement l'amplitude RMS de la piste audio distante avec Web Audio,
+  la lisser, puis diffuser ce seul nombre éphémère aux présences coach/canvas
+  par propriétés CSS; aucun audio, transcript ou échantillon n'est conservé.
+- Fermer la bouche et libérer l'analyseur au Stop, cleanup, échec ou changement
+  de transport. Sans Web Audio ou sans piste, utiliser un mouvement de parole
+  CSS déterministe.
+- Mettre à jour les tests pour prouver la stabilité de la pose, l'absence de
+  double sprite et de progression par timers, le signal audio sans rerender et
+  le comportement réduit.
+
+## Hors périmètre
+
+- Création ou intégration d'un rig Rive, faute d'asset vectoriel articulé
+  validé dans cette tranche; Rive reste l'évolution suivante du personnage.
+- Lip-sync phonétique, analyse du transcript, reconnaissance d'émotion ou
+  stockage d'audio.
+- Nouvel appel modèle, nouvelle prise de parole, mutation GeoGebra, modification
+  des preuves, missions, permissions, XP ou données de classe.
+- Refonte des cameos et épingles déjà qualifiés par la tranche précédente.
+
+## Fichiers probables
+
+- `apps/frontend/components/compass-mascot.tsx`
+- `apps/frontend/components/realtime-spike.tsx`
+- `apps/frontend/lib/realtime/webrtc-session.ts`
+- `apps/frontend/app/globals.css`
+- tests unitaires et Playwright mascotte/parcours direct
+- documents pilotes et architecture
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test e2e/t25-demo-direct.spec.ts e2e/t9-mascot.spec.ts
+git diff --check
+# inspection navigateur 390/768/1440, normal et mouvement réduit
+```
+
+## Définition de fini
+
+- Une activité non idle garde le même `data-frame` après au moins deux secondes
+  et ne rend qu'un sprite; aucun timer de frame React n'existe dans la mascotte.
+- Les mouvements continus utilisent uniquement des propriétés compositables et
+  cessent avec l'activité ou sous `prefers-reduced-motion`.
+- En parole live, une variation d'énergie audio modifie la bouche et les ondes
+  via variables CSS sans `setState`; le coach et le cameo partagent le même
+  signal. Le fallback CSS reste animé si Web Audio est indisponible.
+- L'analyseur ne transmet qu'un niveau normalisé, est stoppé avec la session et
+  n'altère ni la lecture audio ni les contrats Realtime existants.
+- Les gates et l'inspection visuelle prouvent l'absence de saccade, flash,
+  obstruction ou débordement, en conservant le libellé d'état accessible.
+
+## Preuves de clôture
+
+- `MascotAnimation` ne contient plus de boucle de frames, remount ou double
+  sprite. Chaque état rend la cellule zéro de sa ligne et conserve le même
+  `data-frame` après cinq secondes; le seul `setTimeout` restant borne les
+  leases applicatifs finis, pas le rendu.
+- L'atlas est décodé une fois. Les états utilisent des keyframes limitées à
+  `transform`/`opacity`; `speaking` rend une bouche dédiée et des ondes pilotées
+  par variables CSS, avec fallback CSS et suppression sous mouvement réduit.
+- `RemoteAudioEnergyMeter` lit uniquement 256 amplitudes temporelles, publie un
+  scalaire RMS normalisé et lissé sans `setState`, puis annule sa frame,
+  déconnecte source/analyseur et ferme l'`AudioContext` au Stop. Le test unitaire
+  prouve silence, signal, saturation et cleanup.
+- Les tests composants prouvent un sprite stable, l'absence de remount et la
+  projection directe du niveau audio. Le vrai parcours navigateur prouve 5/5 :
+  même frame après 750 ms, signal de bouche, un sprite, EN/FR, Axe, responsive
+  et mouvement réduit.
+- Validation : 102 cartes documentaires, lint, typecheck, build, 893/893 Vitest
+  sur 104 fichiers, 5/5 Playwright contractuels et `git diff --check` passent.
+  Les captures normal/réduit à 390, 768 et 1440 px ne montrent ni obstruction
+  ni débordement; le coach et le cameo partagent le même compositeur.
+- Aucun transcript, sample audio, appel modèle, mutation GeoGebra, preuve, XP ou
+  donnée de classe n'est ajouté. La migration vers Rive reste une évolution
+  distincte après validation d'un rig articulé.
+
+---
+
+# Contrat Builder — présence animée à deux couches dans Varignon — close `pass`
+
+## État
+
+- Le porteur demande le 18 juillet 2026 de rétablir une présence humaine forte
+  dans l'atelier Varignon public : Compass doit rester vivant dans la barre du
+  coach et intervenir brièvement dans le plan lors d'événements réels.
+- La tranche est close `pass` le 18 juillet 2026. Le parcours direct v2 possède
+  désormais une autorité `MascotProvider` locale, une présence coach animée et
+  une couche de cameos décorative au-dessus du vrai plan GeoGebra.
+- Cette tranche est une correction de présentation et de composition. Elle ne
+  rouvre ni les neuf missions, ni les preuves, ni les permissions GeoGebra, ni
+  la policy de parole.
+
+## Objectif
+
+Donner à l'élève l'impression que Compass observe et travaille réellement avec
+lui : présence animée continue dans le coach, apparitions finies dans le plan,
+regard vers le dernier objet manipulé, pointage pendant une aide et célébration
+unique de chaque mission déterministement vérifiée.
+
+## Inclus
+
+- Monter une autorité `MascotProvider` unique autour de l'atelier publié v2 et
+  rendre une mascotte animée dans la barre du coach.
+- Remplacer les changements secs de l'atlas 8 × 9 par des transitions de frames
+  fondues, complétées par des micro-mouvements CSS continus uniquement pendant
+  les états applicatifs réels `listening`, `thinking`, `speaking`, `modifying`
+  ou `hinting`.
+- Rendre dans le plan une couche décorative sans interception de pointeur :
+  accueil, suivi silencieux du dernier objet élève, carte de nouvelle mission,
+  pointage d'indice et célébration de preuve.
+- Dériver la cible depuis les commits `geometry_world.v2` stabilisés et leur
+  `actor`; une action système ou assistant ne doit jamais être présentée comme
+  un geste élève.
+- Exposer la session d'apprentissage au seul orchestrateur de présentation afin
+  de détecter les changements de mission et le passage exact à `verified`.
+- Épingler visuellement les missions vérifiées, sans assimiler `completed` à une
+  preuve et sans modifier le ledger XP.
+- Conserver le libellé d'état bilingue, un rendu fixe sous mouvement réduit, le
+  cleanup des timers et l'absence d'appel modèle ou de tracking.
+- Étendre les tests unitaires et Playwright du parcours direct aux états voix,
+  objet, indice, mission, preuve, responsive et mouvement réduit.
+
+## Hors périmètre
+
+- Nouvel atlas généré, animation vidéo, rig 3D, lip-sync depuis transcript ou
+  analyse du contenu libre du modèle.
+- Réponse proactive supplémentaire, ouverture automatique du microphone ou
+  mutation GeoGebra déclenchée par la mascotte.
+- Modification des contrats `geometry_investigation.v1`, des tolérances, des
+  actions O0–O5, des neuf missions Varignon, du score ou de la persistance T25.
+- Déploiement Production, soumission Devpost ou reprise checkpoint T25-C04.
+
+## Fichiers probables
+
+- `apps/frontend/components/compass-mascot.tsx`
+- `apps/frontend/components/geometry-published-workspace.tsx`
+- `apps/frontend/components/geogebra-scratchpad.tsx`
+- `apps/frontend/app/globals.css`
+- tests unitaires et `apps/frontend/e2e/t25-demo-direct.spec.ts`
+- documents pilotes et architecture
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+pnpm --dir apps/frontend exec playwright test e2e/t25-demo-direct.spec.ts e2e/t9-mascot.spec.ts
+git diff --check
+# inspection visuelle 390/768/1440, mouvement normal et réduit
+```
+
+## Définition de fini
+
+- Dans le parcours direct, Compass est visible et animé pendant écoute,
+  réflexion, parole, outil et indice; `response.done`, annulation et cleanup le
+  ramènent au repos.
+- Une action élève stabilisée fait regarder Compass vers le dernier objet sans
+  parole ni mutation; une première erreur pédagogique ne déclenche aucune
+  réaction négative.
+- Une nouvelle mission ouvre une carte finie; chaque passage inédit à
+  `verified` produit une seule célébration et une seule épingle. Un statut
+  `completed` seul n'est jamais présenté comme une preuve.
+- Les frames se fondent sans flash de cellule, les accents de mouvement restent
+  fluides et l'atlas ne boucle jamais à l'état idle. Les cycles actifs cessent
+  immédiatement avec l'état applicatif qui les justifie.
+- À 390, 768 et 1440 px, la mascotte et ses épingles ne bloquent aucun contrôle
+  GeoGebra ou CTA. Sous `prefers-reduced-motion`, une pose fixe et le texte
+  d'état conservent la même information.
+- Les gates et le vrai applet prouvent le comportement sans appel modèle
+  obligatoire et sans régression des autorités T22/T25.
+
+## Preuves de clôture
+
+- `GeometryPublishedWorkspace` porte une autorité mascotte unique. La barre du
+  coach rend les neuf états de l'atlas 8 × 9 avec deux couches fondues et des
+  accents CSS continus seulement pendant les leases voix, réflexion, outil ou
+  indice réellement actifs; le cleanup rend toujours `idle`.
+- Le plan reçoit uniquement des apparitions `pointer-events:none` : accueil,
+  objet issu d'un commit learner stabilisé, mission, indice et preuve. Les
+  callbacks d'observation restent stables via refs et ne remontent donc pas
+  l'applet à chaque déplacement.
+- Les épingles sont dérivées du premier passage exact à `verified`, dédupliquées
+  par mission et absentes pour un simple `completed`. Les tests couvrent aussi
+  l'ignorance des commits assistant et l'absence de réaction négative au
+  premier blocage.
+- Les 102 cartes documentaires, lint, typecheck, build et 888/888 Vitest sur
+  104 fichiers passent. Le gate Playwright contractuel rend 5/5 sur le vrai applet : parole avec frames
+  mobiles, déplacement learner, indice explicite, construction Varignon,
+  deux preuves épinglées, EN/FR, Axe, mobile et mouvement réduit.
+- Les captures `output/playwright/mascot-*` ont été inspectées à 390, 768 et
+  1440 px en mouvement normal puis réduit : aucun CTA ou contrôle GeoGebra
+  n'est intercepté, aucun débordement horizontal n'apparaît et l'information
+  reste disponible en pose fixe. Les captures actives `speaking` et `hint`
+  confirment les ondes de parole et l'entrée pointée dans le plan.
+- Aucun appel modèle, analyse de transcript, ouverture de micro, mutation
+  GeoGebra ou changement du ledger XP n'a été ajouté par cette tranche.
+
+---
+
 # Contrat Builder — amendement démo hackathon, accès direct à Varignon — close `pass`
 
 ## État

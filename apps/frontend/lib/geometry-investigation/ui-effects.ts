@@ -4,6 +4,7 @@ import type {
   GeometryActionArgumentsC04,
 } from "./actions";
 import { GeometryActionError } from "./action-error";
+import type { GeometryVisualGuidanceCueV1 } from "./visual-guidance";
 
 export const GEOGEBRA_TOOL_MODE_IDS_V1 = Object.freeze({
   move: 0,
@@ -116,6 +117,7 @@ export class GeometryUiEffectsV1 {
   private initialViewport?: GeometryLogicalBoxV1;
   private readonly activeHighlightByName = new Map<string, HighlightGroup>();
   private groupSequence = 0;
+  private guidanceSequence = 0;
 
   constructor(
     private readonly api: GeoGebraApi,
@@ -123,6 +125,8 @@ export class GeometryUiEffectsV1 {
       locale?: "fr" | "en";
       timers?: Timers;
       freezeMutations?: (reason: string) => void;
+      onGuidanceCue?: (cue?: GeometryVisualGuidanceCueV1) => void;
+      prepareToolTarget?: (mode: number) => void;
     }> = {},
   ) {}
 
@@ -142,6 +146,7 @@ export class GeometryUiEffectsV1 {
     }
     const before = objectNames(this.api);
     try {
+      this.dependencies.prepareToolTarget?.(GEOGEBRA_TOOL_MODE_IDS_V1[tool]);
       this.api.setOnTheFlyPointCreationActive?.(false);
       this.api.setMode(GEOGEBRA_TOOL_MODE_IDS_V1[tool]);
     } finally {
@@ -157,7 +162,7 @@ export class GeometryUiEffectsV1 {
     }
     this.initialMode ??= previousMode;
     const locale = this.dependencies.locale ?? "fr";
-    return {
+    const result = {
       tool,
       mode: GEOGEBRA_TOOL_MODE_IDS_V1[tool],
       label: TOOL_LABELS[locale][tool],
@@ -165,6 +170,17 @@ export class GeometryUiEffectsV1 {
       createdObjects: 0,
       reversible: true,
     };
+    this.emitGuidance({
+      id: ++this.guidanceSequence,
+      kind: "toolbar",
+      action: "activate_geometry_tool",
+      tool,
+      mode: result.mode,
+      label: result.label,
+      clickOrder: result.clickOrder,
+      durationMs: 10_000,
+    });
+    return result;
   }
 
   highlight(
@@ -198,13 +214,22 @@ export class GeometryUiEffectsV1 {
     }, durationMs);
     const group = { id, originals, timer } satisfies HighlightGroup;
     for (const name of names) this.activeHighlightByName.set(name, group);
-    return {
+    const result = {
       names: [...names],
       style,
       durationMs,
       expiresInMs: durationMs,
       reversible: true,
     };
+    this.emitGuidance({
+      id: ++this.guidanceSequence,
+      kind: "objects",
+      action: "highlight_geometry_objects",
+      names: result.names,
+      style,
+      durationMs,
+    });
+    return result;
   }
 
   focus(box: GeometryLogicalBoxV1, margin: number) {
@@ -239,7 +264,15 @@ export class GeometryUiEffectsV1 {
       applied.yMax,
     );
     this.initialViewport ??= previous;
-    return { viewport: applied, margin, reversible: true };
+    const result = { viewport: applied, margin, reversible: true };
+    this.emitGuidance({
+      id: ++this.guidanceSequence,
+      kind: "viewport",
+      action: "focus_geometry_view",
+      box: applied,
+      durationMs: 4_000,
+    });
+    return result;
   }
 
   cleanup(): { ok: boolean; restored: string[] } {
@@ -283,6 +316,7 @@ export class GeometryUiEffectsV1 {
       }
     }
     if (!ok) this.freeze("UI effect cleanup could not be verified.");
+    this.emitGuidance(undefined);
     return { ok, restored: [...new Set(restored)].sort() };
   }
 
@@ -373,6 +407,14 @@ export class GeometryUiEffectsV1 {
 
   private freeze(reason: string): void {
     this.dependencies.freezeMutations?.(reason);
+  }
+
+  private emitGuidance(cue?: GeometryVisualGuidanceCueV1): void {
+    try {
+      this.dependencies.onGuidanceCue?.(cue);
+    } catch {
+      // Presentation must never change the outcome of an authorized O2 action.
+    }
   }
 }
 

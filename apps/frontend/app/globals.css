@@ -726,6 +726,11 @@ main {
 }
 
 .compass-mascot-presence {
+  --mascot-speech-energy: 0;
+  --mascot-speech-lift: 0px;
+  --mascot-mouth-scale: 0.18;
+  --mascot-wave-opacity: 0.05;
+  --mascot-wave-scale: 0.35;
   position: fixed;
   z-index: 24;
   right: clamp(8px, 1.8vw, 26px);
@@ -742,13 +747,371 @@ main {
   opacity: 0.9;
 }
 
-.compass-mascot-sprite {
+.compass-mascot-sprite-stage {
+  position: relative;
   width: 100%;
   aspect-ratio: 192 / 208;
+  transform-origin: 50% 84%;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.compass-mascot-sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background-image: url("/mascot/compass-mentor-atlas.webp");
   background-repeat: no-repeat;
   background-size: 800% 900%;
   image-rendering: auto;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+.compass-mascot-presence[data-focus-side="left"] .compass-mascot-sprite {
+  transform: translateZ(0) scaleX(-1);
+}
+
+.compass-mascot-mouth {
+  position: absolute;
+  z-index: 2;
+  top: 24.4%;
+  left: 52.1%;
+  width: 6.4%;
+  aspect-ratio: 1.7;
+  border-radius: 46% 46% 52% 52%;
+  background: #6f2928;
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 38%);
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0) scaleY(0.18);
+  transform-origin: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.compass-mascot-presence[data-focus-side="left"] .compass-mascot-mouth {
+  left: 47.9%;
+}
+
+.compass-mascot-presence[data-mascot-state="idle"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-breathe 3.6s ease-in-out infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="receiving"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-receive 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.compass-mascot-motion-accent,
+.compass-mascot-motion-accent i {
+  position: absolute;
+  pointer-events: none;
+}
+
+.compass-mascot-motion-accent {
+  inset: 0;
+}
+
+.compass-mascot-motion-accent i {
+  display: none;
+}
+
+.compass-mascot-presence[data-mascot-state="thinking"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-thinking 1.25s ease-in-out infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="thinking"]
+  .compass-mascot-motion-accent i {
+  top: 9%;
+  right: 8%;
+  width: 8px;
+  height: 8px;
+  display: block;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgb(255 255 255 / 82%);
+  animation: compass-mascot-thought-dot 1.05s ease-in-out infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="thinking"]
+  .compass-mascot-motion-accent i:nth-child(2) {
+  top: 4%;
+  right: -1%;
+  animation-delay: 140ms;
+}
+
+.compass-mascot-presence[data-mascot-state="thinking"]
+  .compass-mascot-motion-accent i:nth-child(3) {
+  top: -3%;
+  right: -10%;
+  animation-delay: 280ms;
+}
+
+.compass-mascot-presence[data-mascot-state="listening"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-listening 760ms ease-in-out infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="listening"]
+  .compass-mascot-motion-accent i,
+.compass-mascot-presence[data-mascot-state="speaking"]
+  .compass-mascot-motion-accent i {
+  --mascot-wave-angle: 45deg;
+  top: 25%;
+  right: 5%;
+  width: 20%;
+  aspect-ratio: 1;
+  display: block;
+  border: 3px solid var(--accent);
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  transform: rotate(var(--mascot-wave-angle)) scale(0.35);
+  opacity: 0;
+  animation: compass-mascot-voice-wave 1.05s ease-out infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="listening"]
+  .compass-mascot-motion-accent i {
+  --mascot-wave-angle: -135deg;
+  right: auto;
+  left: 4%;
+}
+
+.compass-mascot-presence[data-mascot-state="listening"]
+  .compass-mascot-motion-accent i:nth-child(2),
+.compass-mascot-presence[data-mascot-state="speaking"]
+  .compass-mascot-motion-accent i:nth-child(2) {
+  animation-delay: 210ms;
+}
+
+.compass-mascot-presence[data-mascot-state="listening"]
+  .compass-mascot-motion-accent i:nth-child(3),
+.compass-mascot-presence[data-mascot-state="speaking"]
+  .compass-mascot-motion-accent i:nth-child(3) {
+  animation-delay: 420ms;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-speaking 460ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"]:not([data-reduced-motion="true"])
+  .compass-mascot-mouth {
+  opacity: 0.88;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="fallback"]:not([data-reduced-motion="true"])
+  .compass-mascot-mouth {
+  animation: compass-mascot-mouth-fallback 420ms ease-in-out infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="meter"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: none;
+  transform: translate3d(0, var(--mascot-speech-lift), 0);
+  transition: transform 48ms linear;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="meter"]:not([data-reduced-motion="true"])
+  .compass-mascot-mouth {
+  transform: translate3d(-50%, -50%, 0) scaleY(var(--mascot-mouth-scale));
+  transition: transform 48ms linear, opacity 80ms linear;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="meter"]
+  .compass-mascot-motion-accent i {
+  animation: none;
+  opacity: var(--mascot-wave-opacity);
+  transform: rotate(var(--mascot-wave-angle)) scale(var(--mascot-wave-scale));
+  transition: transform 64ms linear, opacity 64ms linear;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="meter"]
+  .compass-mascot-motion-accent i:nth-child(2) {
+  top: 21%;
+  right: 1%;
+  width: 26%;
+}
+
+.compass-mascot-presence[data-mascot-state="speaking"][data-speech-signal="meter"]
+  .compass-mascot-motion-accent i:nth-child(3) {
+  top: 17%;
+  right: -3%;
+  width: 32%;
+}
+
+.compass-mascot-presence[data-mascot-state="modifying"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-working 680ms ease-in-out infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="modifying"]
+  .compass-mascot-motion-accent i {
+  right: 7%;
+  bottom: 19%;
+  width: 26%;
+  aspect-ratio: 1;
+  display: block;
+  border: 2px dashed var(--success);
+  border-radius: 50%;
+  animation: compass-mascot-orbit 1.25s linear infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="modifying"]
+  .compass-mascot-motion-accent i:not(:first-child) {
+  display: none;
+}
+
+.compass-mascot-presence[data-mascot-state="hinting"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-hint 620ms ease-in-out infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="hinting"]
+  .compass-mascot-motion-accent i {
+  right: -12%;
+  bottom: 34%;
+  width: 42%;
+  height: 4px;
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), rgb(235 120 67 / 0%));
+  transform: rotate(-8deg) scaleX(0.35);
+  transform-origin: left;
+  animation: compass-mascot-point-beam 760ms ease-out infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="hinting"]
+  .compass-mascot-motion-accent i:nth-child(2) {
+  bottom: 30%;
+  animation-delay: 190ms;
+}
+
+.compass-mascot-presence[data-mascot-state="hinting"]
+  .compass-mascot-motion-accent i:nth-child(3) {
+  bottom: 38%;
+  animation-delay: 380ms;
+}
+
+.compass-mascot-presence[data-mascot-state="celebrating"]
+  .compass-mascot-motion-accent i {
+  top: 12%;
+  left: 18%;
+  width: 8px;
+  height: 18px;
+  display: block;
+  border-radius: 3px;
+  background: #f0a443;
+  animation: compass-mascot-confetti 900ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
+.compass-mascot-presence[data-mascot-state="celebrating"]
+  .compass-mascot-motion-accent i:nth-child(2) {
+  left: 72%;
+  background: #3f7a50;
+  animation-delay: 160ms;
+}
+
+.compass-mascot-presence[data-mascot-state="celebrating"]
+  .compass-mascot-motion-accent i:nth-child(3) {
+  left: 46%;
+  background: #d8643d;
+  animation-delay: 320ms;
+}
+
+.compass-mascot-presence[data-mascot-state="celebrating"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-celebrate 620ms cubic-bezier(0.2, 0.8, 0.2, 1) infinite alternate;
+}
+
+.compass-mascot-presence[data-mascot-state="error"]:not([data-reduced-motion="true"])
+  .compass-mascot-sprite-stage {
+  animation: compass-mascot-error 180ms ease-in-out 3 alternate;
+}
+
+@keyframes compass-mascot-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -2px, 0) scale(1.006); }
+}
+
+@keyframes compass-mascot-receive {
+  0% { transform: translate3d(0, 4px, 0) scale(0.985); opacity: 0.72; }
+  100% { transform: translate3d(0, 0, 0) scale(1); opacity: 1; }
+}
+
+@keyframes compass-mascot-thinking {
+  from { transform: translateY(0) rotate(-0.7deg); }
+  to { transform: translateY(-3px) rotate(0.8deg); }
+}
+
+@keyframes compass-mascot-listening {
+  from { transform: translateX(0) rotate(0); }
+  to { transform: translateX(-3px) rotate(-1.2deg); }
+}
+
+@keyframes compass-mascot-speaking {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-2px) scale(1.012); }
+}
+
+@keyframes compass-mascot-mouth-fallback {
+  from { transform: translate3d(-50%, -50%, 0) scaleY(0.22); }
+  to { transform: translate3d(-50%, -50%, 0) scaleY(1.15); }
+}
+
+@keyframes compass-mascot-working {
+  from { transform: translateY(0) rotate(-0.6deg); }
+  to { transform: translateY(-2px) rotate(0.9deg); }
+}
+
+@keyframes compass-mascot-hint {
+  from { transform: translateX(0) rotate(0); }
+  to { transform: translateX(4px) rotate(1.4deg); }
+}
+
+@keyframes compass-mascot-thought-dot {
+  0%, 100% { transform: translateY(3px) scale(0.72); opacity: 0.35; }
+  50% { transform: translateY(-3px) scale(1); opacity: 1; }
+}
+
+@keyframes compass-mascot-voice-wave {
+  0% { transform: rotate(var(--mascot-wave-angle)) scale(0.25); opacity: 0; }
+  28% { opacity: 0.9; }
+  100% { transform: rotate(var(--mascot-wave-angle)) scale(1.12); opacity: 0; }
+}
+
+@keyframes compass-mascot-orbit {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes compass-mascot-point-beam {
+  0% { transform: rotate(-8deg) scaleX(0.25); opacity: 0; }
+  34% { opacity: 0.9; }
+  100% { transform: rotate(-8deg) scaleX(1); opacity: 0; }
+}
+
+@keyframes compass-mascot-confetti {
+  0% { transform: translateY(-7px) rotate(0); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translateY(42px) rotate(260deg); opacity: 0; }
+}
+
+@keyframes compass-mascot-celebrate {
+  from { transform: translate3d(0, 0, 0) rotate(-0.8deg) scale(1); }
+  to { transform: translate3d(0, -5px, 0) rotate(1deg) scale(1.018); }
+}
+
+@keyframes compass-mascot-error {
+  from { transform: translate3d(-2px, 0, 0) rotate(-0.6deg); }
+  to { transform: translate3d(2px, 0, 0) rotate(0.6deg); }
 }
 
 .compass-mascot-presence p {
@@ -5944,6 +6307,478 @@ button.mission-complete-button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .compass-mascot-portrait {
     transition: none;
+  }
+}
+
+/* Animated two-layer Compass presence in the published Varignon workspace */
+
+.geometry-published-coach-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.geometry-published-coach-stage > .compass-mascot-presence--coach {
+  position: absolute;
+  z-index: 6;
+  top: 50%;
+  left: 28px;
+  right: auto;
+  bottom: auto;
+  width: 142px;
+  opacity: 1;
+  filter: drop-shadow(0 14px 16px rgb(25 34 29 / 16%));
+  transform: translateY(-50%);
+}
+
+.compass-mascot-presence--coach p {
+  width: 142px;
+  max-width: 142px;
+  margin-top: -15px;
+  padding: 6px 9px;
+  font-size: 0.66rem;
+}
+
+.geometry-mascot-layer {
+  position: absolute;
+  z-index: 8;
+  inset: 52px 10px 10px;
+  overflow: hidden;
+  border-radius: 12px 12px 5px 12px;
+  pointer-events: none;
+}
+
+.geometry-guidance-layer {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.geometry-guidance-target {
+  position: absolute;
+  box-sizing: border-box;
+  min-width: 30px;
+  min-height: 30px;
+  border: 3px solid #f59e0b;
+  border-radius: 16px;
+  background: rgb(245 158 11 / 9%);
+  box-shadow:
+    0 0 0 4px rgb(255 255 255 / 86%),
+    0 0 0 8px rgb(245 158 11 / 28%),
+    0 12px 30px rgb(84 49 25 / 18%);
+  pointer-events: none;
+}
+
+.geometry-guidance-target[data-kind="objects"] {
+  border-color: #168459;
+  border-radius: 999px;
+  background: rgb(22 132 89 / 12%);
+  box-shadow:
+    0 0 0 4px rgb(255 255 255 / 86%),
+    0 0 0 9px rgb(22 132 89 / 24%),
+    0 12px 30px rgb(25 34 29 / 18%);
+}
+
+.geometry-guidance-target[data-kind="viewport"] {
+  min-width: 80px;
+  min-height: 80px;
+  border-color: #2563eb;
+  border-radius: 14px;
+  background: rgb(37 99 235 / 5%);
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 55%);
+}
+
+.geometry-guidance-target__pulse {
+  position: absolute;
+  inset: -11px;
+  border: 2px solid currentColor;
+  border-radius: inherit;
+  color: #f59e0b;
+  opacity: 0;
+  animation: geometry-guidance-pulse 1.35s ease-out infinite;
+}
+
+.geometry-guidance-target[data-kind="objects"] .geometry-guidance-target__pulse {
+  color: #168459;
+}
+
+.geometry-guidance-target[data-kind="viewport"] .geometry-guidance-target__pulse {
+  color: #2563eb;
+}
+
+.geometry-guidance-target__pointer {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 7px);
+  width: 24px;
+  height: 3px;
+  border-radius: 999px;
+  background: #f59e0b;
+  transform: translateY(-50%);
+}
+
+.geometry-guidance-target__pointer::after {
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-top: 3px solid #f59e0b;
+  border-right: 3px solid #f59e0b;
+  content: "";
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.geometry-guidance-target[data-kind="objects"] .geometry-guidance-target__pointer {
+  background: #168459;
+}
+
+.geometry-guidance-target[data-kind="objects"] .geometry-guidance-target__pointer::after {
+  border-color: #168459;
+}
+
+.geometry-guidance-target[data-side="before"] .geometry-guidance-target__pointer {
+  right: calc(100% + 7px);
+  left: auto;
+}
+
+.geometry-guidance-target[data-side="before"] .geometry-guidance-target__pointer::after {
+  right: auto;
+  left: -1px;
+  transform: translateY(-50%) rotate(225deg);
+}
+
+.geometry-guidance-target[data-kind="viewport"] .geometry-guidance-target__pointer {
+  display: none;
+}
+
+.geometry-guidance-target__callout {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: calc(100% + 38px);
+  width: min(250px, 38vw);
+  margin: 0;
+  padding: 10px 12px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgb(255 255 255 / 26%);
+  border-radius: 12px 12px 4px 12px;
+  color: #fff;
+  background: rgb(25 34 29 / 94%);
+  box-shadow: 0 12px 28px rgb(25 34 29 / 22%);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  transform: translateY(-50%);
+  backdrop-filter: blur(8px);
+}
+
+.geometry-guidance-target__callout strong {
+  font-family: var(--display-font);
+  font-size: 0.76rem;
+}
+
+.geometry-guidance-target__callout span {
+  color: rgb(255 255 255 / 82%);
+}
+
+.geometry-guidance-target[data-side="before"] .geometry-guidance-target__callout {
+  right: calc(100% + 38px);
+  left: auto;
+  border-radius: 12px 12px 12px 4px;
+  text-align: right;
+}
+
+.geometry-guidance-target[data-kind="viewport"] .geometry-guidance-target__callout {
+  top: 14px;
+  right: 14px;
+  left: auto;
+  width: min(230px, calc(100% - 28px));
+  transform: none;
+}
+
+@keyframes geometry-guidance-pulse {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.94);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+.geometry-mascot-cameo {
+  position: absolute;
+  z-index: 2;
+  bottom: 8px;
+  width: min(430px, calc(100% - 16px));
+  min-height: 180px;
+  display: grid;
+  align-items: end;
+  animation: geometry-mascot-enter-left 440ms cubic-bezier(0.18, 0.86, 0.24, 1.12) both;
+}
+
+.geometry-mascot-cameo[data-anchor="left"] {
+  left: 8px;
+  grid-template-columns: 170px minmax(0, 1fr);
+}
+
+.geometry-mascot-cameo[data-anchor="right"] {
+  right: 8px;
+  grid-template-columns: minmax(0, 1fr) 170px;
+  animation-name: geometry-mascot-enter-right;
+}
+
+.geometry-mascot-cameo[data-anchor="right"] .compass-mascot-presence--canvas {
+  grid-column: 2;
+}
+
+.geometry-mascot-cameo[data-anchor="right"] .geometry-mascot-cameo__detail,
+.geometry-mascot-cameo[data-anchor="right"] .geometry-mascot-cameo__targets {
+  grid-column: 1;
+  justify-self: end;
+}
+
+.compass-mascot-presence--canvas {
+  position: relative;
+  z-index: 2;
+  right: auto;
+  bottom: auto;
+  width: 170px;
+  opacity: 1;
+  filter: drop-shadow(0 16px 18px rgb(25 34 29 / 17%));
+}
+
+.compass-mascot-presence--canvas p {
+  max-width: 160px;
+  margin-top: -13px;
+  font-size: 0.69rem;
+}
+
+.geometry-mascot-cameo__detail {
+  align-self: center;
+  max-width: 260px;
+  margin: 0 0 42px -8px;
+  padding: 10px 12px;
+  border: 1px solid rgb(25 34 29 / 14%);
+  border-radius: 14px 14px 5px 14px;
+  color: var(--ink);
+  background: rgb(255 253 248 / 95%);
+  box-shadow: 0 12px 28px rgb(84 49 25 / 12%);
+  font-family: var(--display-font);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-wrap: balance;
+  backdrop-filter: blur(10px);
+}
+
+.geometry-mascot-cameo[data-anchor="right"] .geometry-mascot-cameo__detail {
+  margin-right: -8px;
+  margin-left: 0;
+  border-radius: 14px 14px 14px 5px;
+}
+
+.geometry-mascot-cameo__targets {
+  position: absolute;
+  right: 10px;
+  bottom: 14px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--success);
+  box-shadow: 0 5px 14px rgb(25 34 29 / 16%);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.geometry-mascot-cameo[data-anchor="right"] .geometry-mascot-cameo__targets {
+  right: auto;
+  left: 10px;
+}
+
+.geometry-mascot-cameo[data-kind="focus"] {
+  width: 188px;
+  min-height: 174px;
+  opacity: 0.9;
+}
+
+.geometry-mascot-cameo[data-kind="proof"] .geometry-mascot-cameo__detail {
+  border-color: rgb(63 122 80 / 34%);
+  background: rgb(233 244 234 / 96%);
+}
+
+.geometry-mascot-proof-pins {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 8px;
+  max-width: calc(100% - 16px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  list-style: none;
+}
+
+.geometry-mascot-proof-pins li {
+  min-height: 30px;
+  padding: 4px 8px 4px 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgb(63 122 80 / 26%);
+  border-radius: 999px;
+  color: #244c32;
+  background: rgb(233 244 234 / 94%);
+  box-shadow: 0 6px 16px rgb(84 49 25 / 9%);
+  animation: geometry-proof-pin 460ms cubic-bezier(0.18, 0.86, 0.24, 1.12) both;
+  backdrop-filter: blur(8px);
+}
+
+.geometry-mascot-proof-pins span {
+  width: 21px;
+  height: 21px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--success);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.geometry-mascot-proof-pins small {
+  font-size: 0.63rem;
+  font-weight: 850;
+}
+
+@keyframes geometry-mascot-enter-left {
+  from { transform: translateX(-52px) translateY(18px); opacity: 0; }
+  to { transform: translateX(0) translateY(0); opacity: 1; }
+}
+
+@keyframes geometry-mascot-enter-right {
+  from { transform: translateX(52px) translateY(18px); opacity: 0; }
+  to { transform: translateX(0) translateY(0); opacity: 1; }
+}
+
+@keyframes geometry-proof-pin {
+  from { transform: translateY(-8px) scale(0.82); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@media (max-width: 980px) {
+  .geometry-published-coach-stage > .compass-mascot-presence--coach {
+    left: 16px;
+    width: 126px;
+  }
+
+  .compass-mascot-presence--coach p {
+    width: 126px;
+    max-width: 126px;
+  }
+}
+
+@media (max-width: 640px) {
+  .geometry-published-coach-stage > .compass-mascot-presence--coach {
+    top: 2px;
+    left: 12px;
+    width: 102px;
+    transform: none;
+  }
+
+  .compass-mascot-presence--coach p {
+    width: 112px;
+    max-width: 112px;
+    margin-top: -11px;
+    font-size: 0.59rem;
+  }
+
+  .geometry-mascot-layer {
+    inset: 48px 6px 6px;
+  }
+
+  .geometry-mascot-cameo,
+  .geometry-mascot-cameo[data-anchor="left"],
+  .geometry-mascot-cameo[data-anchor="right"] {
+    width: min(292px, calc(100% - 10px));
+    min-height: 144px;
+    grid-template-columns: 122px minmax(0, 1fr);
+  }
+
+  .geometry-mascot-cameo[data-anchor="right"] {
+    grid-template-columns: minmax(0, 1fr) 122px;
+  }
+
+  .compass-mascot-presence--canvas {
+    width: 122px;
+  }
+
+  .compass-mascot-presence--canvas p {
+    max-width: 122px;
+    padding: 5px 7px;
+    font-size: 0.57rem;
+  }
+
+  .geometry-mascot-cameo__detail {
+    max-width: 168px;
+    margin-bottom: 36px;
+    padding: 7px 8px;
+    font-size: 0.6rem;
+  }
+
+  .geometry-guidance-target__callout {
+    width: min(180px, 46vw);
+    padding: 7px 8px;
+    font-size: 0.62rem;
+  }
+
+  .geometry-guidance-target__callout strong {
+    font-size: 0.66rem;
+  }
+
+  .geometry-guidance-target[data-kind="viewport"] .geometry-guidance-target__callout {
+    width: min(190px, calc(100% - 20px));
+  }
+
+  .geometry-mascot-proof-pins li {
+    padding-right: 5px;
+  }
+
+  .geometry-mascot-proof-pins small {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compass-mascot-sprite-stage,
+  .compass-mascot-mouth,
+  .compass-mascot-motion-accent i,
+  .geometry-mascot-cameo,
+  .geometry-mascot-proof-pins li,
+  .geometry-guidance-target__pulse {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .compass-mascot-motion-accent {
+    display: none;
+  }
+
+  .compass-mascot-mouth {
+    display: none;
   }
 }
 

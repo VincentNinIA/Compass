@@ -13,7 +13,7 @@ const common = {
 } as const;
 
 describe("geometry action authority", () => {
-  it("allows O0 in the active mission but rejects undeclared mission actions", () => {
+  it("allows O0 in the active mission but rejects undeclared non-UI actions", () => {
     const allowed = authorizeGeometryActionC04(
       "inspect_geometry_workspace",
       { ...common, scope: "all", names: [] },
@@ -21,25 +21,56 @@ describe("geometry action authority", () => {
       authority({ missionId: "V1", maxLevel: "O0" }),
     );
     const rejected = authorizeGeometryActionC04(
-      "focus_geometry_view",
+      "check_geometry_relation",
       {
         ...common,
-        target: { kind: "objects", names: ["A"] },
-        margin: 0.2,
+        relationId: "rel_midpoint_e",
       },
       VARIGNON_ACTIVITY_FR_V1,
-      authority({ missionId: "V1", maxLevel: "O2" }),
+      authority({ missionId: "V2", maxLevel: "O0" }),
     );
     expect(allowed).toMatchObject({ ok: true, level: "O0" });
     expect(rejected).toMatchObject({ ok: false, code: "action_not_allowed" });
   });
 
-  it("requires an approved help context for O2", () => {
+  it("allows reversible O2 guidance without actor, approval or mission ceremony", () => {
+    const tool = authorizeGeometryActionC04(
+      "activate_geometry_tool",
+      { ...common, tool: "midpoint" },
+      VARIGNON_ACTIVITY_FR_V1,
+      authority({
+        actor: "system",
+        missionId: "V6",
+        maxLevel: "O2",
+        uiGuidanceAllowed: false,
+      }),
+    );
+    const focusAfterCompletion = authorizeGeometryActionC04(
+      "focus_geometry_view",
+      {
+        ...common,
+        target: { kind: "objects", names: ["A", "B"] },
+        margin: 0.2,
+      },
+      VARIGNON_ACTIVITY_FR_V1,
+      authority({
+        actor: "system",
+        phase: "completed",
+        missionId: undefined,
+        maxLevel: "O2",
+        uiGuidanceAllowed: false,
+      }),
+    );
+    expect(tool).toMatchObject({ ok: true, level: "O2" });
+    expect(focusAfterCompletion).toMatchObject({ ok: true, level: "O2" });
+  });
+
+  it("still requires O2 authority for reversible UI guidance", () => {
     const result = authorizeGeometryActionC04(
       "activate_geometry_tool",
       { ...common, tool: "midpoint" },
       VARIGNON_ACTIVITY_FR_V1,
-      authority({ missionId: "V1", maxLevel: "O2", uiGuidanceAllowed: false }),
+      authority({ actor: "system", missionId: "V6", maxLevel: "O1" }),
     );
     expect(result).toMatchObject({ ok: false, code: "invalid_authority" });
   });

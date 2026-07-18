@@ -20,19 +20,22 @@ function Controls() {
   return (
     <div>
       <button onClick={() => mascot.start("analysis", "thinking")}>think</button>
+      <button onClick={() => mascot.start("voice", "speaking")}>speak</button>
       <button onClick={() => mascot.start("hint", "hinting")}>hint</button>
       <button onClick={() => mascot.stop("hint")}>stop hint</button>
       <button onClick={() => mascot.pulse("alert", "error", 500)}>error</button>
       <button onClick={() => mascot.start("alert", "celebrating")}>replace</button>
+      <button onClick={() => mascot.setSpeechEnergy(0.72)}>meter</button>
+      <button onClick={() => mascot.setSpeechEnergy(null)}>fallback</button>
       <button onClick={mascot.reset}>reset</button>
     </div>
   );
 }
 
-function renderMascot() {
+function renderMascot(placement: "floating" | "coach" = "floating") {
   return render(
     <MascotProvider>
-      <CompassMascot />
+      <CompassMascot placement={placement} />
       <Controls />
     </MascotProvider>,
   );
@@ -82,19 +85,20 @@ describe("CompassMascot", () => {
     expect(presence()).toHaveAttribute("data-source", "alert");
   });
 
-  it("plays a non-idle atlas sequence once and then settles", () => {
+  it("keeps one stable atlas pose while the CSS compositor owns motion", () => {
     vi.useFakeTimers();
-    renderMascot();
+    renderMascot("coach");
     const presence = () => screen.getByLabelText("Compass presence");
+    const sprite = presence().querySelector(".compass-mascot-sprite");
 
     expect(presence()).toHaveAttribute("data-frame", "0");
     fireEvent.click(screen.getByRole("button", { name: "think" }));
-    act(() => vi.advanceTimersByTime(170 * 7));
-    expect(presence()).toHaveAttribute("data-frame", "7");
-    act(() => vi.advanceTimersByTime(420));
+    act(() => vi.advanceTimersByTime(5_000));
+
     expect(presence()).toHaveAttribute("data-frame", "0");
-    act(() => vi.advanceTimersByTime(2_000));
-    expect(presence()).toHaveAttribute("data-frame", "0");
+    expect(presence()).toHaveAttribute("data-renderer", "css-compositor");
+    expect(presence().querySelectorAll(".compass-mascot-sprite")).toHaveLength(1);
+    expect(presence().querySelector(".compass-mascot-sprite")).toBe(sprite);
   });
 
   it("keeps a fixed first pose when reduced motion is requested", () => {
@@ -114,6 +118,31 @@ describe("CompassMascot", () => {
     act(() => vi.advanceTimersByTime(2_000));
     expect(presence()).toHaveAttribute("data-mascot-state", "thinking");
     expect(presence()).toHaveAttribute("data-frame", "0");
+  });
+
+  it("projects one ephemeral speech level into CSS without remounting the sprite", () => {
+    renderMascot("coach");
+    const presence = () => screen.getByLabelText("Compass presence");
+    const sprite = presence().querySelector(".compass-mascot-sprite");
+
+    fireEvent.click(screen.getByRole("button", { name: "speak" }));
+    fireEvent.click(screen.getByRole("button", { name: "meter" }));
+
+    expect(presence()).toHaveAttribute("data-speech-signal", "meter");
+    expect(presence().style.getPropertyValue("--mascot-speech-energy")).toBe(
+      "0.720",
+    );
+    expect(
+      Number(presence().style.getPropertyValue("--mascot-mouth-scale")),
+    ).toBeGreaterThan(1);
+    expect(presence().querySelector(".compass-mascot-mouth")).toBeInTheDocument();
+    expect(presence().querySelector(".compass-mascot-sprite")).toBe(sprite);
+
+    fireEvent.click(screen.getByRole("button", { name: "fallback" }));
+    expect(presence()).toHaveAttribute("data-speech-signal", "fallback");
+    expect(presence().style.getPropertyValue("--mascot-speech-energy")).toBe(
+      "0.000",
+    );
   });
 });
 

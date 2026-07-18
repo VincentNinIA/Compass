@@ -58,6 +58,64 @@ export type GeometryRealtimePedagogyContextV1 = z.infer<
   typeof GeometryRealtimePedagogyContextV1
 >;
 
+const GeometryCoachMissionV1 = z.strictObject({
+  id: Identifier,
+  order: z.number().int().positive().max(100),
+  title: z.string().trim().min(1).max(160),
+  instruction: z.string().trim().min(1).max(360),
+});
+
+const GeometryCoachPreviousMissionV1 = z.strictObject({
+  id: Identifier,
+  order: z.number().int().positive().max(100),
+  title: z.string().trim().min(1).max(160),
+  outcome: z.enum(["verified", "completed"]),
+});
+
+const GeometryCoachHintV1 = z.strictObject({
+  directiveId: Identifier,
+  source: z.enum(["proactive", "explicit"]),
+  level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  prompt: z.string().trim().min(1).max(360),
+  objectNames: z.array(Identifier).max(16),
+  action: z
+    .enum([
+      "activate_geometry_tool",
+      "highlight_geometry_objects",
+      "demonstrate_geometry_step",
+    ])
+    .optional(),
+});
+
+const GeometryCoachTurnAnchorV1 = {
+  schemaVersion: z.literal("geometry_coach_turn.v1"),
+  activityId: Identifier,
+  epoch: z.number().int().nonnegative(),
+  revision: z.number().int().nonnegative(),
+} as const;
+
+export const GeometryCoachTurnV1 = z.discriminatedUnion("reason", [
+  z.strictObject({
+    ...GeometryCoachTurnAnchorV1,
+    reason: z.literal("mission_orientation"),
+    currentMission: GeometryCoachMissionV1,
+  }),
+  z.strictObject({
+    ...GeometryCoachTurnAnchorV1,
+    reason: z.literal("mission_advanced"),
+    previousMission: GeometryCoachPreviousMissionV1,
+    currentMission: GeometryCoachMissionV1.optional(),
+  }),
+  z.strictObject({
+    ...GeometryCoachTurnAnchorV1,
+    reason: z.literal("learning_hint"),
+    currentMission: GeometryCoachMissionV1,
+    hint: GeometryCoachHintV1,
+  }),
+]);
+
+export type GeometryCoachTurnV1 = z.infer<typeof GeometryCoachTurnV1>;
+
 export type GeometryLearningRuntimeCallbacksV1 = Readonly<{
   onState?: (state: GeometrySessionStateV1) => void;
   onDecision?: (decision: GeometryLearningDecisionV1) => void;

@@ -2,11 +2,12 @@
 
 ## Prochaine action
 
-La mise à jour du README GitHub est close `pass`. La présentation du dépôt est
-alignée sur la Production animée et guidée : Varignon direct, neuf missions,
-onze actions fermées, coach O2, mascotte hybride, halo contextuel, classe pilote
-et quota WAF. Les neuf liens locaux et les 102 cartes documentaires passent.
-Cette tranche n'a modifié aucun runtime ni environnement Vercel.
+La mise à jour anglaise du README GitHub est close `pass`. Toute la copie
+publique du dépôt est maintenant en anglais et reste alignée sur la Production
+animée et guidée : Varignon direct, neuf missions, onze actions fermées, coach
+O2, mascotte hybride, halo contextuel, classe pilote et quota WAF. L'audit
+lexical, les neuf liens locaux et les 102 cartes documentaires passent. Cette
+tranche n'a modifié aucun runtime ni environnement Vercel.
 
 La tranche `guidage visuel contextuel du harnais GeoGebra` est close `pass`.
 Le registre couvre les onze actions; l'agent sait demander un halo sur le vrai

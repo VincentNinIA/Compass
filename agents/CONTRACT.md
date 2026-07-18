@@ -1,3 +1,64 @@
+# Contrat Builder — README GitHub intégralement anglais — close `pass`
+
+## État
+
+- Le porteur précise le 18 juillet 2026 que le README GitHub doit être en
+  anglais, alors que la mise à jour précédente a conservé une majorité de copie
+  française.
+- La tranche est close `pass` le 18 juillet 2026. Le README public est désormais
+  intégralement anglais; le runtime et la Production restent inchangés.
+
+## Objectif
+
+Traduire intégralement le README public en anglais sans modifier les capacités,
+preuves, limites, commandes, liens ou informations de Production documentées.
+
+## Inclus
+
+- Traduire introduction, CTA, texte alternatif, titres, listes, tableaux,
+  installation, vérifications, Production, limites et candidature.
+- Conserver les identifiants techniques, chemins, commandes et chiffres
+  qualifiés tels quels.
+- Vérifier qu'aucune phrase française ne subsiste dans `README.md`.
+
+## Hors périmètre
+
+- Traduire les documents pilotes internes ou l'interface bilingue du produit.
+- Modifier le runtime, les modèles, GeoGebra, Vercel ou la base pilote.
+- Changer les promesses produit au-delà d'une reformulation anglaise fidèle.
+
+## Fichiers probables
+
+- `README.md`
+- `agents/CONTRACT.md`
+- `agents/TODO_NEXT.md`
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+git diff --check
+# validation des liens locaux et audit lexical du README
+```
+
+## Définition de fini
+
+- Le README visible sur GitHub est intégralement anglais.
+- Les neuf liens locaux restent valides et les affirmations correspondent au
+  même candidat fonctionnel que la version précédente.
+- Aucun runtime ou environnement externe n'est modifié.
+
+## Preuves de clôture
+
+- Introduction, CTA, texte alternatif, titres, listes, tableaux, setup, gates,
+  Production, limites et candidature sont rédigés en anglais.
+- L'audit lexical ne trouve ni caractère accentué ni vocabulaire français
+  courant dans `README.md`; les neuf cibles locales existent toujours.
+- Validation : 102 cartes documentaires passent et `git diff --check` ne
+  signale aucune erreur de whitespace.
+
+---
+
 # Contrat Builder — README GitHub aligné sur la release Compass — close `pass`
 
 ## État

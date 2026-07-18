@@ -6,112 +6,111 @@ animated voice coach observes a bounded world, verifies supported relations
 deterministically, and provides contextual guidance through closed semantic
 actions.
 
-Compass est un prototype Education qui accompagne l'élève sans lui retirer la
-main. La démo publique ouvre en un clic une investigation Varignon préparée par
-le professeur : l'élève construit, explore, conjecture et justifie dans le vrai
-applet GeoGebra, avec un coach vocal ou texte qui sait montrer précisément
-l'outil, l'objet ou la zone dont il parle.
+Compass is an Education prototype designed to support students without taking
+control away from them. The public demo opens a teacher-prepared Varignon
+investigation in one click: students construct, explore, conjecture, and justify
+inside the real GeoGebra applet with a voice or text coach that can point to the
+exact tool, object, or region it is discussing.
 
-**[Ouvrir la démo publique](https://compass-geotutor-demo.vercel.app/)**
+**[Open the public demo](https://compass-geotutor-demo.vercel.app/)**
 
-![Compass montre l'outil Milieu dans GeoGebra](output/playwright/T74-midpoint-guidance-1440x900.png)
+![Compass points to the Midpoint tool in GeoGebra](output/playwright/T74-midpoint-guidance-1440x900.png)
 
-## Ce que montre la démo
+## What the demo shows
 
-- **Un départ immédiat** : une seule action ouvre l'activité Varignon exacte,
-  sans compte, code de classe, pseudonyme ou écriture serveur préalable.
-- **Neuf missions progressives** : construire les quatre milieux, explorer les
-  cas convexe, concave et croisé, conjecturer, justifier puis transférer.
-- **Un vrai monde GeoGebra borné** : objets, dépendances, ownership, epoch,
-  révision et faits sont stabilisés avant toute décision pédagogique.
-- **Des validations honnêtes** : les relations compatibles sont calculées par
-  l'application. Le modèle ne vérifie pas la géométrie et n'attribue pas les XP.
-- **Un coach qui prend l'initiative avec mesure** : à la connexion, après une
-  mission ou lors d'un blocage qualifié, Compass peut poser une question,
-  conseiller ou choisir une action d'interface O2 réversible.
-- **Un guidage visuel précis** : halo, pointeur et appel textuel ciblent le vrai
-  bouton GeoGebra, un point, un segment ou une zone. Les pixels sont dérivés du
-  DOM et du monde géométrique; ils ne viennent jamais du modèle.
-- **Une mascotte fluide et factuelle** : une pose stable et des micro-mouvements
-  CSS remplacent le défilement image par image. Écoute, réflexion, parole,
-  outil, indice et célébration reflètent seulement des états applicatifs réels.
-- **Une expérience accessible** : interface EN/FR, clavier, zoom 200 %,
-  mouvement réduit et layouts qualifiés à 390, 768 et 1440 px.
+- **Immediate access:** one action opens the exact Varignon activity, with no
+  account, classroom code, pseudonym, or server write required beforehand.
+- **Nine progressive missions:** construct the four midpoints, explore convex,
+  concave, and crossed cases, form a conjecture, justify it, and transfer it.
+- **A real bounded GeoGebra world:** objects, dependencies, ownership, epoch,
+  revision, and facts are stabilized before any pedagogical decision.
+- **Honest validation:** the application computes supported relations. The
+  model does not verify geometry or award XP.
+- **A coach with measured initiative:** at connection time, after a mission, or
+  when a qualified block occurs, Compass may ask a question, offer advice, or
+  select a reversible O2 interface action.
+- **Precise visual guidance:** a halo, pointer, and callout target the real
+  GeoGebra control, point, segment, or region. Screen coordinates are derived
+  from the DOM and geometry world; they never come from the model.
+- **A fluid, factual mascot:** a stable pose and composited CSS micro-motion
+  replace frame-by-frame playback. Listening, thinking, speaking, tool use,
+  hinting, and celebration only reflect real application states.
+- **An accessible experience:** EN/FR interface, keyboard navigation, 200% zoom,
+  reduced motion, and layouts qualified at 390, 768, and 1440 px.
 
-## Les frontières de confiance
+## Trust boundaries
 
-Compass sépare strictement la conversation, les actions visibles et les preuves.
+Compass strictly separates conversation, visible actions, and evidence.
 
-| Niveau | Exemples | Autorité |
+| Level | Examples | Authority |
 |---|---|---|
-| Dialogue | Question, explication, relance courte | Le modèle formule; l'application décide quand une occasion de parler existe |
-| Guidage O2 | Activer un outil, surligner, cadrer et pointer | Actions fermées, non constructives, budgétées, annulables et restaurées au cleanup |
-| Mutation O3–O5 | Variation, restauration, démonstration | Consentement ou confirmation, cible fermée, rollback et vérification déterministe |
-| Preuve et XP | Milieu, parallélisme, configuration, progression | Application uniquement; aucune sortie modèle ne complète une mission |
+| Dialogue | Question, explanation, short prompt | The model chooses the wording; the application decides when an opportunity to speak exists |
+| O2 guidance | Activate a tool, highlight, frame, or point | Closed, non-constructive, budgeted, cancellable actions restored during cleanup |
+| O3–O5 mutation | Variation, restore, demonstration | Consent or confirmation, closed targets, rollback, and deterministic verification |
+| Evidence and XP | Midpoint, parallelism, configuration, progress | Application only; model output can never complete a mission |
 
-Le harnais expose onze actions sémantiques sous niveaux O0 à O5. Il n'existe ni
-commande GeoGebra arbitraire, ni clic DOM libre, ni coordonnée de pointage
-choisie par le modèle. Un geste ou une reprise de parole de l'élève annule le
-travail du coach en cours.
+The harness exposes eleven semantic actions across authority levels O0 through
+O5. There is no arbitrary GeoGebra command, unrestricted DOM click, or
+model-selected screen coordinate. A student gesture or resumed speech cancels
+the coach's in-flight work.
 
-## Capacités disponibles hors du golden path
+## Capabilities outside the golden path
 
-La page publique reste volontairement simple, mais le dépôt contient aussi :
+The public page stays intentionally simple, while the repository also contains:
 
-- un parcours photo générique qui lit un exercice scolaire, demande une
-  confirmation humaine puis ouvre un tutorat conversationnel honnête;
-- un studio professeur qui produit au plus un brouillon IA structuré, le rend
-  éditable et exige une relecture avant publication;
-- un catalogue d'exercices éphémère et un bilan de session factuel sans nom,
-  texte libre ni note;
-- une boucle classe pilote avec identité professeur limitée, codes rotatifs,
-  élèves pseudonymes, affectations Varignon ciblées et PostgreSQL 16;
-- les bancs spécialisés historiques de médiatrice, invariance, reset et
-  restauration exacte, conservés pour les qualifications internes.
+- a general photo workflow that reads a school exercise, requests human
+  confirmation, and opens an honest conversational tutoring experience;
+- a teacher studio that produces at most one structured AI draft, keeps it
+  editable, and requires review before publication;
+- an ephemeral exercise catalog and factual session report with no name, free
+  text response, or grade;
+- a classroom pilot with limited teacher identity, rotating codes, pseudonymous
+  students, targeted Varignon assignments, and PostgreSQL 16;
+- historical specialist harnesses for perpendicular bisectors, invariance,
+  reset, and exact restoration, retained for internal qualification.
 
-Ces capacités ne sont pas empilées sur l'accueil du jury et ne transforment pas
-Compass en LMS.
+These capabilities are not stacked onto the jury landing page and do not turn
+Compass into an LMS.
 
-## Rôle des modèles
+## Model responsibilities
 
-| Besoin | Modèle | Frontière |
+| Need | Model | Boundary |
 |---|---|---|
-| Lire une photo d'exercice élève | `gpt-5.6-terra` | Un appel serveur, image en mémoire, `store:false`, outils vides, sortie stricte |
-| Préparer un brouillon professeur | `gpt-5.6-luna` | Un appel maximum, effort faible, `store:false`, outils vides, sortie stricte |
-| Tutorat voix/texte | `gpt-realtime-2.1` | WebRTC; profil général sans outil ou profil investigation à fonctions fermées |
-| Relations, preuves et XP | Aucun modèle | Moteur TypeScript déterministe, contrats versionnés et ledger local |
+| Read a student's exercise photo | `gpt-5.6-terra` | One server call, in-memory image, `store:false`, no tools, strict output |
+| Prepare a teacher draft | `gpt-5.6-luna` | At most one call, low effort, `store:false`, no tools, strict output |
+| Voice and text tutoring | `gpt-realtime-2.1` | WebRTC; general profile without tools or investigation profile with closed functions |
+| Relations, evidence, and XP | No model | Deterministic TypeScript engine, versioned contracts, and local ledger |
 
-Les consignes professeur, le texte extrait et les observations GeoGebra restent
-des données non fiables. Ils ne peuvent pas modifier le prompt système, les
-permissions, les preuves ou les règles de score.
+Teacher instructions, extracted text, and GeoGebra observations remain
+untrusted data. They cannot change the system prompt, permissions, evidence, or
+scoring rules.
 
 ## Architecture
 
-Le runtime est une application Next.js App Router TypeScript sous
-`apps/frontend`. Les routes serveur conservent les secrets hors du navigateur;
-le client orchestre GeoGebra, WebRTC, la progression et les contrôleurs
-d'annulation. Adapter, gateway, moteur de faits, checkpoints, policy et arbitre
-restent des autorités distinctes derrière des contrats Zod fermés.
+The runtime is a Next.js App Router TypeScript application under
+`apps/frontend`. Server routes keep secrets out of the browser; the client
+orchestrates GeoGebra, WebRTC, progress, and cancellation controllers. The
+adapter, gateway, fact engine, checkpoints, policy, and arbiter remain separate
+authorities behind closed Zod contracts.
 
-La démo directe construit localement une publication
-`geometry_investigation.v1` validée et monte le même
-`GeometryInvestigationRuntime` que le parcours professeur. Elle n'utilise ni
-runtime parallèle ni raccourci de validation. L'audio distant peut alimenter un
-unique niveau RMS local et éphémère pour la bouche de Compass; aucun sample,
-transcript ou historique audio n'est stocké.
+The direct demo locally creates a validated `geometry_investigation.v1`
+publication and mounts the same `GeometryInvestigationRuntime` used by the
+teacher workflow. It uses neither a parallel runtime nor a validation shortcut.
+Remote audio may feed one local, ephemeral RMS value into Compass's mouth
+animation; no sample, transcript, or audio history is stored.
 
-La mémoire reste la règle pour la démo, les médias, les XP et les rapports. La
-base PostgreSQL est réservée à la boucle classe pilote et échoue fermée si sa
-configuration manque. La reprise persistante du checkpoint sémantique reste
-une tranche distincte encore incomplète.
+Memory remains the default for the demo, media, XP, and reports. PostgreSQL is
+reserved for the classroom pilot and fails closed when its configuration is
+missing. Persistent semantic checkpoint restoration remains a separate,
+unfinished slice.
 
-Voir [l'architecture détaillée](docs/ARCHITECTURE.md), la
-[roadmap](docs/ROADMAP.md), les [décisions](agents/DECISIONS.md) et le
-[contrat de données classe](docs/CLASSROOM_DATA_CONTRACT.md).
+See the [detailed architecture](docs/ARCHITECTURE.md),
+[roadmap](docs/ROADMAP.md), [decisions](agents/DECISIONS.md), and
+[classroom data contract](docs/CLASSROOM_DATA_CONTRACT.md).
 
-## Installation locale
+## Local setup
 
-Prérequis : Node.js 22.17.x et pnpm 10.6.3.
+Requirements: Node.js 22.17.x and pnpm 10.6.3.
 
 ```sh
 corepack enable
@@ -120,17 +119,17 @@ cp .env.example .env
 pnpm dev
 ```
 
-Ouvrir <http://localhost:3000>. `OPENAI_API_KEY` est optionnelle pour les
-chemins locaux et déterministes, mais requise pour la lecture photo, le
-brouillon professeur et les sessions Realtime. Elle doit rester serveur-only :
-ne jamais la préfixer par `NEXT_PUBLIC_` ni la committer.
+Open <http://localhost:3000>. `OPENAI_API_KEY` is optional for local,
+deterministic paths, but required for photo reading, teacher drafts, and
+Realtime sessions. It must remain server-only: never prefix it with
+`NEXT_PUBLIC_` or commit it.
 
-La classe pilote est désactivée par défaut. Son activation exige PostgreSQL,
-les migrations et les secrets décrits dans le
-[runbook classe](docs/CLASSROOM_PILOT_RUNBOOK.md); aucun fallback mémoire n'est
-autorisé en Production.
+The classroom pilot is disabled by default. Enabling it requires PostgreSQL,
+migrations, and the secrets described in the
+[classroom runbook](docs/CLASSROOM_PILOT_RUNBOOK.md); no in-memory fallback is
+allowed in Production.
 
-## Vérification reproductible
+## Reproducible verification
 
 ```sh
 pnpm test:docs:t0
@@ -141,12 +140,12 @@ pnpm build
 pnpm --dir apps/frontend exec playwright test --grep-invert @live
 ```
 
-Le dernier candidat fonctionnel qualifié rend 102 cartes documentaires,
-899/899 tests Vitest sur 106 fichiers, lint, typecheck et build verts. Le gate
-ciblé du parcours direct et de la mascotte rend 5/5 scénarios Playwright.
+The latest qualified functional candidate passes 102 documentation cards,
+899/899 Vitest tests across 106 files, lint, typecheck, and build. The targeted
+direct-demo and mascot gate passes 5/5 Playwright scenarios.
 
-Les gates credentialed restent séparés : ils exigent une clé, un certificat et
-une piste audio hors dépôt.
+Credentialed gates remain separate. They require an API key, a certificate,
+and an audio track that are not stored in the repository.
 
 ```sh
 GEOTUTOR_TLS_CERT=/path/to/cert.pem \
@@ -154,43 +153,42 @@ GEOTUTOR_TLS_KEY=/path/to/key.pem \
 pnpm gate:t6:live
 ```
 
-Le [runbook de démonstration](docs/DEMO_RUNBOOK.md) distingue le harness local,
-le microphone physique et le certificat de confiance. Les réserves live
-historiques restent explicites dans `agents/TODO_NEXT.md`.
+The [demo runbook](docs/DEMO_RUNBOOK.md) distinguishes the local harness,
+physical microphone, and trusted certificate. Historical live reservations
+remain explicit in `agents/TODO_NEXT.md`.
 
-## Production publique
+## Public production
 
-Le projet Vercel isolé `compass-geotutor-demo` sert l'alias HTTPS stable :
-[compass-geotutor-demo.vercel.app](https://compass-geotutor-demo.vercel.app/).
-La release animée et guidée est READY sous le déploiement
+The isolated Vercel project `compass-geotutor-demo` serves the stable HTTPS
+alias: [compass-geotutor-demo.vercel.app](https://compass-geotutor-demo.vercel.app/).
+The animated, visually guided release is READY under deployment
 `dpl_62Q7d7DXTQoyaT3LtSmSkndPZMNz`.
 
-L'alias s'ouvre sans code applicatif. Une règle Vercel WAF limite toutefois les
-`POST /api/*` à six requêtes par fenêtre de soixante secondes et par IP, avant
-l'exécution des fonctions. Les sessions professeur et élèves du pilote restent
-des frontières d'authentification séparées. Voir le
-[runbook d'accès public](docs/DEMO_ACCESS_RUNBOOK.md).
+The alias opens without an application access code. A Vercel WAF rule still
+limits `POST /api/*` to six requests per fixed 60-second window per IP before
+functions execute. Teacher and student pilot sessions remain separate
+authentication boundaries. See the
+[public access runbook](docs/DEMO_ACCESS_RUNBOOK.md).
 
-## Limites assumées
+## Known limitations
 
-- Compass ne vérifie automatiquement que les relations couvertes par un contrat
-  déterministe compatible; ailleurs, le tutorat reste conversationnel.
-- La démo publique n'est ni un LMS, ni une notation à enjeu élevé, ni un dossier
-  élève persistant.
-- La classe pilote existe, mais la reprise persistante de la progression
-  GeoGebra n'est pas encore qualifiée et le quota WAF global doit être segmenté
-  avant un pilote multi-élèves derrière un même NAT.
-- Les textes de démarche et de transfert ne sont ni notés ni transmis au
-  professeur; médias, transcripts et Base64 ne sont pas persistés.
-- Les fonctionnalités live dépendent des credentials, du navigateur, du
-  microphone et des services externes; les fallbacks ne se présentent jamais
-  comme une session live.
-- GeoGebra est utilisé pour ce prototype non commercial avec attribution. Un
-  usage commercial exige un accord distinct.
+- Compass only verifies relations covered by a compatible deterministic
+  contract; elsewhere, tutoring remains conversational.
+- The public demo is not an LMS, a high-stakes grading system, or a persistent
+  student record.
+- The classroom pilot exists, but persistent GeoGebra progress restoration is
+  not yet qualified, and the global WAF quota must be segmented before a
+  multi-student pilot behind one NAT.
+- Reasoning and transfer text is neither graded nor sent to the teacher; media,
+  transcripts, and Base64 checkpoints are not persisted.
+- Live features depend on credentials, browser capabilities, a microphone, and
+  external services; fallbacks never present themselves as a live session.
+- GeoGebra is used with attribution for this non-commercial prototype. Any
+  commercial use requires a separate agreement.
 
-## Candidature
+## Submission materials
 
-Le dossier prêt à adapter se trouve dans
-[`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md). Il contient la copie
-de soumission, le parcours jury, un script vidéo inférieur à trois minutes et
-la checklist des actions qui restent sous responsabilité humaine.
+The adaptable submission package is available in
+[`docs/DEVPOST_SUBMISSION.md`](docs/DEVPOST_SUBMISSION.md). It includes the
+submission copy, jury journey, a video script under three minutes, and the
+checklist of actions that remain under human responsibility.

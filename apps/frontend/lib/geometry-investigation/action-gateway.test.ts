@@ -6,7 +6,6 @@ import type { GeoGebraApi } from "@/types/geogebra";
 
 import { GeometryActionGatewayV1 } from "./action-gateway";
 import type { GeometryActionAuthorityV1 } from "./authority";
-import { GeometryConsentTokenStoreV1 } from "./consent";
 import { GeometryWorldV2, type GeometryWorldObjectV2 } from "./contracts";
 import { VARIGNON_ACTIVITY_FR_V1 } from "./varignon";
 
@@ -158,34 +157,40 @@ describe("GeometryActionGatewayV1", () => {
     });
   });
 
-  it("rejects a variation without current consent before any GeoGebra read", async () => {
+  it("previews a deterministic variation without mutating or exposing coordinates", async () => {
     const fixture = gatewayFixture();
     authorizeVariation(fixture.authority, "concave");
+    fixture.authority.maxLevel = "O2";
     const result = await fixture.gateway.execute(
-      call("create_geometry_variation", {
+      call("preview_geometry_variation", {
         ...common,
         target: "concave",
         movingPoint: "A",
-        consentToken: "ggb-consent:missing-token-0000",
       }),
       context(),
     );
-    expect(result).toMatchObject({ ok: false, error: { code: "consent_required" } });
-    expect(fixture.apiCalls()).toBe(0);
+    expect(result).toMatchObject({
+      ok: true,
+      data: {
+        status: "previewed",
+        target: "concave",
+        movingPoint: "A",
+        coordinatesExposed: false,
+        geometryChanged: false,
+        evidenceCreated: false,
+      },
+    });
+    expect(result).not.toHaveProperty("data.from");
+    expect(result).not.toHaveProperty("data.to");
+    expect(fixture.setCoords).not.toHaveBeenCalled();
   });
 
-  it("applies one deterministic consented variation, hides coordinates and is idempotent", async () => {
+  it("applies one deterministic bounded variation, hides coordinates and is idempotent", async () => {
     const fixture = gatewayFixture();
     authorizeVariation(fixture.authority, "concave");
-    const token = fixture.tokens.issue({
-      ...common,
-      action: "create_geometry_variation",
-      target: "concave",
-      movingPoint: "A",
-    });
     const variationCall = call(
       "create_geometry_variation",
-      { ...common, target: "concave", movingPoint: "A", consentToken: token },
+      { ...common, target: "concave", movingPoint: "A" },
       "variation-once",
     );
     const first = await fixture.gateway.execute(variationCall, context());
@@ -210,11 +215,11 @@ describe("GeometryActionGatewayV1", () => {
 
     const replayWithNewCallId = await fixture.gateway.execute(
       { ...variationCall, callId: "variation-token-reuse" },
-      context("second-turn"),
+      context(),
     );
     expect(replayWithNewCallId).toMatchObject({
       ok: false,
-      error: { code: "consent_invalid" },
+      error: { code: "budget_exceeded" },
     });
   });
 
@@ -231,19 +236,12 @@ describe("GeometryActionGatewayV1", () => {
       },
     });
     authorizeVariation(fixture.authority, "crossed");
-    const token = fixture.tokens.issue({
-      ...common,
-      action: "create_geometry_variation",
-      target: "crossed",
-      movingPoint: "A",
-    });
     const before = fixture.point("A");
     const result = await fixture.gateway.execute(
       call("create_geometry_variation", {
         ...common,
         target: "crossed",
         movingPoint: "A",
-        consentToken: token,
       }),
       context(),
     );
@@ -395,10 +393,6 @@ function gatewayFixture(
   for (const object of objects.values()) {
     registry.register(object.name, object.name.length === 1 ? "scaffold" : "student", object.type === "point" ? "point" : "segment");
   }
-  const tokens = new GeometryConsentTokenStoreV1({
-    now: () => 1_000,
-    createToken: () => "ggb-consent:44444444-4444-4444-4444-444444444444",
-  });
   const authority: MutableAuthority = {
     activityId,
     epoch: 1,
@@ -417,13 +411,11 @@ function gatewayFixture(
     registry,
     getAuthority: () => authority,
     getWorld,
-    consentTokens: tokens,
     getInteractionGeneration: options.getInteractionGeneration,
   });
   return {
     gateway,
     authority,
-    tokens,
     registry,
     setCoords,
     apiCalls: () => apiCalls,

@@ -248,8 +248,11 @@ describe("POST /api/realtime/session", () => {
             "highlight_geometry_objects to point to named points or segments",
           );
           expect(session.instructions).toContain("which tool they would choose");
-          expect(session.instructions).toContain("prior learner attempt");
-          expect(session.instructions).toContain("Never propose or send coordinates");
+          expect(session.instructions).toContain("preview_geometry_variation");
+          expect(session.instructions).toContain(
+            "explicitly asks you to move it",
+          );
+          expect(session.instructions).toContain("never propose or send coordinates");
           expect(session.tools).toEqual(
             GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS,
           );

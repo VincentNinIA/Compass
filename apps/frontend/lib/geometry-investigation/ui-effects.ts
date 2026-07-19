@@ -4,6 +4,7 @@ import type {
   GeometryActionArgumentsC04,
 } from "./actions";
 import { GeometryActionError } from "./action-error";
+import type { GeometryPointV1 } from "./numeric";
 import type { GeometryVisualGuidanceCueV1 } from "./visual-guidance";
 
 export const GEOGEBRA_TOOL_MODE_IDS_V1 = Object.freeze({
@@ -232,6 +233,38 @@ export class GeometryUiEffectsV1 {
     return result;
   }
 
+  showVariationMovement(
+    movingPoint: "A" | "B" | "C" | "D",
+    target: "convex" | "concave" | "crossed",
+    from: GeometryPointV1,
+    to: GeometryPointV1,
+    applied: boolean,
+  ) {
+    const durationMs = applied ? 6_000 : 8_000;
+    this.emitGuidance({
+      id: ++this.guidanceSequence,
+      kind: "movement",
+      action: applied
+        ? "create_geometry_variation"
+        : "preview_geometry_variation",
+      movingPoint,
+      target,
+      from,
+      to,
+      applied,
+      durationMs,
+    });
+    return {
+      status: applied ? "applied" : "previewed",
+      movingPoint,
+      target,
+      durationMs,
+      coordinatesExposed: false,
+      geometryChanged: applied,
+      evidenceCreated: false,
+    } as const;
+  }
+
   focus(box: GeometryLogicalBoxV1, margin: number) {
     if (!this.api.getViewProperties) {
       throw new GeometryActionError(
@@ -413,7 +446,7 @@ export class GeometryUiEffectsV1 {
     try {
       this.dependencies.onGuidanceCue?.(cue);
     } catch {
-      // Presentation must never change the outcome of an authorized O2 action.
+      // Presentation must never change the outcome of an authorized action.
     }
   }
 }

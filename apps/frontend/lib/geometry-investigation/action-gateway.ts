@@ -28,10 +28,6 @@ import type {
   GeometryWorldV2,
 } from "./contracts";
 import { GeometryEvidenceCaptureV1 } from "./contracts";
-import {
-  type GeometryVariationConsentBindingV1,
-  GeometryConsentTokenStoreV1,
-} from "./consent";
 import type { GeometryCheckpointControllerV1 } from "./checkpoint-v2";
 import type { GeometryEvidenceStoreV1 } from "./evidence-store";
 import type { GeometryPrivilegedConsentStoreV1 } from "./privileged-consent";
@@ -64,7 +60,6 @@ export type GeometryActionGatewayDependenciesV1 = Readonly<{
   registry: SceneRegistry;
   getAuthority(): GeometryActionAuthorityV1;
   getWorld(): GeometryWorldV2;
-  consentTokens: GeometryConsentTokenStoreV1;
   uiEffects?: GeometryUiEffectsV1;
   getInteractionGeneration?: () => number;
   freezeMutations?: (reason: string) => void;
@@ -94,6 +89,7 @@ const ACTION_CATEGORY = Object.freeze({
   inspect_geometry_workspace: "reads",
   activate_geometry_tool: "ui",
   highlight_geometry_objects: "ui",
+  preview_geometry_variation: "ui",
   initialize_geometry_activity: "mutations",
   create_geometry_variation: "mutations",
   classify_geometry_configuration: "reads",
@@ -287,6 +283,10 @@ export class GeometryActionGatewayV1 implements ToolGatewayExecutor {
           data: this.uiEffects.highlight(value.names, value.style, value.durationMs),
         };
       }
+      case "preview_geometry_variation":
+        return this.previewVariation(
+          arguments_ as GeometryActionArgumentsV1["preview_geometry_variation"],
+        );
       case "initialize_geometry_activity":
         return this.initialize(
           arguments_ as GeometryActionArgumentsV1["initialize_geometry_activity"],
@@ -610,17 +610,6 @@ export class GeometryActionGatewayV1 implements ToolGatewayExecutor {
         "No deterministic safe coordinate reaches the requested configuration.",
       );
     }
-    const binding = variationConsentBinding(arguments_);
-    const consumed = this.dependencies.consentTokens.consume(
-      arguments_.consentToken,
-      binding,
-    );
-    if (!consumed.ok) {
-      throw new GeometryActionError(
-        "consent_invalid",
-        "The variation consent token is no longer current.",
-      );
-    }
     const generation = this.dependencies.getInteractionGeneration?.();
     try {
       this.assertContextAuthority(context);
@@ -667,6 +656,13 @@ export class GeometryActionGatewayV1 implements ToolGatewayExecutor {
         from,
         to,
       });
+      this.uiEffects.showVariationMovement(
+        arguments_.movingPoint,
+        arguments_.target,
+        from,
+        to,
+        true,
+      );
       const currentAuthority = this.dependencies.getAuthority();
       return {
         revision: Math.max(arguments_.revision + 1, currentAuthority.revision),
@@ -694,6 +690,44 @@ export class GeometryActionGatewayV1 implements ToolGatewayExecutor {
       }
       throw error;
     }
+  }
+
+  private previewVariation(
+    arguments_: GeometryActionArgumentsV1["preview_geometry_variation"],
+  ): ActionResult {
+    const api = this.dependencies.api;
+    const world = this.currentWorld(arguments_);
+    const points = pointMap(world, ["A", "B", "C", "D"]);
+    if (
+      api.isIndependent?.(arguments_.movingPoint) !== true ||
+      api.isMoveable?.(arguments_.movingPoint) !== true
+    ) {
+      throw new GeometryActionError(
+        "invalid_authority",
+        "The requested scaffold point is not independently moveable.",
+      );
+    }
+    const from = points[arguments_.movingPoint];
+    const to = deterministicVariationPoint(
+      points,
+      arguments_.movingPoint,
+      arguments_.target,
+    );
+    if (!to) {
+      throw new GeometryActionError(
+        "indeterminate",
+        "No deterministic safe coordinate reaches the requested configuration.",
+      );
+    }
+    return {
+      data: this.uiEffects.showVariationMovement(
+        arguments_.movingPoint,
+        arguments_.target,
+        from,
+        to,
+        false,
+      ),
+    };
   }
 
   private async captureEvidence(
@@ -997,23 +1031,6 @@ export class GeometryActionGatewayV1 implements ToolGatewayExecutor {
   ):
     | { ok: true }
     | { ok: false; code: GatewayErrorCode; message: string } {
-    if (action === "create_geometry_variation") {
-      const variation =
-        arguments_ as GeometryActionArgumentsV1["create_geometry_variation"];
-      const validation = this.dependencies.consentTokens.validate(
-        variation.consentToken,
-        variationConsentBinding(variation),
-      );
-      if (validation.ok) return validation;
-      return {
-        ok: false,
-        code:
-          validation.reason === "missing"
-            ? "consent_required"
-            : "consent_invalid",
-        message: "A current one-shot consent token is required.",
-      };
-    }
     if (action === "restore_geometry_checkpoint") {
       const restore =
         arguments_ as GeometryActionArgumentsV1["restore_geometry_checkpoint"];
@@ -1126,19 +1143,6 @@ function validateGatewayCorrelation(
     return { ok: false, code: "rejected_stale", message: "Applet epoch is stale." };
   }
   return { ok: true };
-}
-
-function variationConsentBinding(
-  arguments_: GeometryActionArgumentsV1["create_geometry_variation"],
-): GeometryVariationConsentBindingV1 {
-  return {
-    activityId: arguments_.activityId,
-    epoch: arguments_.epoch,
-    revision: arguments_.revision,
-    action: "create_geometry_variation",
-    target: arguments_.target,
-    movingPoint: arguments_.movingPoint,
-  };
 }
 
 function missionObjectNames(

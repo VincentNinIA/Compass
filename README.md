@@ -46,11 +46,13 @@ Compass strictly separates conversation, visible actions, and evidence.
 |---|---|---|
 | Dialogue | Question, explanation, short prompt | The model chooses the wording; the application decides when an opportunity to speak exists |
 | O2 guidance | Activate a tool, highlight, frame, or point | Closed, non-constructive, budgeted, cancellable actions restored during cleanup |
-| O3–O5 mutation | Variation, restore, demonstration | Consent or confirmation, closed targets, rollback, and deterministic verification |
+| O3 bounded move | Preview or move one A–D vertex toward an approved configuration | The model chooses the semantic gesture; the application computes coordinates, verifies, rolls back, and never awards evidence |
+| O4–O5 privileged mutation | Restore, demonstration | Visible confirmation, closed targets, rollback, and deterministic verification |
 | Evidence and XP | Midpoint, parallelism, configuration, progress | Application only; model output can never complete a mission |
 
-The harness exposes eleven semantic actions across authority levels O0 through
-O5. There is no arbitrary GeoGebra command, unrestricted DOM click, or
+The model receives eleven semantic actions, plus one system-only initialization
+action, across authority levels O0 through O5. There is no arbitrary GeoGebra
+command, unrestricted DOM click, or
 model-selected screen coordinate. A student gesture or resumed speech cancels
 the coach's in-flight work.
 

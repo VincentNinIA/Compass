@@ -23,6 +23,7 @@ export type GeometryHarnessPresentationV1 =
   | "none"
   | "toolbar_target"
   | "object_target"
+  | "movement_target"
   | "viewport_target"
   | "activity_state"
   | "world_change"
@@ -70,6 +71,13 @@ const CAPABILITY_DETAILS = Object.freeze({
     consent: "none",
     reversible: true,
   },
+  preview_geometry_variation: {
+    surface: "canvas",
+    presentation: "movement_target",
+    mutatesGeometry: false,
+    consent: "none",
+    reversible: true,
+  },
   initialize_geometry_activity: {
     surface: "activity",
     presentation: "activity_state",
@@ -79,9 +87,9 @@ const CAPABILITY_DETAILS = Object.freeze({
   },
   create_geometry_variation: {
     surface: "canvas",
-    presentation: "world_change",
+    presentation: "movement_target",
     mutatesGeometry: true,
-    consent: "one_shot",
+    consent: "none",
     reversible: true,
   },
   classify_geometry_configuration: {
@@ -171,9 +179,21 @@ export type GeometryViewportGuidanceCueV1 = GuidanceBase &
     box: GeometryLogicalBoxV1;
   }>;
 
+export type GeometryMovementGuidanceCueV1 = GuidanceBase &
+  Readonly<{
+    kind: "movement";
+    action: "preview_geometry_variation" | "create_geometry_variation";
+    movingPoint: "A" | "B" | "C" | "D";
+    target: "convex" | "concave" | "crossed";
+    from: GeometryScreenPointV1;
+    to: GeometryScreenPointV1;
+    applied: boolean;
+  }>;
+
 export type GeometryVisualGuidanceCueV1 =
   | GeometryToolbarGuidanceCueV1
   | GeometryObjectsGuidanceCueV1
+  | GeometryMovementGuidanceCueV1
   | GeometryViewportGuidanceCueV1;
 
 export type GeometryViewPropertiesV1 = Readonly<{

@@ -4,6 +4,7 @@ export const GEOMETRY_INVESTIGATION_C04_MODEL_ACTIONS_V1 = [
   "inspect_geometry_workspace",
   "activate_geometry_tool",
   "highlight_geometry_objects",
+  "preview_geometry_variation",
   "create_geometry_variation",
   "classify_geometry_configuration",
   "check_geometry_relation",
@@ -95,6 +96,12 @@ export const HighlightGeometryObjectsArgumentsV1 = z.strictObject({
   durationMs: z.number().int().min(1_000).max(8_000),
 });
 
+export const PreviewGeometryVariationArgumentsV1 = z.strictObject({
+  ...Common,
+  target: z.enum(["convex", "concave", "crossed"]),
+  movingPoint: z.enum(["A", "B", "C", "D"]),
+});
+
 export const InitializeGeometryActivityArgumentsV1 = z.strictObject({
   ...Common,
   scaffoldVersion: z.literal("varignon-scaffold.v1"),
@@ -104,11 +111,6 @@ export const CreateGeometryVariationArgumentsV1 = z.strictObject({
   ...Common,
   target: z.enum(["convex", "concave", "crossed"]),
   movingPoint: z.enum(["A", "B", "C", "D"]),
-  consentToken: z
-    .string()
-    .min(16)
-    .max(160)
-    .regex(/^[A-Za-z0-9_.:-]+$/),
 });
 
 export const ClassifyGeometryConfigurationArgumentsV1 = z.strictObject({
@@ -173,6 +175,7 @@ export const GEOMETRY_ACTION_SCHEMAS_C04 = {
   inspect_geometry_workspace: InspectGeometryWorkspaceArgumentsV1,
   activate_geometry_tool: ActivateGeometryToolArgumentsV1,
   highlight_geometry_objects: HighlightGeometryObjectsArgumentsV1,
+  preview_geometry_variation: PreviewGeometryVariationArgumentsV1,
   initialize_geometry_activity: InitializeGeometryActivityArgumentsV1,
   create_geometry_variation: CreateGeometryVariationArgumentsV1,
   classify_geometry_configuration: ClassifyGeometryConfigurationArgumentsV1,
@@ -318,20 +321,25 @@ export const GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS = [
     ),
   ),
   functionTool(
-    "create_geometry_variation",
-    "With a current one-shot consent token, move one free scaffold point to a deterministic target configuration. Coordinates are application-owned.",
+    "preview_geometry_variation",
+    "Show which free scaffold vertex would move and the application-computed direction toward one approved target configuration, without changing geometry.",
     parameters(
       {
         target: { type: "string", enum: ["convex", "concave", "crossed"] },
         movingPoint: { type: "string", enum: ["A", "B", "C", "D"] },
-        consentToken: {
-          type: "string",
-          minLength: 16,
-          maxLength: 160,
-          pattern: "^[A-Za-z0-9_.:-]+$",
-        },
       },
-      ["target", "movingPoint", "consentToken"],
+      ["target", "movingPoint"],
+    ),
+  ),
+  functionTool(
+    "create_geometry_variation",
+    "Move one free scaffold point to an application-computed deterministic target configuration. Use only for one bounded learner-requested demonstration; coordinates are application-owned and the action creates no evidence.",
+    parameters(
+      {
+        target: { type: "string", enum: ["convex", "concave", "crossed"] },
+        movingPoint: { type: "string", enum: ["A", "B", "C", "D"] },
+      },
+      ["target", "movingPoint"],
     ),
   ),
   functionTool(

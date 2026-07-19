@@ -8,11 +8,12 @@ import {
 } from "./actions";
 
 describe("geometry investigation action contracts", () => {
-  it("preserves the seven C04 actions and exposes exactly ten after C05", () => {
+  it("exposes eight C04 actions and exactly eleven model actions after C05", () => {
     expect(GEOMETRY_INVESTIGATION_C04_MODEL_ACTIONS_V1).toEqual([
       "inspect_geometry_workspace",
       "activate_geometry_tool",
       "highlight_geometry_objects",
+      "preview_geometry_variation",
       "create_geometry_variation",
       "classify_geometry_configuration",
       "check_geometry_relation",
@@ -41,13 +42,20 @@ describe("geometry investigation action contracts", () => {
     expect(serialized).not.toContain("evalCommand");
   });
 
-  it("keeps model-provided coordinates out of the variation schema", () => {
+  it("keeps model-provided coordinates and unreachable tokens out of variation schemas", () => {
     const variation = GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS.find(
       ({ name }) => name === "create_geometry_variation",
     );
+    const preview = GEOMETRY_INVESTIGATION_REALTIME_TOOL_DEFINITIONS.find(
+      ({ name }) => name === "preview_geometry_variation",
+    );
     expect(variation?.parameters).not.toHaveProperty("properties.x");
     expect(variation?.parameters).not.toHaveProperty("properties.y");
+    expect(variation?.parameters).not.toHaveProperty("properties.consentToken");
     expect(variation?.parameters).toMatchObject({ additionalProperties: false });
+    expect(preview?.parameters).not.toHaveProperty("properties.x");
+    expect(preview?.parameters).not.toHaveProperty("properties.y");
+    expect(preview?.parameters).toMatchObject({ additionalProperties: false });
   });
 
   it("rejects extra keys, invalid bounds and duplicate ordered labels", () => {

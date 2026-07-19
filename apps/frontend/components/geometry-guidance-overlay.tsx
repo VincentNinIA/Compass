@@ -28,6 +28,12 @@ type GuidanceTarget = Readonly<{
     left: number;
     width: number;
   }>;
+  movement?: Readonly<{
+    left: number;
+    top: number;
+    width: number;
+    angle: number;
+  }>;
 }>;
 
 type ResolvedGuidanceTarget = GuidanceTarget & Readonly<{ cueId: number }>;
@@ -146,39 +152,58 @@ export function GeometryGuidanceOverlay({
         data-guidance-resolved={activeTarget ? "true" : "false"}
         data-target-mode={cue.kind === "toolbar" ? cue.mode : undefined}
         data-target-names={cue.kind === "objects" ? cue.names.join(",") : undefined}
+        data-moving-point={cue.kind === "movement" ? cue.movingPoint : undefined}
+        data-movement-target={cue.kind === "movement" ? cue.target : undefined}
+        data-movement-applied={cue.kind === "movement" ? String(cue.applied) : undefined}
         aria-hidden="true"
       >
         {activeTarget ? (
-          <div
-            className="geometry-guidance-target"
-            data-kind={cue.kind}
-            data-side={activeTarget.side}
-            style={{
-              left: activeTarget.left,
-              top: activeTarget.top,
-              width: activeTarget.width,
-              height: activeTarget.height,
-            }}
-          >
-            <span className="geometry-guidance-target__pulse" />
-            <span className="geometry-guidance-target__pointer" />
-            <p
-              className="geometry-guidance-target__callout"
-              style={
-                activeTarget.compactCallout
-                  ? {
-                      left: activeTarget.compactCallout.left,
-                      right: "auto",
-                      width: activeTarget.compactCallout.width,
-                      textAlign: "left",
-                    }
-                  : undefined
-              }
+          <>
+            {activeTarget.movement ? (
+              <span
+                className="geometry-guidance-movement"
+                style={{
+                  left: activeTarget.movement.left,
+                  top: activeTarget.movement.top,
+                  width: activeTarget.movement.width,
+                  transform: `rotate(${activeTarget.movement.angle}rad)`,
+                }}
+              >
+                <span className="geometry-guidance-movement__origin" />
+                <span className="geometry-guidance-movement__head" />
+              </span>
+            ) : null}
+            <div
+              className="geometry-guidance-target"
+              data-kind={cue.kind}
+              data-side={activeTarget.side}
+              style={{
+                left: activeTarget.left,
+                top: activeTarget.top,
+                width: activeTarget.width,
+                height: activeTarget.height,
+              }}
             >
-              <strong>{copy.title}</strong>
-              <span>{copy.detail}</span>
-            </p>
-          </div>
+              <span className="geometry-guidance-target__pulse" />
+              <span className="geometry-guidance-target__pointer" />
+              <p
+                className="geometry-guidance-target__callout"
+                style={
+                  activeTarget.compactCallout
+                    ? {
+                        left: activeTarget.compactCallout.left,
+                        right: "auto",
+                        width: activeTarget.compactCallout.width,
+                        textAlign: "left",
+                      }
+                    : undefined
+                }
+              >
+                <strong>{copy.title}</strong>
+                <span>{copy.detail}</span>
+              </p>
+            </div>
+          </>
         ) : null}
       </div>
     </>
@@ -221,6 +246,44 @@ function resolveGuidanceTarget(
       },
       shellRect.width,
     );
+  }
+
+  if (cue.kind === "movement") {
+    const from = projectGeometryPointV1(cue.from, view);
+    const to = projectGeometryPointV1(cue.to, view);
+    const fromInShell = {
+      x: canvasRect.left - shellRect.left + from.x,
+      y: canvasRect.top - shellRect.top + from.y,
+    };
+    const toInShell = {
+      x: canvasRect.left - shellRect.left + to.x,
+      y: canvasRect.top - shellRect.top + to.y,
+    };
+    const distance = Math.hypot(
+      toInShell.x - fromInShell.x,
+      toInShell.y - fromInShell.y,
+    );
+    const size = 32;
+    return {
+      ...withSide(
+        {
+          left: toInShell.x - size / 2,
+          top: toInShell.y - size / 2,
+          width: size,
+          height: size,
+        },
+        shellRect.width,
+      ),
+      movement: {
+        left: fromInShell.x,
+        top: fromInShell.y,
+        width: Math.max(24, distance),
+        angle: Math.atan2(
+          toInShell.y - fromInShell.y,
+          toInShell.x - fromInShell.x,
+        ),
+      },
+    };
   }
 
   const projected = projectGeometryBoxV1(cue.box, view);
@@ -340,6 +403,39 @@ function guidanceCopy(
     return locale === "fr"
       ? { title: `Regarde ${names}`, detail: "Compass met cette cible en évidence." }
       : { title: `Look at ${names}`, detail: "Compass is highlighting this target." };
+  }
+  if (cue.kind === "movement") {
+    const target = locale === "fr"
+      ? {
+          convex: "une forme convexe",
+          concave: "une forme concave",
+          crossed: "une forme croisée",
+        }[cue.target]
+      : {
+          convex: "a convex shape",
+          concave: "a concave shape",
+          crossed: "a crossed shape",
+        }[cue.target];
+    if (cue.applied) {
+      return locale === "fr"
+        ? {
+            title: `Compass a déplacé ${cue.movingPoint}`,
+            detail: `Le sommet atteint ${target}. Tu peux reprendre la main.`,
+          }
+        : {
+            title: `Compass moved ${cue.movingPoint}`,
+            detail: `The vertex now reaches ${target}. You can take over again.`,
+          };
+    }
+    return locale === "fr"
+      ? {
+          title: `Déplace ${cue.movingPoint} dans cette direction`,
+          detail: `La flèche mène vers ${target}, sans bouger la figure.`,
+        }
+      : {
+          title: `Move ${cue.movingPoint} this way`,
+          detail: `The arrow leads toward ${target} without changing the figure.`,
+        };
   }
   return locale === "fr"
     ? { title: "Zone à observer", detail: "Compass a cadré cette partie du plan." }

@@ -1277,3 +1277,21 @@
   avance toujours uniquement sur deux snapshots concordants. Les tours en file
   ou les retours serveur d'une ancienne révision sont supprimés, et l'audio
   tardif reste ignoré.
+
+## D-091 - L'IA choisit le geste, l'application choisit les coordonnées
+
+- Décision : ouvrir au modèle une prévisualisation O2 et la variation O3 pour
+  les seules configurations `convex`, `concave` et `crossed` et les seuls
+  sommets libres A–D. Retirer du schéma modèle le jeton de variation impossible
+  à obtenir et la condition de tentative préalable; conserver le solveur
+  déterministe, une mutation par tour et toutes les postconditions runtime.
+- Raison : un jeton secret attendu dans l'appel outil mais jamais injecté dans
+  la conversation rend la capacité théorique inutilisable et pousse Compass à
+  déclarer qu'il ne peut pas agir. La décision pédagogique appartient au
+  modèle; la sécurité du geste vient de l'espace d'action fermé, de la cible
+  calculée localement et de la possibilité pour l'élève de reprendre la main.
+- Impact : un blocage peut produire une flèche sans mutation, tandis qu'une
+  demande d'exécution peut déplacer un seul sommet. Le mouvement assistant est
+  signalé comme tel, reste réversible et ne crée ni tentative learner, preuve,
+  capture ou score. Les consentements O4/O5 et leurs confirmations visibles ne
+  sont pas modifiés.

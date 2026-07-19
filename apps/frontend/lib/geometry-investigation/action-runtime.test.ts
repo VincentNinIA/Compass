@@ -24,55 +24,10 @@ describe("GeometryActionRuntimeV1", () => {
     expect(context?.isAuthorityCurrent?.()).toBe(false);
   });
 
-  it("issues consent only after explicit confirmation and a matching attempt", () => {
+  it("does not expose an unreachable variation-consent API", () => {
     const fixture = runtimeFixture();
-    expect(
-      fixture.runtime.issueVariationConsent({
-        target: "concave",
-        movingPoint: "A",
-        confirmed: false,
-      }),
-    ).toBeUndefined();
-    fixture.authority.attemptedVariationTargets = ["concave"];
-    const token = fixture.runtime.issueVariationConsent({
-      target: "concave",
-      movingPoint: "A",
-      confirmed: true,
-    });
-    expect(token).toMatch(/^ggb-consent:/);
-    expect(
-      fixture.runtime.consentTokens.validate(token!, {
-        activityId: VARIGNON_ACTIVITY_FR_V1.id,
-        epoch: 1,
-        revision: 2,
-        action: "create_geometry_variation",
-        target: "concave",
-        movingPoint: "A",
-      }),
-    ).toEqual({ ok: true });
-  });
-
-  it("revokes pending consent when learner activity cancels the runtime", () => {
-    const fixture = runtimeFixture();
-    fixture.authority.attemptedVariationTargets = ["crossed"];
-    const binding = {
-      activityId: VARIGNON_ACTIVITY_FR_V1.id,
-      epoch: 1,
-      revision: 2,
-      action: "create_geometry_variation" as const,
-      target: "crossed" as const,
-      movingPoint: "A" as const,
-    };
-    const token = fixture.runtime.issueVariationConsent({
-      target: "crossed",
-      movingPoint: "A",
-      confirmed: true,
-    })!;
-    fixture.runtime.cancel("student_speech");
-    expect(fixture.runtime.consentTokens.validate(token, binding)).toEqual({
-      ok: false,
-      reason: "missing",
-    });
+    expect(fixture.runtime).not.toHaveProperty("issueVariationConsent");
+    expect(fixture.runtime).not.toHaveProperty("consentTokens");
   });
 
   it("issues and revokes a one-shot demonstration token only after an attempt", () => {

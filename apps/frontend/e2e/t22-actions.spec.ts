@@ -15,10 +15,6 @@ type BrowserActions = {
     turnId?: string,
   ): Promise<ActionEnvelope>;
   setAuthority(authority: Record<string, unknown>): void;
-  issueVariationConsent(
-    target: "convex" | "concave" | "crossed",
-    movingPoint: "A" | "B" | "C" | "D",
-  ): string | undefined;
   register(name: string, owner: "scaffold" | "student", kind?: "point" | "segment"): void;
   cleanup(): { ok: boolean; restored: string[] };
 };
@@ -50,7 +46,7 @@ type ActionsWindow = {
   }) => void;
 };
 
-test("T22-C04 runs reversible UI actions and a consented target variation on the real applet", async ({
+test("T22-C04 previews and applies a bounded target variation on the real applet", async ({
   page,
 }) => {
   const consoleErrors: string[] = [];
@@ -234,17 +230,49 @@ test("T22-C04 runs reversible UI actions and a consented target variation on the
   expect(focus.cleanup).toMatchObject({ ok: true });
   expect(viewportBounds(focus.restored)).toEqual(viewportBounds(focus.previous));
 
-  const variation = await page.evaluate(async () => {
+  const preview = await page.evaluate(async () => {
     const testWindow = window as unknown as ActionsWindow;
     const actions = testWindow.__GEOTUTOR_ACTIONS_V1__!;
     const world = testWindow.__GEOTUTOR_WORLD_V2__!.world;
     actions.setAuthority({
       missionId: "V4",
-      maxLevel: "O3",
-      attemptedVariationTargets: ["concave"],
+      maxLevel: "O2",
     });
-    const token = actions.issueVariationConsent("concave", "A");
-    if (!token) throw new Error("Consent token was not issued.");
+    return actions.execute(
+      "preview-concave-real",
+      "preview_geometry_variation",
+      {
+        activityId: world.activityId,
+        epoch: world.epoch,
+        revision: world.revision,
+        target: "concave",
+        movingPoint: "A",
+      },
+      "real-preview-turn",
+    );
+  });
+  expect(preview, JSON.stringify(preview)).toMatchObject({
+    ok: true,
+    data: {
+      status: "previewed",
+      target: "concave",
+      movingPoint: "A",
+      geometryChanged: false,
+      evidenceCreated: false,
+    },
+  });
+  await expect(
+    page.locator("[data-geometry-guidance='movement']"),
+  ).toHaveAttribute("data-moving-point", "A");
+  await page.locator(".geogebra-scratchpad").screenshot({
+    path: "../../output/playwright/T22-C04-variation-preview.png",
+  });
+
+  const variation = await page.evaluate(async () => {
+    const testWindow = window as unknown as ActionsWindow;
+    const actions = testWindow.__GEOTUTOR_ACTIONS_V1__!;
+    const world = testWindow.__GEOTUTOR_WORLD_V2__!.world;
+    actions.setAuthority({ missionId: "V4", maxLevel: "O3" });
     return actions.execute(
       "variation-concave-real",
       "create_geometry_variation",
@@ -254,7 +282,6 @@ test("T22-C04 runs reversible UI actions and a consented target variation on the
         revision: world.revision,
         target: "concave",
         movingPoint: "A",
-        consentToken: token,
       },
       "real-variation-turn",
     );

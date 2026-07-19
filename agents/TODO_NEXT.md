@@ -2,6 +2,13 @@
 
 ## Prochaine action
 
+La tranche corrective `déplacement géométrique guidé et borné` est
+`in_progress`. L'audit a isolé un jeton O3 inaccessible au modèle et une
+autorité Realtime qui n'ouvre pas la variation. Le Builder ajoute une
+prévisualisation fléchée sommet → cible, rend la variation A–D déterministe
+appelable par Compass, puis qualifie annulation, rollback, absence de preuve et
+viewports avant de rendre T25-C04 à nouveau prioritaire.
+
 La tranche corrective `préemption Realtime par geste GeoGebra` est close
 `pass`. Une manipulation learner coupe désormais réponse, outils, file et audio
 avant la stabilisation; le feedback coach porte activité, epoch, révision et

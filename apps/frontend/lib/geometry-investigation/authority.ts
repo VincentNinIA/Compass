@@ -3,7 +3,6 @@ import type {
   GeometryMissionV1,
 } from "./contracts";
 import type {
-  GeometryActionArgumentsC04,
   GeometryActionArgumentsV1,
   GeometryActionArgumentsValueC04,
   GeometryActionArgumentsValueV1,
@@ -18,6 +17,7 @@ export const GEOMETRY_ACTION_AUTHORITY_LEVEL = Object.freeze({
   inspect_geometry_workspace: "O0",
   activate_geometry_tool: "O2",
   highlight_geometry_objects: "O2",
+  preview_geometry_variation: "O2",
   initialize_geometry_activity: "O3",
   create_geometry_variation: "O3",
   classify_geometry_configuration: "O0",
@@ -113,6 +113,7 @@ export function authorizeGeometryActionV1(
   if (
     action === "activate_geometry_tool" ||
     action === "highlight_geometry_objects" ||
+    action === "preview_geometry_variation" ||
     action === "focus_geometry_view"
   ) {
     if (
@@ -135,16 +136,8 @@ export function authorizeGeometryActionV1(
   }
 
   if (action === "create_geometry_variation") {
-    const variation =
-      arguments_ as GeometryActionArgumentsC04["create_geometry_variation"];
-    if (
-      authority.actor !== "assistant" ||
-      !activity.assistancePolicy.allowAssistantVariationAfterConsent
-    ) {
+    if (!activity.assistancePolicy.allowAssistantVariationAfterConsent) {
       return reject("action_not_allowed", "Assistant variations are disabled.");
-    }
-    if (!authority.attemptedVariationTargets.includes(variation.target)) {
-      return reject("attempt_required", "A learner attempt is required before this variation.");
     }
   }
 

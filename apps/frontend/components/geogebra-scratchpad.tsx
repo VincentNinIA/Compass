@@ -289,6 +289,17 @@ export function GeoGebraScratchpad({
                       : next.phase === "completed"
                         ? "completed"
                         : "investigating";
+                if (
+                  !["loading", "ready", "recovering", "fatal"].includes(
+                    next.phase,
+                  )
+                ) {
+                  Object.assign(investigationAuthority, {
+                    actor: "assistant",
+                    maxLevel: "O3",
+                    uiGuidanceAllowed: true,
+                  });
+                }
                 investigationAuthority.attemptedDemonstrationStepIds =
                   (next.attempts.V8?.count ?? 0) > 0 ||
                   next.reflections.completedJustificationStepIds.length > 0
@@ -807,15 +818,6 @@ export function GeoGebraScratchpad({
                 setAuthority: (
                   next: Partial<MutableInvestigationAuthority>,
                 ) => Object.assign(investigationAuthority, next),
-                issueVariationConsent: (
-                  target: "convex" | "concave" | "crossed",
-                  movingPoint: "A" | "B" | "C" | "D",
-                ) =>
-                  investigationRuntime?.issueVariationConsent({
-                    target,
-                    movingPoint,
-                    confirmed: true,
-                  }),
                 issueRestoreConfirmation: (checkpointId: string) =>
                   investigationRuntime?.issueRestoreConfirmation({
                     checkpointId,

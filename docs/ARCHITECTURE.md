@@ -473,8 +473,8 @@ flowchart LR
     World --> Policy["SILENT / QUEUE / SPEAK"]
     Policy --> Realtime["geogebra_tutor v2"]
     Realtime --> Gateway["Actions O0-O5 fermées"]
-    Gateway --> Consent["Budgets + consent tokens"]
-    Consent --> Adapter
+    Gateway --> Guards["Budgets + cible fermée + rollback"]
+    Guards --> Adapter
     Runtime <--> Checkpoints["Captures + restore + replay"]
 ```
 
@@ -801,9 +801,12 @@ gestes O2 ne construisent aucun objet. Ils restent soumis à une activité et un
 révision courantes, à une phase utilisable, au niveau O2, aux politiques de
 l'activité, au budget par tour, à l'idempotence et à l'annulation.
 
-Les mutations O3–O5 conservent leur chemin séparé : tentative préalable,
-consentement ou confirmation one-shot, cible fermée, rollback et preuve
-déterministe. L'assouplissement O2 n'est donc pas une commande GeoGebra libre.
+Les mutations O3–O5 conservent leur chemin séparé. La variation O3 est une
+exception bornée : le modèle choisit seulement un sommet A–D et une intention
+`convex | concave | crossed`; le solveur local choisit les coordonnées, vérifie
+la postcondition, restaure en cas d'échec et n'émet aucune preuve. Les restores
+O4 et démonstrations O5 conservent tentative préalable et confirmation
+one-shot. Aucun de ces chemins n'est une commande GeoGebra libre.
 
 Le workspace publié peut remettre au transport un `geometry_coach_turn.v1` à
 trois moments sémantiques : ouverture du coach, transition de mission et indice
@@ -842,7 +845,15 @@ réelle. `focus_geometry_view` projette de la même façon la boîte effectiveme
 appliquée. Aucun argument modèle ne contient de pixel ou de coordonnée de
 pointage.
 
-Le registre de capacités associe les onze actions à leur niveau O0-O5, leur
+`preview_geometry_variation` réutilise le solveur de variation en lecture seule
+et publie une flèche `from → to` interne sans changer la figure ni renvoyer les
+coordonnées au modèle. `create_geometry_variation` publie la même indication
+après vérification du mouvement réellement appliqué. La flèche, son origine et
+sa cible sont projetées depuis `getViewProperties`; le mouvement assistant
+reste distinct d'un geste learner et ne crédite ni tentative, ni capture, ni XP.
+
+Le registre de capacités associe les douze actions, dont l'initialisation
+système, à leur niveau O0-O5, leur
 surface (`coach`, `toolbar`, `canvas`, `gallery` ou `activity`), leur mutation,
 leur consentement et leur primitive visuelle. Il est vérifié contre
 `GEOMETRY_ACTIONS_V1` pour empêcher toute capacité orpheline. La couche halo est

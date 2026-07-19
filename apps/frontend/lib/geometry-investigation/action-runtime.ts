@@ -4,16 +4,14 @@ import {
   GeometryActionGatewayV1,
   type GeometryActionGatewayDependenciesV1,
 } from "./action-gateway";
-import { GeometryConsentTokenStoreV1 } from "./consent";
 import { GeometryEvidenceStoreV1 } from "./evidence-store";
 import { GeometryPrivilegedConsentStoreV1 } from "./privileged-consent";
 
 export type GeometryActionRuntimeDependenciesV1 = Omit<
   GeometryActionGatewayDependenciesV1,
-  "consentTokens" | "evidenceStore" | "privilegedTokens"
+  "evidenceStore" | "privilegedTokens"
 > &
   Readonly<{
-    consentTokens?: GeometryConsentTokenStoreV1;
     evidenceStore?: GeometryEvidenceStoreV1;
     privilegedTokens?: GeometryPrivilegedConsentStoreV1;
   }>;
@@ -21,20 +19,16 @@ export type GeometryActionRuntimeDependenciesV1 = Omit<
 export class GeometryActionRuntimeV1 {
   readonly gateway: GeometryActionGatewayV1;
   readonly toolRuntime: ToolRuntime;
-  readonly consentTokens: GeometryConsentTokenStoreV1;
   readonly evidenceStore: GeometryEvidenceStoreV1;
   readonly privilegedTokens: GeometryPrivilegedConsentStoreV1;
 
   constructor(private readonly dependencies: GeometryActionRuntimeDependenciesV1) {
-    this.consentTokens =
-      dependencies.consentTokens ?? new GeometryConsentTokenStoreV1();
     this.evidenceStore =
       dependencies.evidenceStore ?? new GeometryEvidenceStoreV1();
     this.privilegedTokens =
       dependencies.privilegedTokens ?? new GeometryPrivilegedConsentStoreV1();
     this.gateway = new GeometryActionGatewayV1({
       ...dependencies,
-      consentTokens: this.consentTokens,
       evidenceStore: this.evidenceStore,
       privilegedTokens: this.privilegedTokens,
     });
@@ -71,35 +65,6 @@ export class GeometryActionRuntimeV1 {
         };
       },
     };
-  }
-
-  issueVariationConsent(request: Readonly<{
-    target: "convex" | "concave" | "crossed";
-    movingPoint: "A" | "B" | "C" | "D";
-    confirmed: boolean;
-    ttlMs?: number;
-  }>): string | undefined {
-    const authority = this.dependencies.getAuthority();
-    if (
-      !request.confirmed ||
-      authority.phase !== "investigating" ||
-      authority.actor !== "assistant" ||
-      !["O3", "O4", "O5"].includes(authority.maxLevel) ||
-      !authority.attemptedVariationTargets.includes(request.target)
-    ) {
-      return undefined;
-    }
-    return this.consentTokens.issue(
-      {
-        activityId: authority.activityId,
-        epoch: authority.epoch,
-        revision: authority.revision,
-        action: "create_geometry_variation",
-        target: request.target,
-        movingPoint: request.movingPoint,
-      },
-      request.ttlMs,
-    );
   }
 
   issueRestoreConfirmation(request: Readonly<{
@@ -192,7 +157,6 @@ export class GeometryActionRuntimeV1 {
 
   clearActivityMemory(): number {
     const activityId = this.dependencies.getAuthority().activityId;
-    this.consentTokens.revokeActivity(activityId);
     this.privilegedTokens.revokeActivity(activityId);
     this.gateway.cancelEffects();
     return this.evidenceStore.clear(activityId);
@@ -202,7 +166,6 @@ export class GeometryActionRuntimeV1 {
     reason: "student_action" | "student_speech" | "timeout" | "session_stop",
   ): void {
     this.gateway.cancelEffects(reason);
-    this.consentTokens.revokeActivity(this.dependencies.getAuthority().activityId);
     this.privilegedTokens.revokeActivity(
       this.dependencies.getAuthority().activityId,
     );

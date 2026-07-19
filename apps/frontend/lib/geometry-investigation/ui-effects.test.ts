@@ -80,6 +80,42 @@ describe("GeometryUiEffectsV1", () => {
     effects.cleanup();
     expect(state.viewport()).toEqual({ xMin: -5, xMax: 5, yMin: -3, yMax: 3 });
   });
+
+  it("publishes a semantic movement arrow without exposing coordinates", () => {
+    const state = styledApi();
+    const guidance = vi.fn();
+    const effects = new GeometryUiEffectsV1(state.api, {
+      onGuidanceCue: guidance,
+    });
+    expect(
+      effects.showVariationMovement(
+        "A",
+        "concave",
+        { x: -4, y: -1 },
+        { x: 0, y: 1 },
+        false,
+      ),
+    ).toEqual({
+      status: "previewed",
+      movingPoint: "A",
+      target: "concave",
+      durationMs: 8_000,
+      coordinatesExposed: false,
+      geometryChanged: false,
+      evidenceCreated: false,
+    });
+    expect(guidance).toHaveBeenLastCalledWith({
+      id: 1,
+      kind: "movement",
+      action: "preview_geometry_variation",
+      movingPoint: "A",
+      target: "concave",
+      from: { x: -4, y: -1 },
+      to: { x: 0, y: 1 },
+      applied: false,
+      durationMs: 8_000,
+    });
+  });
 });
 
 function styledApi(

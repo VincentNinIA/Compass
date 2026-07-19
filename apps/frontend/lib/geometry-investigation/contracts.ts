@@ -34,6 +34,7 @@ export const GEOMETRY_ACTIONS_V1 = [
   "inspect_geometry_workspace",
   "activate_geometry_tool",
   "highlight_geometry_objects",
+  "preview_geometry_variation",
   "initialize_geometry_activity",
   "create_geometry_variation",
   "classify_geometry_configuration",

@@ -34,6 +34,27 @@ describe("geometry harness capability map", () => {
     });
     expect(
       GEOMETRY_HARNESS_CAPABILITIES_V1.find(
+        ({ action }) => action === "preview_geometry_variation",
+      ),
+    ).toMatchObject({
+      level: "O2",
+      surface: "canvas",
+      presentation: "movement_target",
+      mutatesGeometry: false,
+      consent: "none",
+    });
+    expect(
+      GEOMETRY_HARNESS_CAPABILITIES_V1.find(
+        ({ action }) => action === "create_geometry_variation",
+      ),
+    ).toMatchObject({
+      level: "O3",
+      presentation: "movement_target",
+      mutatesGeometry: true,
+      consent: "none",
+    });
+    expect(
+      GEOMETRY_HARNESS_CAPABILITIES_V1.find(
         ({ action }) => action === "restore_geometry_checkpoint",
       ),
     ).toMatchObject({

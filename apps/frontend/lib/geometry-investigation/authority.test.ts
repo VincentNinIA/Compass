@@ -75,19 +75,18 @@ describe("geometry action authority", () => {
     expect(result).toMatchObject({ ok: false, code: "invalid_authority" });
   });
 
-  it("requires an exact prior learner attempt before O3 variation", () => {
+  it("allows one bounded O3 variation without an unreachable model token", () => {
     const result = authorizeGeometryActionC04(
       "create_geometry_variation",
       {
         ...common,
         target: "concave",
         movingPoint: "A",
-        consentToken: "ggb-consent:00000000-0000-0000-0000-000000000000",
       },
       VARIGNON_ACTIVITY_FR_V1,
       authority({ missionId: "V4", maxLevel: "O3" }),
     );
-    expect(result).toMatchObject({ ok: false, code: "attempt_required" });
+    expect(result).toMatchObject({ ok: true, level: "O3" });
   });
 
   it("keeps initialization system-only and rejects stale epoch", () => {

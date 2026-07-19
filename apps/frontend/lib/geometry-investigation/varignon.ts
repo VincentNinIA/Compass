@@ -197,6 +197,7 @@ const missionConfiguration = [
     kind: "capture",
     requiredEvidence: ["rel_configuration_convex"],
     allowedActions: [
+      "preview_geometry_variation",
       "classify_geometry_configuration",
       "capture_geometry_evidence",
       "create_geometry_variation",
@@ -207,6 +208,7 @@ const missionConfiguration = [
     kind: "capture",
     requiredEvidence: ["rel_configuration_concave"],
     allowedActions: [
+      "preview_geometry_variation",
       "classify_geometry_configuration",
       "capture_geometry_evidence",
       "create_geometry_variation",
@@ -217,6 +219,7 @@ const missionConfiguration = [
     kind: "capture",
     requiredEvidence: ["rel_configuration_crossed"],
     allowedActions: [
+      "preview_geometry_variation",
       "classify_geometry_configuration",
       "capture_geometry_evidence",
       "create_geometry_variation",

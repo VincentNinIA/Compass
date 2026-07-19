@@ -117,6 +117,61 @@ describe("GeometryGuidanceOverlay", () => {
     });
     shell.remove();
   });
+
+  it("projects a movement arrow from the named vertex to the computed target", async () => {
+    const { shell, root } = appletShell();
+    const canvas = document.createElement("canvas");
+    canvas.getBoundingClientRect = () => rect(300, 100, 500, 300);
+    root.append(canvas);
+
+    const result = render(
+      <GeometryGuidanceOverlay
+        presentation={{
+          cue: {
+            id: 3,
+            kind: "movement",
+            action: "preview_geometry_variation",
+            movingPoint: "A",
+            target: "concave",
+            from: { x: -2, y: 0 },
+            to: { x: 1, y: 1 },
+            applied: false,
+            durationMs: 8_000,
+          },
+          view: {
+            xMin: -5,
+            yMin: -3,
+            invXscale: 0.02,
+            invYscale: 0.02,
+            width: 500,
+            height: 300,
+          },
+        }}
+        appletRootRef={{ current: root }}
+        locale="fr"
+      />,
+    );
+
+    await waitFor(() =>
+      expect(
+        result.container.querySelector("[data-guidance-resolved='true']"),
+      ).not.toBeNull(),
+    );
+    const layer = result.container.querySelector<HTMLElement>(
+      "[data-geometry-guidance='movement']",
+    );
+    expect(layer?.dataset.movingPoint).toBe("A");
+    expect(layer?.dataset.movementTarget).toBe("concave");
+    expect(layer?.dataset.movementApplied).toBe("false");
+    expect(
+      result.container.querySelector<HTMLElement>(
+        ".geometry-guidance-movement",
+      )?.style.width,
+    ).toBe("158.11388300841898px");
+    expect(result.getByText("Déplace A dans cette direction")).toBeTruthy();
+    expect(result.getAllByText(/sans bouger la figure/)).toHaveLength(2);
+    shell.remove();
+  });
 });
 
 function appletShell(width = 900) {

@@ -177,12 +177,12 @@ disponible.
 | FR-42 | Valider un contrat fermé `geometry_investigation.v1` décrivant scaffold, missions, relations, aides, démonstration et transfert. |
 | FR-43 | Publier un monde GeoGebra v2 borné avec commandes, parents, ownership, événements terminaux, faits, epoch, révision et hash. |
 | FR-44 | Permettre au coach d'activer un outil autorisé, recentrer la vue et mettre temporairement en évidence des objets sans créer de construction. |
-| FR-45 | Initialiser un scaffold approuvé et créer, après consentement, une variation convexe, concave ou croisée choisie par intention sémantique plutôt que coordonnées modèle. |
+| FR-45 | Initialiser un scaffold approuvé et créer une variation convexe, concave ou croisée choisie par intention sémantique plutôt que coordonnées modèle; l'application borne le sommet, calcule la cible, vérifie le résultat et restaure en cas d'échec. |
 | FR-46 | Classer déterministement un quadrilatère ordonné en convexe, concave, croisé ou dégénéré avec tolérance versionnée. |
 | FR-47 | Vérifier par faits déterministes milieu, parallélisme, perpendicularité, égalité de longueurs, appartenance, non-alignement et parallélogramme. |
 | FR-48 | Capturer en mémoire un état expérimental tout-ou-rien avec checkpoint, snapshot, hash, configuration, provenance et evidence IDs. |
 | FR-49 | Restaurer exactement une capture et rejouer une démonstration temporaire avec pause, arrêt et cleanup vérifié. |
-| FR-50 | Appliquer les niveaux d'autorité O0 à O5, budgets, consent tokens, idempotence, annulation et rejet du stale à toutes les actions du harnais. |
+| FR-50 | Appliquer les niveaux d'autorité O0 à O5, budgets, consentements lorsqu'ils protègent une restauration ou démonstration privilégiée, idempotence, annulation et rejet du stale à toutes les actions du harnais. |
 | FR-51 | Piloter missions, tentatives, aides L1 à L4 et progression depuis le contrat d'activité plutôt que depuis un exercice codé en dur. |
 | FR-52 | Livrer Varignon comme parcours golden : quatre milieux exacts, trois configurations capturées, deux parallélismes par état, conjecture, justification et transfert. |
 | FR-53 | Permettre au professeur de configurer, prévisualiser et publier Varignon puis recevoir un bilan factuel sans identité, texte libre ou note. |
@@ -208,6 +208,7 @@ disponible.
 | FR-72 | Dans une investigation GeoGebra, laisser Compass choisir spontanément une question, un conseil ou une action d'interface O2 réversible à partir du monde borné et de la mission courante, notamment à la connexion, après une mission franchie ou sur un blocage qualifié, sans exiger une demande d'aide préalable et sans étendre son autorité aux mutations, preuves ou scores. |
 | FR-74 | Pour toute action O2 choisie par Compass, localiser la cible sémantique dans le vrai applet et montrer temporairement le bouton d'outil, l'objet, le segment ou la zone concernés par un halo, un pointeur et un texte accessible, sans coordonnée modèle, interception de pointeur ni effet persistant. |
 | FR-75 | Lorsqu'un élève manipule GeoGebra pendant une réponse, préempter immédiatement la voix depuis le geste brut, puis n'autoriser un nouveau feedback que depuis le monde doublement stabilisé qui porte activité, epoch, révision et hash courants. |
+| FR-76 | Dans les missions d'exploration Varignon, permettre à Compass de prévisualiser par une flèche le déplacement déterministe d'un sommet A–D vers une configuration approuvée puis, lorsqu'un déplacement est demandé ou pédagogiquement choisi, d'appliquer un unique geste borné sans coordonnée modèle, preuve, XP ni perte de la préemption learner. |
 
 ## Contraintes
 
@@ -285,11 +286,13 @@ disponible.
   exact. Le dernier objet élève stabilisé oriente une apparition silencieuse;
   une mission ne reçoit une épingle et une célébration qu'à son premier passage
   déterministe à `verified`, jamais sur un simple statut `completed`.
-- Les actions `activate_geometry_tool`, `highlight_geometry_objects` et
-  `focus_geometry_view` ne requièrent ni consentement, ni actor assistant, ni
+- Les actions `activate_geometry_tool`, `highlight_geometry_objects`,
+  `preview_geometry_variation` et `focus_geometry_view` ne requièrent ni
+  consentement, ni actor assistant, ni
   déclaration par mission : elles restent non mutantes, allowlistées, ancrées à
-  la révision, budgétées et annulables. Toute action O3–O5 conserve ses
-  confirmations et tentatives préalables.
+  la révision, budgétées et annulables. La variation O3 reste limitée à A–D et
+  aux trois configurations calculées localement; seules les actions O4/O5
+  conservent confirmations et tentatives préalables.
 - Chaque geste O2 rend sa cible compréhensible : le vrai contrôle GeoGebra est
   révélé et entouré, un objet ou segment est pointé depuis le monde et ses
   dépendances, et une zone cadrée reçoit un repère temporaire. Le modèle ne

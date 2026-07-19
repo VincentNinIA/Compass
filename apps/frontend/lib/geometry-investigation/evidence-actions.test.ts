@@ -7,7 +7,6 @@ import type { GeoGebraApi } from "@/types/geogebra";
 import { GeometryActionGatewayV1 } from "./action-gateway";
 import type { GeometryActionAuthorityV1 } from "./authority";
 import type { GeometryCheckpointControllerV1 } from "./checkpoint-v2";
-import { GeometryConsentTokenStoreV1 } from "./consent";
 import { GeometryWorldV2, type GeometryWorldObjectV2 } from "./contracts";
 import { evaluateGeometryWorldV2 } from "./engine";
 import { GeometryEvidenceStoreV1, type GeometryCheckpointV1 } from "./evidence-store";
@@ -305,7 +304,6 @@ function evidenceFixture(
     registry,
     getAuthority: () => authority,
     getWorld: () => world,
-    consentTokens: new GeometryConsentTokenStoreV1(),
     evidenceStore: store,
     checkpoints: { capture, restore } as unknown as GeometryCheckpointControllerV1,
     privilegedTokens: privileged,

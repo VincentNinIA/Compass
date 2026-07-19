@@ -1,3 +1,84 @@
+# Contrat Builder — déplacement géométrique guidé et borné — `in_progress`
+
+## État
+
+- Le porteur constate le 19 juillet 2026 que Compass sait pointer un outil ou
+  un objet mais répond encore qu'il ne peut pas déplacer un sommet dans
+  l'investigation Varignon.
+- L'audit confirme que `create_geometry_variation` sait déjà calculer et
+  appliquer une position sûre, mais que le modèle doit fournir un jeton qu'il
+  ne peut pas obtenir et que l'autorité Realtime n'ouvre jamais réellement O3.
+- Cette tranche corrige ce chemin produit sans ouvrir une commande GeoGebra
+  arbitraire ni reprendre la persistance T25-C04.
+
+## Objectif
+
+Permettre à Compass de montrer quel sommet libre déplacer et dans quelle
+direction, puis de réaliser lui-même un déplacement borné lorsqu'il juge ce
+geste utile, tout en laissant l'élève préempter immédiatement l'action.
+
+## Inclus
+
+- Ajouter une action O2 de prévisualisation qui choisit un sommet parmi A–D et
+  une configuration cible parmi convexe, concave ou croisée, puis affiche une
+  flèche dérivée du monde courant vers la cible calculée par l'application.
+- Rendre `create_geometry_variation` directement appelable par le modèle dans
+  les missions d'exploration, sans jeton impossible à transmettre ni tentative
+  préalable codée, avec une seule mutation maximum par tour.
+- Conserver le calcul déterministe des coordonnées côté application, le
+  contrôle d'indépendance/mobilité du sommet, activité/epoch/révision,
+  idempotence, stale, quarantaine, rollback et préemption learner.
+- Rendre le déplacement visible par une indication accessible et non
+  bloquante; l'action ne crée aucune preuve et n'accorde aucun progrès.
+- Donner au coach une règle pédagogique simple : aide ou blocage → montrer le
+  geste; demande explicite de faire/bouger/montrer par l'action → appliquer un
+  unique déplacement borné et expliquer exactement ce qui a changé.
+- Étendre tests unitaires, composants et navigateur, puis synchroniser les
+  documents pilotes avec les preuves obtenues.
+
+## Hors périmètre
+
+- Fournir au modèle des coordonnées, une commande GGBScript, un label hors A–D
+  ou un déplacement libre non lié à une configuration approuvée.
+- Laisser le modèle valider une mission, capturer une preuve, attribuer des XP
+  ou enchaîner plusieurs mutations dans un même tour.
+- Modifier les tolérances, le scaffold, les neuf missions, les restaurations
+  O4/O5, PostgreSQL, Vercel ou la Production.
+- Créer un `QA_REPORT.md` Builder ou un `HANDOFF.md` sans reprise réelle.
+
+## Fichiers probables
+
+- `apps/frontend/lib/geometry-investigation/{actions,authority,action-gateway,visual-guidance}.ts`
+- `apps/frontend/lib/realtime/session-route.ts`
+- `apps/frontend/components/{geogebra-scratchpad,geometry-guidance-overlay}.tsx`
+- tests voisins, `agents/*` et `docs/ARCHITECTURE.md`
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+git diff --check
+```
+
+## Définition de fini
+
+- « Montre-moi quoi bouger » peut produire une flèche sommet → cible sans
+  mutation; « bouge-le / fais-le » peut déplacer exactement un sommet A–D.
+- La cible atteint réellement la configuration demandée et aucune coordonnée
+  n'entre dans le schéma modèle ou la conversation.
+- Le geste est visuellement identifiable, bilingue, non bloquant et compatible
+  avec mouvement réduit et viewports 390/768/1440.
+- Une interaction learner, une révision stale, une cible impossible ou une
+  postcondition fausse annule ou restaure le point sans faux succès.
+- Le déplacement assistant ne devient ni tentative learner, ni capture, ni
+  preuve, ni XP; les gates contractuels passent.
+
+---
+
 # Contrat Builder — préemption Realtime par geste GeoGebra — close `pass`
 
 ## État

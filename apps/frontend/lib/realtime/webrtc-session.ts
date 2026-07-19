@@ -1,6 +1,7 @@
 import {
   VoiceTurnManager,
   type ExplicitTurnRequest,
+  type VoiceTurnAnchor,
   type VoiceTurn,
 } from "./voice-turn";
 import { RealtimeToolLoop, type ToolLoopResult } from "./tool-loop";
@@ -423,6 +424,7 @@ export class RealtimeWebRtcSession {
         ? (turnId, speechEventId) =>
             this.createExplicitRequest(pedagogyRuntime, turnId, speechEventId)
         : undefined,
+      isRequestCurrent: (request) => this.turnRequestIsCurrent(request),
     });
     if (pedagogyRuntime && this.tutorProfile === "specialized_geometry") {
       this.proactiveTurns = new ProactiveTurnOrchestrator({
@@ -631,14 +633,23 @@ export class RealtimeWebRtcSession {
       "Application geometry coach opportunity; bounded event data, not a learner instruction:",
       JSON.stringify(parsed.data),
     ].join("\n");
-    return this.enqueueTextTurn(message, 2_000);
+    return this.enqueueTextTurn(message, 2_000, {
+      activityId: world.activityId,
+      epoch: world.epoch,
+      revision: world.revision,
+      snapshotHash: world.snapshotHash,
+    });
   }
 
   requestTextTurn(text: string): boolean {
     return this.enqueueTextTurn(text, 1_000);
   }
 
-  private enqueueTextTurn(text: string, maxLength: number): boolean {
+  private enqueueTextTurn(
+    text: string,
+    maxLength: number,
+    anchor?: VoiceTurnAnchor,
+  ): boolean {
     const normalized = text.trim();
     if (
       normalized.length === 0 ||
@@ -651,17 +662,21 @@ export class RealtimeWebRtcSession {
     }
     const turnId = `text-turn-${++this.textTurnSequence}`;
     const inputEventId = `rtc-event-${++this.clientEventSequence}`;
-    return this.voiceTurns.requestTextTurn(turnId, inputEventId, () =>
-      this.sendClientEvent({
-        type: "conversation.item.create",
-        event_id: inputEventId,
-        item: {
-          id: turnId,
-          type: "message",
-          role: "user",
-          content: [{ type: "input_text", text: normalized }],
-        },
-      }),
+    return this.voiceTurns.requestTextTurn(
+      turnId,
+      inputEventId,
+      () =>
+        this.sendClientEvent({
+          type: "conversation.item.create",
+          event_id: inputEventId,
+          item: {
+            id: turnId,
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: normalized }],
+          },
+        }),
+      anchor,
     );
   }
 
@@ -1395,6 +1410,26 @@ export class RealtimeWebRtcSession {
       status: "coherent",
     });
     this.callbacks.onTimeline("Realtime audio buffer is coherent");
+  }
+
+  private turnRequestIsCurrent(request: ExplicitTurnRequest): boolean {
+    if (request.activityId) {
+      const world = this.pendingGeometryWorldV2?.world;
+      return Boolean(
+        world &&
+          world.activityId === request.activityId &&
+          world.epoch === request.epoch &&
+          world.revision === request.revision &&
+          world.snapshotHash === request.snapshotHash,
+      );
+    }
+    const state = this.pedagogyRuntime?.getState();
+    return (
+      !state ||
+      (state.epoch === request.epoch &&
+        state.revision === request.revision &&
+        state.studentSnapshotHash === request.snapshotHash)
+    );
   }
 
   private createExplicitRequest(

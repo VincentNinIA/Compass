@@ -20,11 +20,15 @@ export type VoiceTurn = {
   responseId?: string;
 };
 
-export type ExplicitTurnRequest = {
-  turnId: string;
+export type VoiceTurnAnchor = {
+  activityId?: string;
   epoch: number;
   revision: number;
   snapshotHash: string;
+};
+
+export type ExplicitTurnRequest = VoiceTurnAnchor & {
+  turnId: string;
   speechEventId: string;
 };
 
@@ -39,6 +43,7 @@ export type VoiceTurnServerEvent = {
     metadata?: {
       geotutor_turn_id?: unknown;
       geotutor_response_owner?: unknown;
+      geotutor_activity_id?: unknown;
       geotutor_epoch?: unknown;
       geotutor_revision?: unknown;
       geotutor_snapshot_hash?: unknown;
@@ -58,6 +63,7 @@ type VoiceTurnDependencies = {
     turnId: string,
     speechEventId: string | undefined,
   ): ExplicitTurnRequest | undefined;
+  isRequestCurrent?(request: ExplicitTurnRequest): boolean;
 };
 
 export class VoiceTurnManager {
@@ -103,7 +109,15 @@ export class VoiceTurnManager {
         !active ||
         active.state !== "requested" ||
         !responseId ||
-        responseTurnId !== active.turnId ||
+        responseTurnId !== active.turnId
+      ) {
+        return;
+      }
+      if (!this.requestIsCurrent(active.turnId)) {
+        this.cancelActiveTurn(active, responseId);
+        return;
+      }
+      if (
         !this.matchesRequestMetadata(active.turnId, event.response?.metadata) ||
         !this.responseGate.activate(this.owner(active.turnId), responseId)
       ) {
@@ -115,6 +129,10 @@ export class VoiceTurnManager {
     if (event.type === "response.done") {
       const active = this.activeTurn();
       if (!active) return;
+      if (!this.requestIsCurrent(active.turnId)) {
+        this.cancelActiveTurn(active, stringValue(event.response?.id));
+        return;
+      }
       const responseId = stringValue(event.response?.id);
       const responseTurnId = stringValue(
         event.response?.metadata?.geotutor_turn_id,
@@ -148,9 +166,10 @@ export class VoiceTurnManager {
     turnId: string,
     inputEventId: string,
     publishItem: () => boolean = () => true,
+    anchor?: VoiceTurnAnchor,
   ): boolean {
     if (!turnId || !inputEventId || this.turns.has(turnId)) return false;
-    return this.queueExplicitTurn(turnId, inputEventId, publishItem);
+    return this.queueExplicitTurn(turnId, inputEventId, publishItem, anchor);
   }
 
   continueAfterTools(): boolean {
@@ -232,6 +251,12 @@ export class VoiceTurnManager {
     if (!turnId) return;
     const turn = this.turns.get(turnId);
     if (!turn || turn.state !== "committed") return;
+    if (!this.requestIsCurrent(turnId)) {
+      this.publish({ ...turn, state: "cancelled" });
+      this.requests.delete(turnId);
+      this.requestNext();
+      return;
+    }
     const owner = this.owner(turnId);
     if (!this.responseGate.reserve(owner)) {
       this.pending.unshift(turnId);
@@ -260,8 +285,9 @@ export class VoiceTurnManager {
     turnId: string,
     inputEventId: string | undefined,
     publishItem?: () => boolean,
+    anchor?: VoiceTurnAnchor,
   ): boolean {
-    if (!this.captureRequest(turnId, inputEventId)) return false;
+    if (!this.captureRequest(turnId, inputEventId, anchor)) return false;
     this.publish({ turnId, state: "committed" });
     if (publishItem && !publishItem()) {
       this.requests.delete(turnId);
@@ -295,7 +321,20 @@ export class VoiceTurnManager {
   private captureRequest(
     turnId: string,
     speechEventId: string | undefined,
+    anchor?: VoiceTurnAnchor,
   ): boolean {
+    if (anchor) {
+      if (!speechEventId) {
+        this.publish({ turnId, state: "failed" });
+        return false;
+      }
+      this.requests.set(turnId, {
+        ...anchor,
+        turnId,
+        speechEventId,
+      });
+      return true;
+    }
     if (!this.dependencies.createExplicitRequest) return true;
     const anchoredSpeechEventId = this.speechEventIds.get(turnId) ?? speechEventId;
     const request = this.dependencies.createExplicitRequest(
@@ -319,11 +358,30 @@ export class VoiceTurnManager {
     if (!request) return true;
     return (
       metadata?.geotutor_response_owner === this.owner(turnId) &&
+      (request.activityId === undefined ||
+        metadata.geotutor_activity_id === request.activityId) &&
       metadata.geotutor_epoch === String(request.epoch) &&
       metadata.geotutor_revision === String(request.revision) &&
       metadata.geotutor_snapshot_hash === request.snapshotHash &&
       metadata.geotutor_speech_event_id === request.speechEventId
     );
+  }
+
+  private requestIsCurrent(turnId: string): boolean {
+    const request = this.requests.get(turnId);
+    return !request || this.dependencies.isRequestCurrent?.(request) !== false;
+  }
+
+  private cancelActiveTurn(active: VoiceTurn, responseId?: string): void {
+    this.publish({
+      ...active,
+      state: "cancelled",
+      responseId: responseId ?? active.responseId,
+    });
+    this.responseGate.release(this.owner(active.turnId), responseId);
+    this.requests.delete(active.turnId);
+    this.activeTurnId = undefined;
+    this.requestNext();
   }
 }
 
@@ -337,6 +395,7 @@ type ResponseCreateEvent = {
     metadata: {
       geotutor_turn_id: string;
       geotutor_response_owner?: ResponseOwner;
+      geotutor_activity_id?: string;
       geotutor_epoch?: string;
       geotutor_revision?: string;
       geotutor_snapshot_hash?: string;
@@ -367,6 +426,9 @@ function responseRequest(
         ...(request
           ? {
               geotutor_response_owner: explicitResponseOwner(turnId),
+              ...(request.activityId
+                ? { geotutor_activity_id: request.activityId }
+                : {}),
               geotutor_epoch: String(request.epoch),
               geotutor_revision: String(request.revision),
               geotutor_snapshot_hash: request.snapshotHash,

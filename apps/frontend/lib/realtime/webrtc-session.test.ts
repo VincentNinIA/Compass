@@ -1078,7 +1078,7 @@ describe("RealtimeWebRtcSession", () => {
     ).toBe(false);
   });
 
-  it("requests one anchored and cancellable coach turn for a current geometry event", async () => {
+  it("preempts the speaking coach on drag and requests one turn for the next stable world", async () => {
     const harness = createHarness(
       new Response(ANSWER, { status: 201 }),
       { gateway: { execute: vi.fn() }, getContext: () => undefined },
@@ -1176,31 +1176,103 @@ describe("RealtimeWebRtcSession", () => {
         }),
       }),
     );
-    expect(
-      sent.some(
-        (event) =>
-          event.type === "response.create" &&
-          event.response?.metadata?.geotutor_turn_id === "text-turn-1",
-      ),
-    ).toBe(true);
-
-    harness.peer.channel.message(
-      JSON.stringify({
-        type: "input_audio_buffer.speech_started",
-        item_id: "learner-interruption",
+    expect(sent).toContainEqual(
+      expect.objectContaining({
+        type: "response.create",
+        response: {
+          metadata: {
+            geotutor_turn_id: "text-turn-1",
+            geotutor_response_owner: "explicit:text-turn-1",
+            geotutor_activity_id: world.activityId,
+            geotutor_epoch: String(world.epoch),
+            geotutor_revision: String(world.revision),
+            geotutor_snapshot_hash: world.snapshotHash,
+            geotutor_speech_event_id: "rtc-event-2",
+          },
+        },
       }),
     );
+
+    const firstResponseCreate = sent.find(
+      (event) => event.type === "response.create",
+    );
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.created",
+        response: {
+          id: "coach-response-r2",
+          metadata: firstResponseCreate.response.metadata,
+        },
+      }),
+    );
+    expect(harness.session.cancelForActivity("student_drag")).toBe(true);
     const afterInterruption = harness.peer.channel.send.mock.calls.map(
       ([value]) => JSON.parse(value),
     );
-    expect(afterInterruption.some((event) => event.type === "response.cancel")).toBe(
-      true,
+    expect(afterInterruption).toContainEqual(
+      expect.objectContaining({
+        type: "response.cancel",
+        response_id: "coach-response-r2",
+      }),
     );
     expect(
       afterInterruption.some(
         (event) => event.type === "output_audio_buffer.clear",
       ),
     ).toBe(true);
+
+    harness.peer.channel.message(
+      JSON.stringify({
+        type: "response.output_audio.delta",
+        response_id: "coach-response-r2",
+        delta: "late-audio",
+      }),
+    );
+    expect(harness.timeline).toContain(
+      "Ignored late response.output_audio.delta",
+    );
+
+    const nextWorld = geometryWorldV2(3, "drag_end", 3);
+    const nextPedagogy = GeometryRealtimePedagogyContextV1.parse({
+      ...pedagogy,
+      revision: nextWorld.revision,
+      activeMissionId: "V3",
+    });
+    expect(
+      harness.session.publishGeometryWorldV2(
+        nextWorld,
+        createGeometryWorldDeltaV2(world, nextWorld),
+        nextPedagogy,
+      ),
+    ).toBe(true);
+    const nextTurn = GeometryCoachTurnV1.parse({
+      ...turn,
+      revision: nextWorld.revision,
+      previousMission: {
+        id: "V2",
+        order: 2,
+        title: "Relier les milieux",
+        outcome: "verified",
+      },
+      currentMission: {
+        id: "V3",
+        order: 3,
+        title: "Nommer le quadrilatère",
+        instruction: "Observe puis nomme EFGH.",
+      },
+    });
+    expect(harness.session.requestGeometryCoachTurn(nextTurn)).toBe(true);
+
+    const currentResponses = harness.peer.channel.send.mock.calls
+      .map(([value]) => JSON.parse(value))
+      .filter(
+        (event) =>
+          event.type === "response.create" &&
+          event.response?.metadata?.geotutor_revision === "3" &&
+          event.response?.metadata?.geotutor_snapshot_hash ===
+            nextWorld.snapshotHash,
+      );
+    expect(currentResponses).toHaveLength(1);
   });
 
   it("does not become live until session.created matches the server profile", async () => {

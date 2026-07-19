@@ -123,6 +123,23 @@ describe("GeometryPublishedWorkspace", () => {
       (bridge.realtimeProps?.onLearnerSpeechStart as () => void)();
     });
     expect(cancel).toHaveBeenCalledWith("student_speech");
+
+    const cancelForActivity = vi.fn(() => true);
+    act(() => {
+      (
+        bridge.realtimeProps?.onGeometryCoachRuntime as (
+          runtime: {
+            requestCoachTurn: () => boolean;
+            cancelForActivity: typeof cancelForActivity;
+          },
+        ) => void
+      )({ requestCoachTurn: () => true, cancelForActivity });
+      (
+        bridge.scratchpadProps?.onLearnerGeometryInteraction as () => void
+      )();
+    });
+    expect(cancelForActivity).toHaveBeenCalledOnce();
+    expect(cancelForActivity).toHaveBeenCalledWith("student_drag");
   });
 
   it("renders the animated coach and finite canvas cameos from learner, hint and verified mission events", () => {

@@ -1,3 +1,101 @@
+# Contrat Builder — préemption Realtime par geste GeoGebra — close `pass`
+
+## État
+
+- Le porteur constate le 19 juillet 2026 que Compass poursuit une explication
+  devenue obsolète lorsque l'élève exécute entre-temps le geste demandé dans
+  GeoGebra; la félicitation déterministe arrive ensuite trop tard.
+- L'audit confirme que le monde v2 et `mission_advanced` sont bien publiés,
+  mais que le geste GeoGebra annule seulement les effets locaux du harnais. Le
+  tour coach est alors mis en file derrière la réponse Realtime active.
+- Cette tranche corrective préempte la réponse au geste brut, avant la
+  stabilisation, puis ne relance le coach qu'après un monde courant vérifié.
+  Elle ne rouvre pas la persistance T25-C04.
+- La tranche est close `pass` le 19 juillet 2026. Le geste learner coupe le
+  transport avant coalescence et les tours coach ne survivent plus au monde qui
+  les a autorisés.
+
+## Objectif
+
+Faire céder immédiatement la parole à l'élève lorsqu'il manipule GeoGebra, puis
+permettre à Compass de reconnaître une mission vérifiée depuis le monde stable
+le plus récent, sans rejouer un tour coach obsolète.
+
+## Inclus
+
+- Propager les interactions GeoGebra learner terminales vers la session
+  Realtime afin d'annuler réponse, outils, file et audio avant le commit stable.
+- Conserver la stabilisation actuelle à double snapshot et ses délais; aucune
+  réussite n'est annoncée depuis le geste brut.
+- Ancrer chaque tour `geometry_coach_turn.v1` à activité, epoch, révision et
+  hash du monde qui l'autorise, puis revalider cet ancrage avant émission et aux
+  événements `response.created`/`response.done`.
+- Remplacer ou retirer les tours coach mis en file lorsqu'un monde plus récent
+  les rend obsolètes; une transition mission courante reste la seule à pouvoir
+  déclencher la nouvelle réponse.
+- Prouver le scénario : Compass parle, l'élève agit, l'audio est coupé, le
+  monde stable vérifie la mission, puis un seul feedback courant est demandé.
+- Étendre les tests unitaires/composants et synchroniser les pilotes après les
+  preuves réelles.
+
+## Hors périmètre
+
+- Modifier les tolérances, les neuf missions Varignon, les preuves, le ledger
+  XP, les permissions O0-O5 ou les outils GeoGebra.
+- Réduire la fenêtre de stabilisation, répondre à chaque delta ou laisser le
+  modèle décider qu'une mission est réussie.
+- Reprendre T25-C04, persister un checkpoint, modifier PostgreSQL/Vercel ou
+  déployer en Production.
+- Créer un `QA_REPORT.md` Builder ou un `HANDOFF.md` sans reprise réelle.
+
+## Fichiers probables
+
+- `apps/frontend/components/geometry-published-workspace.tsx`
+- `apps/frontend/components/geogebra-scratchpad.tsx`
+- `apps/frontend/lib/realtime/webrtc-session.ts`
+- `apps/frontend/lib/realtime/voice-turn.ts`
+- tests voisins et documents pilotes
+
+## Gates requis
+
+```sh
+pnpm test:docs:t0
+pnpm --dir apps/frontend lint
+pnpm --dir apps/frontend typecheck
+pnpm --dir apps/frontend test --run
+pnpm --dir apps/frontend build
+git diff --check
+```
+
+## Définition de fini
+
+- Un geste learner direct envoie `response.cancel` puis
+  `output_audio_buffer.clear` sans attendre les 180 ms de coalescence.
+- Le commit stable continue d'exiger deux mondes concordants et publie le
+  delta/pédagogie avant le nouveau tour de feedback.
+- Un tour coach ancien ne démarre jamais après une révision plus récente; les
+  événements tardifs ne rendent ni audio, ni outil, ni félicitation obsolète.
+- Une mission passée à `verified` produit au plus un nouveau tour courant après
+  préemption, tandis qu'un geste sans nouvelle preuve ne fabrique aucun succès.
+- Les gates contractuels passent et T25-C04 redevient ensuite la prochaine
+  frontière Builder.
+
+## Preuves de clôture
+
+- Le callback learner du scratchpad appelle `cancelForActivity("student_drag")`
+  avant le commit stable; la session envoie un `response.cancel` ciblé puis
+  `output_audio_buffer.clear` et ignore l'audio tardif de cette réponse.
+- Chaque tour coach sérialise activité, epoch, révision, hash et événement
+  d'entrée. La file retire un tour dont la révision a changé; les retours
+  `response.created` et `response.done` sont revalidés de la même manière.
+- Le scénario automatisé publie le monde suivant après la préemption et observe
+  exactement un `response.create` sur sa révision et son hash. La stabilisation
+  à deux snapshots et l'autorité déterministe des missions restent inchangées.
+- Validation : 102 cartes documentaires, 900/900 Vitest, lint, typecheck et
+  build passent; `git diff --check` ne signale aucune erreur de whitespace.
+
+---
+
 # Contrat Builder — README GitHub intégralement anglais — close `pass`
 
 ## État

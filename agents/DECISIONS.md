@@ -1260,3 +1260,20 @@
   `pointer-events:none`, bilingues et supprimés avec le cleanup O2. Un registre
   exhaustif relie les onze actions à leur niveau, surface et primitive visuelle;
   aucune de ces indications ne devient mutation, preuve ou validation.
+
+## D-090 - Le geste GeoGebra préempte la voix avant la stabilisation
+
+- Décision : propager toute interaction learner terminale observée par le
+  listener GeoGebra vers l'annulation Realtime immédiatement, sans attendre le
+  commit stabilisé. Ancrer séparément chaque `geometry_coach_turn.v1` à
+  activité, epoch, révision et hash, puis revalider cette identité avant envoi
+  et lors des événements de réponse.
+- Raison : la double lecture du monde protège les preuves mais ajoute une
+  latence volontaire. L'utiliser aussi comme signal de barge-in laisse Compass
+  terminer une explication obsolète et place la félicitation courante derrière
+  elle. Le geste brut suffit pour céder la parole, pas pour annoncer un succès.
+- Impact : `response.cancel` et `output_audio_buffer.clear` partent avant la
+  coalescence; le runtime local et les outils sont annulés ensemble. La mission
+  avance toujours uniquement sur deux snapshots concordants. Les tours en file
+  ou les retours serveur d'une ancienne révision sont supprimés, et l'audio
+  tardif reste ignoré.

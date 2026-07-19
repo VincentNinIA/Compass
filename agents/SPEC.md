@@ -207,6 +207,7 @@ disponible.
 | FR-73 | Pour éviter tout effet diaporama, rendre chaque activité de Compass avec une pose d'atlas stable et des micro-mouvements CSS composités; la parole live peut consommer uniquement un niveau d'énergie audio éphémère, avec fallback déterministe, sans boucle de frames React, transcript ou stockage audio. |
 | FR-72 | Dans une investigation GeoGebra, laisser Compass choisir spontanément une question, un conseil ou une action d'interface O2 réversible à partir du monde borné et de la mission courante, notamment à la connexion, après une mission franchie ou sur un blocage qualifié, sans exiger une demande d'aide préalable et sans étendre son autorité aux mutations, preuves ou scores. |
 | FR-74 | Pour toute action O2 choisie par Compass, localiser la cible sémantique dans le vrai applet et montrer temporairement le bouton d'outil, l'objet, le segment ou la zone concernés par un halo, un pointeur et un texte accessible, sans coordonnée modèle, interception de pointeur ni effet persistant. |
+| FR-75 | Lorsqu'un élève manipule GeoGebra pendant une réponse, préempter immédiatement la voix depuis le geste brut, puis n'autoriser un nouveau feedback que depuis le monde doublement stabilisé qui porte activité, epoch, révision et hash courants. |
 
 ## Contraintes
 
@@ -298,6 +299,10 @@ disponible.
   de mission ou d'un blocage qualifié. Elle transporte un événement fermé et
   courant; le modèle choisit la formulation et l'éventuelle action O2, tandis
   qu'un geste ou une parole élève annule immédiatement le travail en cours.
+- Le geste learner brut annule réponse, outils, file et audio avant la fenêtre
+  de coalescence. Il ne vaut jamais preuve : seul le commit à deux snapshots
+  peut avancer la mission, et tout tour coach ancré sur un monde antérieur est
+  supprimé avant émission ou rejeté à son retour.
 - Sur mobile, l'élève distingue le choix d'une image existante de l'ouverture
   de la caméra arrière; les deux sources suivent la même validation locale.
 - Une photo lisible de géométrie multi-étapes, d'algèbre ou d'une autre matière

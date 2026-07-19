@@ -511,6 +511,11 @@ function GeometryPublishedWorkspaceContent({
     [],
   );
 
+  const handleLearnerGeometryInteraction = useCallback(() => {
+    pendingCoachTurnRef.current = undefined;
+    geometryCoachRuntimeRef.current?.cancelForActivity("student_drag");
+  }, []);
+
   if (!activity) return null;
 
   return (
@@ -552,6 +557,7 @@ function GeometryPublishedWorkspaceContent({
         onGeometryLearningState={handleGeometryLearningState}
         onGeometryLearningDirective={handleGeometryLearningDirective}
         onGeometryWorldCommit={handleGeometryWorldCommit}
+        onLearnerGeometryInteraction={handleLearnerGeometryInteraction}
         onLearnerInteractionRuntime={handleLearnerInteractionRuntime}
         onToolRuntime={setToolRuntime}
         canvasOverlay={

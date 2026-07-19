@@ -184,6 +184,82 @@ describe("VoiceTurnManager", () => {
     ]);
   });
 
+  it("drops a stale anchored coach turn queued behind the active response", () => {
+    const sent: unknown[] = [];
+    const turns: VoiceTurn[] = [];
+    let currentRevision = 1;
+    const manager = new VoiceTurnManager({
+      send: (event) => {
+        sent.push(event);
+        return true;
+      },
+      onTurn: (turn) => turns.push(turn),
+      isRequestCurrent: (candidate) =>
+        candidate.activityId === "varignon_fr_v1" &&
+        candidate.revision === currentRevision,
+    });
+    manager.handle({
+      type: "input_audio_buffer.committed",
+      item_id: "learner-turn",
+    });
+    manager.handle(created("learner-turn", "learner-response"));
+
+    expect(
+      manager.requestTextTurn(
+        "coach-r1",
+        "coach-event-r1",
+        () => true,
+        {
+          activityId: "varignon_fr_v1",
+          epoch: 1,
+          revision: 1,
+          snapshotHash: "world-hash-1",
+        },
+      ),
+    ).toBe(true);
+    currentRevision = 2;
+    manager.handle({
+      type: "response.done",
+      response: {
+        id: "learner-response",
+        status: "completed",
+        metadata: { geotutor_turn_id: "learner-turn" },
+      },
+    });
+
+    expect(sent).toEqual([request("learner-turn")]);
+    expect(turns).toContainEqual({ turnId: "coach-r1", state: "cancelled" });
+
+    expect(
+      manager.requestTextTurn(
+        "coach-r2",
+        "coach-event-r2",
+        () => true,
+        {
+          activityId: "varignon_fr_v1",
+          epoch: 1,
+          revision: 2,
+          snapshotHash: "world-hash-2",
+        },
+      ),
+    ).toBe(true);
+    expect(sent.at(-1)).toEqual({
+      type: "response.create",
+      event_id: "voice-event-2",
+      response: {
+        metadata: {
+          geotutor_turn_id: "coach-r2",
+          geotutor_response_owner: "explicit:coach-r2",
+          geotutor_activity_id: "varignon_fr_v1",
+          geotutor_epoch: "1",
+          geotutor_revision: "2",
+          geotutor_snapshot_hash: "world-hash-2",
+          geotutor_speech_event_id: "coach-event-r2",
+        },
+      },
+    });
+  });
+
   it("locks a second committed turn until the active response is terminal", () => {
     const test = harness();
     test.manager.handle({ type: "input_audio_buffer.committed", item_id: "turn-1" });

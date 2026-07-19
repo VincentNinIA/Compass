@@ -814,6 +814,17 @@ gate de réponse et le même chemin d'annulation que les tours élève. Les simp
 deltas `geometry_world.v2` restent observation-only et ne font jamais parler le
 coach.
 
+La préemption ne dépend plus du commit stabilisé. Le listener GeoGebra signale
+chaque interaction learner terminale au workspace dès le geste brut; celui-ci
+vide le feedback local en attente et appelle l'annulation Realtime, qui coupe
+réponse, outils, file et buffer audio. Le stabilisateur conserve ensuite ses
+deux lectures concordantes avant toute preuve ou transition. Chaque tour coach
+texte porte désormais `activityId`, epoch, révision et `snapshotHash` dans les
+métadonnées `response.create`; le gestionnaire les revalide avant émission,
+sur `response.created` et sur `response.done`. Un tour devenu stale est annulé
+et son audio tardif reste quarantainé, tandis que le monde stable suivant peut
+ouvrir un seul feedback courant.
+
 ### Guidage visuel contextuel du harnais
 
 La couche de présentation O2 reçoit uniquement des indications issues des

@@ -81,6 +81,7 @@ export function GeoGebraScratchpad({
   onGeometryWorldCommit,
   onGeometryLearningState,
   onGeometryLearningDirective,
+  onLearnerGeometryInteraction,
   onLearnerInteractionRuntime,
   onReadiness,
   canvasOverlay,
@@ -96,6 +97,7 @@ export function GeoGebraScratchpad({
   ): void;
   onGeometryLearningState?(state?: GeometrySessionStateV1): void;
   onGeometryLearningDirective?(directive?: GeometryHintDirectiveV1): void;
+  onLearnerGeometryInteraction?(): void;
   onLearnerInteractionRuntime?(runtime?: GeometryLearnerInteractionRuntime): void;
   onReadiness?(readiness: GeometryScratchpadReadinessV1): void;
   canvasOverlay?: ReactNode;
@@ -169,18 +171,19 @@ export function GeoGebraScratchpad({
     const cancelForLearnerInteraction = (
       reason: "student_action" | "student_speech",
     ) => {
-      if (internalGeometryActionDepth > 0) return;
+      if (internalGeometryActionDepth > 0) return false;
       const requiredScaffoldObjects =
         activity.scaffold.freePoints.length + activity.scaffold.edges.length;
       if (
         reason === "student_action" &&
         (!currentWorldV2 || currentWorldV2.objects.length < requiredScaffoldObjects)
       ) {
-        return;
+        return false;
       }
       learnerInteractionGeneration += 1;
       investigationRuntime?.cancel(reason);
       setLearningDirective(undefined);
+      return true;
     };
     const guard = new GeoGebraAccessibilityGuard(container);
     const bounds = container.getBoundingClientRect();
@@ -446,8 +449,11 @@ export function GeoGebraScratchpad({
               }
             },
             {
-              onLearnerInteraction: () =>
-                cancelForLearnerInteraction("student_action"),
+              onLearnerInteraction: () => {
+                if (cancelForLearnerInteraction("student_action")) {
+                  onLearnerGeometryInteraction?.();
+                }
+              },
             },
           );
           worldObserverV2.start();
@@ -1048,6 +1054,7 @@ export function GeoGebraScratchpad({
     onGeometryLearningDirective,
     onGeometryLearningState,
     onGeometryWorldCommit,
+    onLearnerGeometryInteraction,
     onLearnerInteractionRuntime,
     onReadiness,
     onToolRuntime,

@@ -2,6 +2,15 @@
 
 ## Prochaine action
 
+La tranche corrective `préemption Realtime par geste GeoGebra` est close
+`pass`. Une manipulation learner coupe désormais réponse, outils, file et audio
+avant la stabilisation; le feedback coach porte activité, epoch, révision et
+hash, et les tours devenus stale sont supprimés. Le scénario parlant → geste →
+annulation ciblée → monde stable suivant → un seul feedback courant passe. Les
+gates rendent 102 cartes documentaires et 900/900 Vitest, avec lint, typecheck,
+build et `git diff --check` verts. La prochaine action Builder redevient
+T25-C04 : persister puis restaurer le checkpoint sémantique allowlisté.
+
 La mise à jour anglaise du README GitHub est close `pass`. Toute la copie
 publique du dépôt est maintenant en anglais et reste alignée sur la Production
 animée et guidée : Varignon direct, neuf missions, onze actions fermées, coach

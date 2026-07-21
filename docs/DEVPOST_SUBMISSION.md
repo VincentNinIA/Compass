@@ -2,8 +2,11 @@
 
 La fiche Compass est publiée sur
 `https://devpost.com/software/compass-tedvqs`. Le contrôle du 21 juillet 2026
-confirme que la participation OpenAI Build Week est enregistrée et soumise, que
-la démo publique répond et que la vidéo YouTube publique dure 2 min 56.
+confirme que le registre relationnel du connecteur classe la participation
+OpenAI Build Week comme `registered` et `submitted`, que la démo publique répond
+et que la vidéo YouTube publique dure 2 min 56. La vue projet renvoie pourtant
+`submitted_at:null`; cette incohérence doit être levée dans le formulaire
+authentifié avant l'échéance.
 
 La page publique ne permet pas de relire la catégorie privée, l'identifiant de
 session `/feedback` ou les éventuels retours humains. Ces trois champs restent
@@ -158,8 +161,10 @@ Image : tests verts puis logo Compass.
       les conditions tierces de GeoGebra.
 - [x] Retirer des liens Devpost la PR no 2 devenue obsolète; conserver uniquement
       le dépôt public et la démo stable.
-- [x] Soumettre la participation OpenAI Build Week; le connecteur confirme
-      l'état `registered` et `submitted` au 21 juillet 2026.
+- [x] Le registre du connecteur associe les états `registered` et `submitted` à
+      OpenAI Build Week au 21 juillet 2026.
+- [ ] Vérifier dans le formulaire authentifié que la soumission est bien active,
+      car la vue projet renvoie encore `submitted_at:null`.
 - [ ] Choisir **Education**.
 - [ ] Ajouter l'identifiant de session obtenu via `/feedback`.
 - [ ] Ajouter les retours humains et seulement les observations réellement reçues.

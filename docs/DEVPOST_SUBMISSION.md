@@ -1,16 +1,13 @@
 # Compass — dossier Devpost Education
 
-La fiche Compass a été synchronisée le 16 juillet 2026 sur
-`https://devpost.com/software/compass-tedvqs`. L'enregistrement d'une fiche
-complète a publié automatiquement la page projet, mais la participation OpenAI
-Build Week reste non soumise (`submitted_at: null`). Les retours humains, la
-vidéo finale, la session `/feedback`, la licence, le choix Education et la
-soumission restent à compléter par le porteur.
+La fiche Compass est publiée sur
+`https://devpost.com/software/compass-tedvqs`. Le contrôle du 21 juillet 2026
+confirme que la participation OpenAI Build Week est enregistrée et soumise, que
+la démo publique répond et que la vidéo YouTube publique dure 2 min 56.
 
-Le 17 juillet 2026, le candidat T18 du commit `e1efc28` a été qualifié sur
-`https://compass-geotutor-demo.vercel.app/` via la Production Vercel READY
-`dpl_3ng7jmgj727Yy1Mu8w9SABuXv7R5`. La description Devpost version 6 a été
-alignée sur ce candidat live; la participation reste non soumise.
+La page publique ne permet pas de relire la catégorie privée, l'identifiant de
+session `/feedback` ou les éventuels retours humains. Ces trois champs restent
+à vérifier depuis le formulaire authentifié sans les inventer dans ce dossier.
 
 ## Positionnement recommandé
 
@@ -19,7 +16,6 @@ alignée sur ce candidat live; la participation reste non soumise.
 - **Tagline :** Turn any school exercise into guided practice—without taking the thinking away.
 - **URL de test :** `https://compass-geotutor-demo.vercel.app/`
 - **Dépôt :** `https://github.com/VincentNinIA/Compass`
-- **Candidat T18 :** `https://github.com/VincentNinIA/Compass/pull/2`
 - **Promesse précise :** conversation guidée pour toute matière lisible;
   observation, action et vérification automatiques uniquement dans les ateliers
   spécialisés dont Compass possède un contrat déterministe, aujourd'hui GeoGebra.
@@ -153,20 +149,19 @@ Image : tests verts puis logo Compass.
 | Potential impact | Boucle professeur-élève-professeur, aide graduée, bilan anonyme, toute matière | Ajouter les retours humains collectés par le porteur; ne pas inventer de traction |
 | Quality of idea | Distinction conversation/instrumentation et terminé/vérifié, frugalité professeur | GeoGebra est aujourd'hui le seul environnement spécialisé instrumenté |
 
-## Checklist avant soumission
+## Checklist finale
 
 - [x] Redéployer le worktree T18 et rejouer le parcours jury sur l'URL publique.
 - [x] Ajouter l'URL de dépôt à Devpost.
+- [x] Publier une vidéo publique strictement inférieure à 3 min (2 min 56).
+- [x] Ajouter une licence non commerciale explicite au dépôt public et séparer
+      les conditions tierces de GeoGebra.
+- [x] Retirer des liens Devpost la PR no 2 devenue obsolète; conserver uniquement
+      le dépôt public et la démo stable.
+- [x] Soumettre la participation OpenAI Build Week; le connecteur confirme
+      l'état `registered` et `submitted` au 21 juillet 2026.
 - [ ] Choisir **Education**.
-- [ ] Enregistrer une vidéo avec voix off, durée strictement inférieure à 3 min,
-      mentionnant explicitement Codex et GPT-5.6.
 - [ ] Ajouter l'identifiant de session obtenu via `/feedback`.
 - [ ] Ajouter les retours humains et seulement les observations réellement reçues.
-- [ ] Si le dépôt est public, choisir et ajouter une licence validée par le
-      porteur. Si le dépôt reste privé, partager l'accès aux comptes de test
-      indiqués par le règlement (`testing@devpost.com` et
-      `build-week-event@openai.com`).
 - [ ] Vérifier que la description Devpost, la vidéo et l'URL décrivent le même
       candidat et les mêmes limites.
-- [ ] Soumettre le projet; la page projet publique n'est pas une soumission
-      OpenAI Build Week tant que `submitted_at` reste nul.
